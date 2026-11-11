@@ -1,4 +1,4 @@
-"""Feature builder - Step 5.4: 87 features total."""
+"""Feature builder - Step 5.5: 99 features (87 + 12 cross-sectional)."""
 import json, gzip
 import pandas as pd
 import numpy as np
@@ -7,13 +7,15 @@ from features.technical import build_technical_features, FEATURE_NAMES as TECH_F
 from features.rtm import build_rtm_features
 from features.price_action import build_pa_features, FEATURE_NAMES as PA_F
 from features.structural import build_structural_features, FEATURE_NAMES as STR_F
+from features.cross_sectional import build_cross_sectional, FEATURE_NAMES as CS_F
 
 DATA = Path('data'); OUT = Path('outputs'); OUT.mkdir(exist_ok=True)
 RTM_F = ['BOS_Bull','BOS_Bear','CHoCH_Bull','CHoCH_Bear','FVG_Bull','FVG_Bear']
-ALL_F = TECH_F + RTM_F + PA_F + STR_F
+PER_STOCK_F = TECH_F + RTM_F + PA_F + STR_F
+ALL_F = PER_STOCK_F + CS_F
 
 print('=' * 55)
-print(f'TSE.Engine Builder - Step 5.4 ({len(ALL_F)} features)')
+print(f'TSE.Engine Builder - Step 5.5 ({len(ALL_F)} features)')
 print('=' * 55)
 
 print('\n[1/5] Loading...')
@@ -21,14 +23,12 @@ with gzip.open(DATA / 'all_history.json.gz', 'rb') as f:
     history = json.loads(f.read().decode('utf-8'))
 print(f'  {len(history)} stocks')
 
-print('\n[2/5] Building...')
+print('\n[2/5] Building per-stock features...')
 all_dfs, skipped, errors = [], 0, []
 for i, (sym, stock) in enumerate(history.items(), 1):
     try:
         rows = stock.get('r', [])
-        if len(rows) < 300:  # 52W needs 250; ensure enough
-            skipped += 1
-            continue
+        if len(rows) < 300: skipped += 1; continue
         df = pd.DataFrame(rows).iloc[::-1].reset_index(drop=True)
         t = build_technical_features(df)
         r = build_rtm_features(df)
@@ -50,9 +50,15 @@ combined = pd.concat(all_dfs, ignore_index=True)
 before = len(combined)
 print(f'  {before:,} rows')
 
-print('\n[4/5] Cleanup...')
+print('\n[4/5] Warmup drop + cross-sectional features...')
 combined = combined.dropna(subset=['EMA200','Ichimoku_SenkouB']).reset_index(drop=True)
-print(f'  After warmup drop: {len(combined):,}')
+print(f'  After warmup: {len(combined):,}')
+
+print('  Computing 12 cross-sectional features (this takes ~1-2 min)...')
+cs = build_cross_sectional(combined)
+combined = pd.concat([combined, cs], axis=1)
+print(f'  CS done')
+
 feat_cols = [c for c in combined.columns if c not in ['symbol','date','close']]
 nan_cnt = combined[feat_cols].isna().sum().sum()
 combined[feat_cols] = combined[feat_cols].replace([np.inf,-np.inf], np.nan).fillna(0)
@@ -64,10 +70,8 @@ size_mb = (OUT / 'features.parquet').stat().st_size / 1e6
 print(f'  {size_mb:.1f} MB')
 
 summary = {
-    'step': '5.4',
-    'stocks': len(all_dfs), 'skipped': skipped, 'errors': len(errors),
-    'rows': len(combined), 'features': len(ALL_F),
-    'feature_names': ALL_F,
+    'step': '5.5', 'stocks': len(all_dfs), 'skipped': skipped, 'errors': len(errors),
+    'rows': len(combined), 'features': len(ALL_F), 'feature_names': ALL_F,
     'size_mb': round(size_mb, 2),
     'date_min': int(combined['date'].min()), 'date_max': int(combined['date'].max()),
 }
