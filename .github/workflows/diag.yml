@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - 'scripts/train_diag.py'
+      - 'scripts/backtest_diag.py'
       - '.github/workflows/diag.yml'
   workflow_dispatch:
 
@@ -19,11 +20,15 @@ jobs:
         run: pip install -r requirements.txt
       - name: Build features
         run: python -m features.builder
-      - name: Diagnostic train (64 features)
+      - name: Train diag
         run: python scripts/train_diag.py
+      - name: Backtest diag (per-fold)
+        run: python scripts/backtest_diag.py
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: diag-output
-          path: outputs/metrics_diag.json
+          path: |
+            outputs/metrics_diag.json
+            outputs/backtest_diag.json
           retention-days: 7

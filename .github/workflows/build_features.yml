@@ -2,10 +2,15 @@ name: Build & Train
 on:
   push:
     paths:
-      - 'features/**'
-      - 'scripts/**'
+      - 'features/technical.py'
+      - 'features/rtm.py'
+      - 'features/price_action.py'
+      - 'features/structural.py'
+      - 'features/cross_sectional.py'
+      - 'features/builder.py'
+      - 'scripts/train.py'
+      - 'scripts/backtest.py'
       - 'requirements.txt'
-      - '.github/workflows/build_features.yml'
   workflow_dispatch:
 
 jobs:
