@@ -1,4 +1,4 @@
-"""Step 17.2: production signals - FIXED models/ mkdir."""
+"""Step 17.3: production signals - FIXED sector names."""
 import json
 import numpy as np
 import pandas as pd
@@ -9,7 +9,7 @@ from pathlib import Path
 
 OUT = Path('outputs')
 PUBLIC = Path('public/data'); PUBLIC.mkdir(parents=True, exist_ok=True)
-MODELS = Path('models'); MODELS.mkdir(parents=True, exist_ok=True)  # ← FIX
+MODELS = Path('models'); MODELS.mkdir(parents=True, exist_ok=True)
 
 TECH_FEATURES = [
     'RSI','RSI_slope','MACD','MACD_Sig','MACD_Hist','MACD_slope',
@@ -37,14 +37,16 @@ THRESHOLD_BUY = 0.65
 THRESHOLD_SELL = 0.40
 
 print('=' * 65)
-print('PRODUCTION SIGNALS - Step 17.2')
+print('PRODUCTION SIGNALS - Step 17.3 (sector names fixed)')
 print('=' * 65)
 
 print('\n[1/5] Loading...')
 df = pd.read_parquet(OUT / 'features.parquet')
 with open('data/companies_final.json', 'r', encoding='utf-8') as f:
     companies = {c['symbol']: c for c in json.load(f)}
-print(f'  {len(df):,} rows')
+with open('data/fundamentals.json', 'r', encoding='utf-8') as f:
+    fundamentals = json.load(f)
+print(f'  {len(df):,} rows | {len(fundamentals)} fundamentals')
 
 print('\n[2/5] Latest per stock...')
 latest = df.sort_values('date').groupby('symbol').tail(1).copy()
@@ -90,9 +92,8 @@ lgb_params = {
     'is_unbalance': True, 'n_jobs': 1, 'random_state': 42, 'verbose': -1,
 }
 mx = xgb.XGBClassifier(**xgb_params); mx.fit(X_train, y_train, verbose=False)
-print('  XGB trained')
 ml = lgb.LGBMClassifier(**lgb_params); ml.fit(X_train, y_train)
-print('  LGBM trained')
+print('  Models trained')
 
 print('\n[5/5] Predict + save...')
 X_latest = latest[feat_cols].values
@@ -115,12 +116,23 @@ for i, row in latest.iterrows():
         sig = 'SELL'; conf = 'HIGH' if p <= 0.30 else 'MEDIUM'
     else:
         sig = 'HOLD'; conf = 'LOW'
+
+    fund = fundamentals.get(sym, {})
     comp = companies.get(sym, {})
+
+    # Sector name (Persian) from fundamentals, fallback to companies industry code
+    sector_name = fund.get('sector', '').strip() or comp.get('industry', '').strip()
+
     signals.append({
-        'symbol': sym, 'name': comp.get('name', ''),
-        'sector': comp.get('industry', ''),
-        'signal': sig, 'confidence': conf,
-        'prob': round(p, 4), 'close': float(row['close']),
+        'symbol': sym,
+        'name': comp.get('name', ''),
+        'sector': sector_name,
+        'signal': sig,
+        'confidence': conf,
+        'prob': round(p, 4),
+        'close': float(row['close']),
+        'eps': fund.get('estimatedEPS'),
+        'pe': fund.get('sectorPE'),
     })
 
 order = {'BUY': 0, 'HOLD': 1, 'SELL': 2}
@@ -129,16 +141,20 @@ signals.sort(key=lambda x: (order[x['signal']], -x['prob'] if x['signal']=='BUY'
 from collections import Counter
 cnt = Counter(s['signal'] for s in signals)
 
+# Sector distribution for top buys
+sector_counts = Counter(s['sector'] for s in signals if s['signal']=='BUY')
+
 output = {
     'date': latest_date,
     'generated_at': str(pd.Timestamp.now()),
-    'model': {'name': 'TSE.Engine', 'version': '17.2',
+    'model': {'name': 'TSE.Engine', 'version': '17.3',
               'features': len(feat_cols), 'ensemble': ['XGBoost', 'LightGBM'],
               'threshold_buy': THRESHOLD_BUY, 'threshold_sell': THRESHOLD_SELL},
     'market': {'regime': regime, 'breadth': round(latest_breadth, 4), 'weights': w},
     'summary': {'total': len(signals), 'buy': cnt.get('BUY', 0),
                 'hold': cnt.get('HOLD', 0), 'sell': cnt.get('SELL', 0),
                 'high_confidence': sum(1 for s in signals if s['confidence'] == 'HIGH')},
+    'sector_buys': dict(sector_counts.most_common(10)),
     'top_buys': [s for s in signals if s['signal']=='BUY'][:20],
     'signals': signals,
 }
@@ -160,6 +176,5 @@ print(f'  Date:   {latest_date} | Regime: {regime}')
 print(f'  BUY:    {cnt.get("BUY", 0)}')
 print(f'  HOLD:   {cnt.get("HOLD", 0)}')
 print(f'  SELL:   {cnt.get("SELL", 0)}')
-print(f'  High:   {output["summary"]["high_confidence"]}')
-print(f'  File:   {out_path} ({out_path.stat().st_size/1024:.0f} KB)')
+print(f'  Top sectors: {dict(sector_counts.most_common(5))}')
 print('=' * 65)
