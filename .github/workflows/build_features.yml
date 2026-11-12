@@ -2,14 +2,9 @@ name: Build & Train
 on:
   push:
     paths:
-      - 'features/technical.py'
-      - 'features/rtm.py'
-      - 'features/price_action.py'
-      - 'features/structural.py'
-      - 'features/cross_sectional.py'
-      - 'features/builder.py'
-      - 'scripts/train.py'
-      - 'scripts/backtest.py'
+      - 'features/**'
+      - 'scripts/train_stack.py'
+      - 'scripts/backtest_stack.py'
       - 'requirements.txt'
   workflow_dispatch:
 
@@ -26,14 +21,14 @@ jobs:
         run: pip install -r requirements.txt
       - name: Build features
         run: python -m features.builder
-      - name: Train models
-        run: python scripts/train.py
+      - name: Train stacking
+        run: python scripts/train_stack.py
       - name: Backtest
-        run: python scripts/backtest.py
-      - name: Upload outputs
+        run: python scripts/backtest_stack.py
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: outputs
+          name: stack-outputs
           path: |
             outputs/
             models/
