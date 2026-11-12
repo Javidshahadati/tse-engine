@@ -1,13 +1,12 @@
 'use client';
 import { useEffect, useRef } from 'react';
 
-export default function IndexChart({ data, height = 320 }) {
+export default function IndexChart({ data, height = 380 }) {
   const containerRef = useRef(null);
   const chartRef = useRef(null);
 
   useEffect(() => {
     if (!containerRef.current || !data || data.length === 0) return;
-
     let cancelled = false;
 
     (async () => {
@@ -22,33 +21,41 @@ export default function IndexChart({ data, height = 320 }) {
           fontFamily: 'Vazirmatn, sans-serif',
         },
         grid: {
-          vertLines: { color: 'rgba(30, 42, 68, 0.3)' },
-          horzLines: { color: 'rgba(30, 42, 68, 0.3)' },
+          vertLines: { color: 'rgba(30, 42, 68, 0.25)' },
+          horzLines: { color: 'rgba(30, 42, 68, 0.25)' },
         },
         crosshair: { mode: CrosshairMode.Normal },
         rightPriceScale: { borderColor: '#1e2a44' },
         timeScale: { borderColor: '#1e2a44', timeVisible: false },
       });
 
-      const areaSeries = chart.addAreaSeries({
-        lineColor: '#06b6d4',
-        topColor: 'rgba(6, 182, 212, 0.4)',
-        bottomColor: 'rgba(6, 182, 212, 0.02)',
-        lineWidth: 2,
+      const candleSeries = chart.addCandlestickSeries({
+        upColor: '#10b981',
+        downColor: '#f43f5e',
+        borderUpColor: '#10b981',
+        borderDownColor: '#f43f5e',
+        wickUpColor: '#10b981',
+        wickDownColor: '#f43f5e',
       });
 
-      // Convert YYYYMMDD → timestamp
       const toTime = (d) => {
         const s = String(d);
         return `${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}`;
       };
 
+      // If h/l missing, fallback to c
       const chartData = data
         .filter(r => r.c > 0)
-        .map(r => ({ time: toTime(r.d), value: r.c }))
+        .map(r => ({
+          time: toTime(r.d),
+          open: r.h && r.l && r.h > r.l ? r.l + (r.h - r.l) * 0.3 : r.c,
+          high: r.h || r.c,
+          low: r.l || r.c,
+          close: r.c,
+        }))
         .sort((a, b) => a.time.localeCompare(b.time));
 
-      areaSeries.setData(chartData);
+      candleSeries.setData(chartData);
       chart.timeScale().fitContent();
       chartRef.current = chart;
 
@@ -56,8 +63,7 @@ export default function IndexChart({ data, height = 320 }) {
         if (containerRef.current) chart.applyOptions({ width: containerRef.current.clientWidth });
       });
       ro.observe(containerRef.current);
-
-      return () => { ro.disconnect(); };
+      return () => ro.disconnect();
     })();
 
     return () => {
