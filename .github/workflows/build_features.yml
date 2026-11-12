@@ -3,9 +3,9 @@ on:
   push:
     paths:
       - 'features/**'
-      - 'scripts/train_stack.py'
-      - 'scripts/backtest_stack.py'
+      - 'scripts/**'
       - 'requirements.txt'
+      - 'data/fundamentals.json'
   workflow_dispatch:
 
 jobs:
@@ -21,14 +21,14 @@ jobs:
         run: pip install -r requirements.txt
       - name: Build features
         run: python -m features.builder
-      - name: Train stacking
+      - name: Train
         run: python scripts/train_stack.py
       - name: Backtest
         run: python scripts/backtest_stack.py
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: stack-outputs
+          name: step14-outputs
           path: |
             outputs/
             models/
