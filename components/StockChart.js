@@ -1,12 +1,36 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-export default function StockChart({ data, height = 360 }) {
+function resample(data, timeframe) {
+  if (timeframe === '1D' || data.length === 0) return data;
+  const result = [];
+  const n = data.length;
+  const step = timeframe === '1W' ? 5 : 21;
+  for (let i = 0; i < n; i += step) {
+    const slice = data.slice(i, Math.min(i + step, n));
+    if (slice.length === 0) continue;
+    result.push({
+      t: slice[slice.length - 1].t,
+      o: slice[0].o,
+      h: Math.max(...slice.map(x => x.h)),
+      l: Math.min(...slice.map(x => x.l)),
+      c: slice[slice.length - 1].c,
+      v: slice.reduce((a, b) => a + (b.v || 0), 0),
+    });
+  }
+  return result;
+}
+
+export default function StockChart({ data, height = 400 }) {
   const containerRef = useRef(null);
   const chartRef = useRef(null);
+  const seriesRef = useRef(null);
+  const [tf, setTf] = useState('1D');
+
+  const displayData = resample(data || [], tf);
 
   useEffect(() => {
-    if (!containerRef.current || !data || data.length === 0) return;
+    if (!containerRef.current || displayData.length === 0) return;
     let cancelled = false;
 
     (async () => {
@@ -35,19 +59,18 @@ export default function StockChart({ data, height = 360 }) {
         return `${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}`;
       };
 
-      const chartData = data.map(r => ({
+      candleSeries.setData(displayData.map(r => ({
         time: toTime(r.t), open: r.o, high: r.h, low: r.l, close: r.c,
-      })).sort((a, b) => a.time.localeCompare(b.time));
+      })));
 
-      candleSeries.setData(chartData);
       chart.timeScale().fitContent();
       chartRef.current = chart;
+      seriesRef.current = candleSeries;
 
       const ro = new ResizeObserver(() => {
         if (containerRef.current) chart.applyOptions({ width: containerRef.current.clientWidth });
       });
       ro.observe(containerRef.current);
-
       return () => ro.disconnect();
     })();
 
@@ -55,7 +78,21 @@ export default function StockChart({ data, height = 360 }) {
       cancelled = true;
       if (chartRef.current) { chartRef.current.remove(); chartRef.current = null; }
     };
-  }, [data, height]);
+  }, [displayData, height]);
 
-  return <div ref={containerRef} className="w-full" />;
+  return (
+    <div>
+      <div className="flex gap-2 mb-3">
+        {['1D', '1W', '1M'].map(t => (
+          <button key={t} onClick={() => setTf(t)}
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              tf === t ? 'bg-primary text-bg shadow-lg shadow-primary/30' : 'glass text-slate-300 hover:bg-white/10'
+            }`}>
+            {t === '1D' ? '۱ روزه' : t === '1W' ? '۱ هفته' : '۱ ماه'}
+          </button>
+        ))}
+      </div>
+      <div ref={containerRef} className="w-full" />
+    </div>
+  );
 }
