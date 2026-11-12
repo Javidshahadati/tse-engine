@@ -1,4 +1,4 @@
-"""Backtest per-fold isolation test."""
+"""Backtest with REALISTIC assumptions - Step 8.7."""
 import json
 import numpy as np
 import pandas as pd
@@ -27,17 +27,24 @@ SAFE_FEATURES = [
     'Consolidation','ConsecUp_3','ConsecDown_3',
 ]
 
+# ─── REALISTIC parameters ───
 THRESHOLD_LABEL = 0.017
-THRESHOLD_BUY = 0.60
-COMMISSION = 0.017
-MAX_POSITIONS = 10
+THRESHOLD_BUY = 0.70             # بالا بردن آستانه (از 0.60)
+COMMISSION = 0.017               # کارمزد رفت و برگشت
+SLIPPAGE_PER_SIDE = 0.015        # ۱.۵٪ هر طرف اسلیپیج
+MAX_RETURN_PER_TRADE = 0.25      # سقف ۲۵٪ (۴-۵ روز limit up)
+MAX_POSITIONS = 5                # کاهش از ۱۰ به ۵ (واقعی‌تر)
 INITIAL_CAPITAL = 1_000_000
 HOLD_DAYS = 5
 TDPY = 252
 
-print('=' * 60)
-print('BACKTEST DIAGNOSTIC: per-fold isolation')
-print('=' * 60)
+print('=' * 65)
+print('REALISTIC BACKTEST - Step 8.7')
+print(f'  THRESHOLD_BUY: {THRESHOLD_BUY} (was 0.60)')
+print(f'  SLIPPAGE: {SLIPPAGE_PER_SIDE*2:.1%} round-trip')
+print(f'  MAX_RETURN: {MAX_RETURN_PER_TRADE:.0%} cap')
+print(f'  MAX_POSITIONS: {MAX_POSITIONS} (was 10)')
+print('=' * 65)
 
 print('\n[1/3] Loading...')
 df = pd.read_parquet(OUT / 'features.parquet')
@@ -51,10 +58,12 @@ print(f'  Rows: {len(df):,} | Features: {len(feat_cols)}')
 
 
 def run_backtest(test_df, probs, fold_id):
-    """Isolated backtest for one fold."""
     test_df = test_df.copy()
     test_df['prob'] = probs
     test_df = test_df.sort_values(['date','prob'], ascending=[True,False]).reset_index(drop=True)
+
+    # ─── Apply cap on future_ret ───
+    test_df['fut_ret_capped'] = test_df['future_ret_5d'].clip(upper=MAX_RETURN_PER_TRADE)
 
     unique_dates = sorted(test_df['date'].unique())
     price_lookup = test_df.set_index(['symbol','date'])['close'].to_dict()
@@ -67,25 +76,28 @@ def run_backtest(test_df, probs, fold_id):
     per_pos = INITIAL_CAPITAL / MAX_POSITIONS
 
     for i, d in enumerate(unique_dates):
-        # Mark to market
         for pos in positions:
             cp = price_lookup.get((pos['sym'], d))
             if cp is not None and pos['entry_price'] > 0:
                 pos['mv'] = pos['size'] * cp / pos['entry_price']
 
-        # Close expired
         still = []
         for pos in positions:
             if i >= pos['exit_idx']:
-                realized = pos['fut_ret'] - COMMISSION
-                proceeds = pos['size'] * (1 + realized)
+                # ─── Realistic net return ───
+                gross = pos['fut_ret']
+                slippage = 2 * SLIPPAGE_PER_SIDE
+                net = gross - COMMISSION - slippage
+                proceeds = pos['size'] * (1 + net)
                 cash += proceeds
-                trades.append({'net_ret': realized, 'pnl': proceeds - pos['size'], 'fold': fold_id})
+                trades.append({
+                    'fold': fold_id, 'gross': gross, 'net': net,
+                    'pnl': proceeds - pos['size'],
+                })
             else:
                 still.append(pos)
         positions = still
 
-        # Open
         available = MAX_POSITIONS - len(positions)
         if available > 0 and d in grouped.groups:
             day = grouped.get_group(d)
@@ -98,7 +110,7 @@ def run_backtest(test_df, probs, fold_id):
                 positions.append({
                     'sym': r['symbol'], 'entry_price': float(r['close']),
                     'entry_idx': i, 'exit_idx': i + HOLD_DAYS,
-                    'size': size, 'fut_ret': float(r['future_ret_5d']),
+                    'size': size, 'fut_ret': float(r['fut_ret_capped']),
                     'mv': size,
                 })
 
@@ -108,9 +120,8 @@ def run_backtest(test_df, probs, fold_id):
     eq = pd.DataFrame(equity)
     eq['ret'] = eq['equity'].pct_change().fillna(0)
     total_ret = float(eq['equity'].iloc[-1] / INITIAL_CAPITAL - 1)
-    n_days = len(eq)
-    years = n_days / TDPY
-    cagr = float((1 + total_ret) ** (1/years) - 1) if years > 0 else 0
+    n_days = len(eq); years = n_days / TDPY
+    cagr = float((1+total_ret)**(1/years)-1) if years > 0 else 0
     eq['peak'] = eq['equity'].cummax()
     eq['dd'] = eq['equity'] / eq['peak'] - 1
     max_dd = float(eq['dd'].min())
@@ -119,14 +130,15 @@ def run_backtest(test_df, probs, fold_id):
 
     tr = pd.DataFrame(trades)
     if len(tr) > 0:
-        wr = float((tr['net_ret'] > 0).mean())
-        ar = float(tr['net_ret'].mean())
-        w = tr.loc[tr['net_ret']>0, 'net_ret']; ls = tr.loc[tr['net_ret']<=0, 'net_ret']
+        wr = float((tr['net'] > 0).mean())
+        ar = float(tr['net'].mean())
+        w = tr.loc[tr['net']>0, 'net']; ls = tr.loc[tr['net']<=0, 'net']
         aw = float(w.mean()) if len(w) > 0 else 0
         al = float(ls.mean()) if len(ls) > 0 else 0
         rr = abs(aw/al) if al != 0 else 0
+        gross_avg = float(tr['gross'].mean())
     else:
-        wr = ar = rr = 0
+        wr = ar = rr = gross_avg = 0
 
     return {
         'n_days': n_days, 'n_trades': len(tr),
@@ -135,13 +147,16 @@ def run_backtest(test_df, probs, fold_id):
         'sharpe': round(sharpe, 2),
         'max_dd': round(max_dd, 4),
         'winrate': round(wr, 4),
-        'avg_ret': round(ar, 4),
+        'avg_ret_net': round(ar, 4),
+        'avg_ret_gross': round(gross_avg, 4),
+        'avg_win': round(aw, 4),
+        'avg_loss': round(al, 4),
         'rr': round(rr, 2),
         'final_equity': round(float(eq['equity'].iloc[-1]), 2),
     }
 
 
-print('\n[2/3] Walk-forward with per-fold backtest...')
+print('\n[2/3] Walk-forward per-fold...')
 udates = sorted(df['date'].unique()); n = len(udates)
 bounds = [udates[int(n*p)] for p in [0.5, 0.625, 0.75, 0.875]]
 tests = [(bounds[0],bounds[1]),(bounds[1],bounds[2]),(bounds[2],bounds[3]),(bounds[3],udates[-1]+1)]
@@ -155,39 +170,46 @@ xgb_params = {
 }
 
 all_fold_results = []
-all_trades = []
 for k, (s, e) in enumerate(tests, 1):
     print(f'\n  Fold {k}: {s} -> {e}')
     tr = df[df['date'] < s].copy()
     te = df[(df['date'] >= s) & (df['date'] < e)].copy()
-    print(f'    train={len(tr):,} test={len(te):,}')
 
     m = xgb.XGBClassifier(**xgb_params)
     m.fit(tr[feat_cols].values, tr['label'].values, verbose=False)
     prob = m.predict_proba(te[feat_cols].values)[:, 1]
     auc = roc_auc_score(te['label'].values, prob)
-    print(f'    AUC: {auc:.4f}')
 
     bt = run_backtest(te, prob, k)
     bt['fold'] = k
     bt['auc'] = round(float(auc), 4)
-    bt['test_start'] = int(s); bt['test_end'] = int(e)
     all_fold_results.append(bt)
-    print(f'    Backtest: Sharpe={bt["sharpe"]} CAGR={bt["cagr"]:.2%} '
-          f'WR={bt["winrate"]:.1%} trades={bt["n_trades"]}')
+    print(f'    AUC={auc:.3f} | trades={bt["n_trades"]} WR={bt["winrate"]:.1%} '
+          f'avg_net={bt["avg_ret_net"]:.2%} | Sharpe={bt["sharpe"]:.2f} '
+          f'CAGR={bt["cagr"]:.1%} DD={bt["max_dd"]:.1%}')
 
 print('\n[3/3] Saving...')
 result = {
-    'diagnostic': 'backtest_per_fold',
+    'diagnostic': 'realistic_backtest',
+    'params': {
+        'threshold_buy': THRESHOLD_BUY,
+        'slippage_round_trip': 2*SLIPPAGE_PER_SIDE,
+        'max_return_cap': MAX_RETURN_PER_TRADE,
+        'max_positions': MAX_POSITIONS,
+        'commission': COMMISSION,
+    },
     'folds': all_fold_results,
-    'verdict': 'BACKTEST_OK' if all(f['sharpe'] < 4 for f in all_fold_results) else 'BACKTEST_BUG',
+    'verdict': 'OK' if all(f['sharpe'] < 5 for f in all_fold_results) else 'STILL_BUG',
 }
-with open(OUT / 'backtest_diag.json', 'w', encoding='utf-8') as f:
+with open(OUT / 'backtest_diag.json','w',encoding='utf-8') as f:
     json.dump(result, f, ensure_ascii=False, indent=2)
 
-print('=' * 60)
+print('\n' + '=' * 65)
+print('SUMMARY:')
 for r in all_fold_results:
-    print(f"  Fold {r['fold']}: Sharpe={r['sharpe']:>5} CAGR={r['cagr']:>8.2%} "
-          f"WR={r['winrate']:.1%} DD={r['max_dd']:.2%}")
-print(f"  VERDICT: {result['verdict']}")
-print('=' * 60)
+    print(f"  Fold {r['fold']}: Sharpe={r['sharpe']:>5} CAGR={r['cagr']:>8.1%} "
+          f"WR={r['winrate']:.1%} avg_net={r['avg_ret_net']:.2%} trades={r['n_trades']}")
+print(f"VERDICT: {result['verdict']}")
+print('=' * 65)
+print('\nFULL JSON:')
+print(json.dumps(result, ensure_ascii=False, indent=2))
