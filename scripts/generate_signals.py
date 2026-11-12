@@ -1,4 +1,4 @@
-"""Step 17.1: production signals with safe model save."""
+"""Step 17.2: production signals - FIXED models/ mkdir."""
 import json
 import numpy as np
 import pandas as pd
@@ -9,7 +9,7 @@ from pathlib import Path
 
 OUT = Path('outputs')
 PUBLIC = Path('public/data'); PUBLIC.mkdir(parents=True, exist_ok=True)
-MODELS = Path('models')
+MODELS = Path('models'); MODELS.mkdir(parents=True, exist_ok=True)  # ← FIX
 
 TECH_FEATURES = [
     'RSI','RSI_slope','MACD','MACD_Sig','MACD_Hist','MACD_slope',
@@ -37,7 +37,7 @@ THRESHOLD_BUY = 0.65
 THRESHOLD_SELL = 0.40
 
 print('=' * 65)
-print('PRODUCTION SIGNALS - Step 17.1')
+print('PRODUCTION SIGNALS - Step 17.2')
 print('=' * 65)
 
 print('\n[1/5] Loading...')
@@ -64,7 +64,6 @@ y_train = train_df['label'].values
 pos_rate = y_train.mean()
 print(f'  Train rows: {len(train_df):,} | Features: {len(feat_cols)}')
 
-# Regime
 feats = df.copy()
 feats['above20'] = (feats['close'] > feats.groupby('symbol')['close'].transform(lambda x: x.rolling(20).mean())).astype(float)
 latest_breadth = float(feats[feats['date'] == latest_date]['above20'].mean())
@@ -133,7 +132,7 @@ cnt = Counter(s['signal'] for s in signals)
 output = {
     'date': latest_date,
     'generated_at': str(pd.Timestamp.now()),
-    'model': {'name': 'TSE.Engine', 'version': '17.1',
+    'model': {'name': 'TSE.Engine', 'version': '17.2',
               'features': len(feat_cols), 'ensemble': ['XGBoost', 'LightGBM'],
               'threshold_buy': THRESHOLD_BUY, 'threshold_sell': THRESHOLD_SELL},
     'market': {'regime': regime, 'breadth': round(latest_breadth, 4), 'weights': w},
@@ -148,7 +147,6 @@ out_path = PUBLIC / 'predictions_today.json'
 with open(out_path, 'w', encoding='utf-8') as f:
     json.dump(output, f, ensure_ascii=False, indent=1)
 
-# ─── Save with joblib (safer than native) ───
 joblib.dump(mx, MODELS / 'production_xgb.pkl')
 joblib.dump(ml, MODELS / 'production_lgbm.pkl')
 with open(MODELS / 'production_meta.json', 'w') as f:
