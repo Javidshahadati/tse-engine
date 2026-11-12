@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 const StockChart = dynamic(() => import('@/components/StockChart'), { ssr: false });
-import TradeSetup from '@/components/TradeSetup';
+import RiskProfile from '@/components/RiskProfile';
 import ComprehensiveAnalysis from '@/components/ComprehensiveAnalysis';
 
 const SIGNAL = {
@@ -98,6 +98,23 @@ export default function StockPage() {
     ? ((rl.buyLegalVol - rl.sellLegalVol) / (rl.buyLegalVol + rl.sellLegalVol) * 100) : null;
 
   // فقط ۱۰ اندیکاتور
+  const highsAll = chartData.map(r => r.h);
+  const lowsAll = chartData.map(r => r.l);
+  const last20High = Math.max(...highsAll.slice(-20));
+  const last20Low = Math.min(...lowsAll.slice(-20));
+  const prev20High = highsAll.length > 20 ? Math.max(...highsAll.slice(-40, -20)) : last20High;
+  const prev20Low = lowsAll.length > 20 ? Math.min(...lowsAll.slice(-40, -20)) : last20Low;
+  const bosBull = last20High > prev20High ? 1 : 0;
+  const bosBear = last20Low < prev20Low ? 1 : 0;
+  const bodySize = Math.abs(lastBar.c - lastBar.o);
+  const rangeSize = lastBar.h - lastBar.l;
+  const upperWick = lastBar.h - Math.max(lastBar.c, lastBar.o);
+  const lowerWick = Math.min(lastBar.c, lastBar.o) - lastBar.l;
+  const isHammer = lastBar.c > lastBar.o && lowerWick > 2 * bodySize && upperWick < bodySize;
+  const isShootingStar = lastBar.c < lastBar.o && upperWick > 2 * bodySize && lowerWick < bodySize;
+  const isDoji = bodySize < rangeSize * 0.1;
+  const paPattern = isHammer ? 'Hammer' : isShootingStar ? 'Shooting Star' : isDoji ? 'Doji' : '—';
+
   const indicatorCards = [
     { key: 'rsi', label: 'RSI', value: ind.rsi, unit: '', ref: '۳۰ / ۷۰', icon: Activity, href: 'rsi', color: (v) => v > 70 ? 'text-danger' : v < 30 ? 'text-success' : 'text-white' },
     { key: 'macd', label: 'MACD', value: ind.macd, unit: '', ref: 'خط صفر', icon: TrendingUp, href: 'macd', color: () => ind.macd_hist > 0 ? 'text-success' : 'text-danger' },
@@ -109,6 +126,8 @@ export default function StockPage() {
     { key: 'mfi', label: 'MFI', value: ind.mfi, unit: '', ref: '۲۰ / ۸۰', icon: DollarSign, href: 'mfi', color: (v) => v > 80 ? 'text-danger' : v < 20 ? 'text-success' : 'text-white' },
     { key: 'willr', label: 'Williams %R', value: ind.willr, unit: '', ref: '-۲۰ / -۸۰', icon: TrendingDown, href: 'williams', color: (v) => v > -20 ? 'text-danger' : v < -80 ? 'text-success' : 'text-white' },
     { key: 'obv', label: 'OBV Slope', value: ind.obv_slope, unit: '', ref: 'روند حجم', icon: BarChart3, href: 'obv', color: (v) => v > 0 ? 'text-success' : 'text-danger' },
+    { key: 'rtm', label: 'RTM', value: bosBull ? 'صعودی' : bosBear ? 'نزولی' : 'خنثی', unit: '', ref: 'ساختار بازار', icon: Layers, href: 'rtm', color: () => bosBull ? 'text-success' : bosBear ? 'text-danger' : 'text-slate-400' },
+    { key: 'pa', label: 'Price Action', value: paPattern, unit: '', ref: 'الگوی کندلی', icon: Target, href: 'price-action', color: () => isHammer ? 'text-success' : isShootingStar ? 'text-danger' : 'text-white' },
   ];
 
   return (
@@ -171,7 +190,7 @@ export default function StockPage() {
       </div>
 
       {/* Trade Setup */}
-      <TradeSetup symbol={symbol} close={lastBar.c} atr={ind.atr} atr_pct={ind.atr_pct} prob={sig?.prob} />
+      <RiskProfile chart={chartData} close={lastBar.c} sig={sig} />
 
       {/* Chart */}
       <div className="glass-strong p-3 md:p-4 rounded-2xl">
@@ -196,7 +215,7 @@ export default function StockPage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-3">
           {indicatorCards.map((x) => {
             const display = x.value != null ? (typeof x.value === 'number' ? x.value.toFixed(2) : x.value) : '—';
-            const colorClass = typeof x.value === 'number' ? x.color(x.value) : 'text-white';
+            const colorClass = x.color ? x.color(x.value) : 'text-white';
             const Icon = x.icon;
             return (
               <Link key={x.key}
@@ -289,7 +308,7 @@ export default function StockPage() {
           </div>
           <div className="bg-bg/40 rounded-lg p-2.5 md:p-3">
             <div className="text-[10px] text-slate-400 mb-1">P/E سهم</div>
-            <div className="num text-sm md:text-base font-bold text-white">{fund?.estimatedEPS && lastBar.c ? fmt(lastBar.c / parseFloat(fund.estimatedEPS), 2) : '—'}</div>
+            <div className="num text-sm md:text-base font-bold text-white">{fund?.estimatedEPS && lastBar.c ? fmt((lastBar.c * 10) / parseFloat(fund.estimatedEPS), 2) : '—'}</div>
           </div>
           <div className="bg-bg/40 rounded-lg p-2.5 md:p-3">
             <div className="text-[10px] text-slate-400 mb-1">P/E صنعت</div>
@@ -365,33 +384,9 @@ export default function StockPage() {
 
       {/* Comprehensive Analysis */}
       <ComprehensiveAnalysis symbol={symbol} sig={sig} ind={ind} fund={fund} chart={chartData} />
-
-      {/* Stock News */}
-      {stockNews.length > 0 && (
-        <div className="glass p-4 md:p-5 rounded-xl">
-          <div className="flex items-center gap-2 mb-3 md:mb-4">
-            <Info className="w-4 md:w-5 h-4 md:h-5 text-accent" />
-            <h3 className="text-sm md:text-base font-bold text-white">اخبار مرتبط با {symbol}</h3>
-          </div>
-          <div className="space-y-2">
-            {stockNews.map((n, i) => (
-              <a key={i} href={n.link} target="_blank" rel="noopener"
-                className="block py-2 border-b border-border/30 last:border-0 hover:bg-white/5 -mx-2 px-2 rounded transition-colors">
-                <div className="flex items-start gap-2">
-                  <span className="text-[9px] text-primary bg-primary/10 px-1.5 py-0.5 rounded whitespace-nowrap">{n.source}</span>
-                  <span className="text-xs text-white leading-relaxed">{n.title}</span>
-                </div>
-              </a>
-            ))}
-          </div>
+      </div>
         </div>
       )}
-
-      {/* Disclaimer */}
-      <div className="flex items-start gap-3 p-3 md:p-4 rounded-xl bg-danger/8 border border-danger/25">
-        <AlertTriangle className="w-4 md:w-5 h-4 md:h-5 text-danger flex-shrink-0 mt-0.5" />
-        <p className="text-xs md:text-sm text-danger/90">این تحلیل صرفاً آموزشی است و نه توصیه معاملاتی.</p>
       </div>
-    </div>
   );
 }

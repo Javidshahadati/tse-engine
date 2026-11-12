@@ -17,7 +17,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="text-sm text-slate-400 leading-relaxed max-w-md">
-              موتور تحلیل هوشمند بازار سرمایه ایران. تحلیل داده‌محور ۶۰۶ سهم با ۹۹ فیچر تکنیکال و بنیادی و شاخص کل ۲۰ ساله.
+              موتور تحلیل هوشمند بازار سرمایه ایران. تحلیل داده‌محور ۶۰۲ سهم با ۱۰۴ فیچر تکنیکال و بنیادی و شاخص کل ۲۰ ساله.
             </p>
           </div>
 
@@ -50,10 +50,8 @@ export default function Footer() {
         <div className="mt-8 pt-6 border-t border-border/40 flex justify-center">
           <div className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-gradient-to-l from-primary/10 via-accent/10 to-primary2/10 border border-primary/25">
             <Sparkles className="w-3.5 h-3.5 text-primary" />
-            <span className="text-xs text-slate-400">Crafted with</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-primary/60" />
             <span className="text-xs font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent">
-              Javid Shahadati
+              Crafted by Javid Shahadati
             </span>
             <Sparkles className="w-3.5 h-3.5 text-accent" />
           </div>
