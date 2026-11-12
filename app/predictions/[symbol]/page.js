@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 import {
   ArrowRight, TrendingUp, TrendingDown, AlertTriangle, BarChart3,
   Target, Activity, Users, Building2, Zap, LineChart, Layers,
-  DollarSign, Info, Percent, Sparkles, ArrowLeft, Shield, Network
+  DollarSign, Info, Sparkles, ArrowLeft, Shield, Gauge, Percent
 } from 'lucide-react';
 
 const StockChart = dynamic(() => import('@/components/StockChart'), { ssr: false });
@@ -14,50 +14,14 @@ import TradeSetup from '@/components/TradeSetup';
 import ComprehensiveAnalysis from '@/components/ComprehensiveAnalysis';
 
 const SIGNAL = {
-  BUY: { label: 'توجه بالا', color: 'success', bg: 'bg-success/10', border: 'border-success/30', icon: TrendingUp },
-  HOLD: { label: 'خنثی', color: 'neutral', bg: 'bg-slate-500/10', border: 'border-slate-500/30', icon: Activity },
-  SELL: { label: 'ریسک بالا', color: 'danger', bg: 'bg-danger/10', border: 'border-danger/30', icon: TrendingDown },
+  BUY: { label: 'توجه بالا', bg: 'bg-success/10', border: 'border-success/30', icon: TrendingUp, text: 'text-success' },
+  HOLD: { label: 'خنثی', bg: 'bg-slate-500/10', border: 'border-slate-500/30', icon: Activity, text: 'text-slate-300' },
+  SELL: { label: 'ریسک بالا', bg: 'bg-danger/10', border: 'border-danger/30', icon: TrendingDown, text: 'text-danger' },
 };
 
 function fmt(n, d = 0) {
   if (n == null) return '—';
   return Number(n).toLocaleString('fa-IR', { maximumFractionDigits: d });
-}
-
-function analyzeStock(chart, sig) {
-  const parts = [];
-  if (chart.length < 20) return parts;
-  const closes = chart.map(r => r.c);
-  const highs = chart.map(r => r.h);
-  const lows = chart.map(r => r.l);
-  const current = closes[closes.length - 1];
-  const high60 = Math.max(...highs);
-  const low60 = Math.min(...lows);
-  const pos60 = ((current - low60) / (high60 - low60) * 100).toFixed(0);
-
-  if (sig) {
-    if (sig.prob > 0.75) parts.push(`امتیاز تحلیل مدل Javid LM برای این سهم ${(sig.prob * 100).toFixed(0)} از ۱۰۰ است که نشان‌دهنده توجه بالای مدل به این سهم می‌باشد.`);
-    else if (sig.prob < 0.30) parts.push(`امتیاز تحلیل مدل Javid LM برای این سهم ${(sig.prob * 100).toFixed(0)} از ۱۰۰ است که نشان‌دهنده ریسک بالای تشخیص‌داده‌شده می‌باشد.`);
-    else parts.push(`امتیاز تحلیل مدل Javid LM برای این سهم ${(sig.prob * 100).toFixed(0)} از ۱۰۰ است که در محدوده خنثی قرار دارد.`);
-  }
-
-  parts.push(`قیمت فعلی در موقعیت ${pos60}٪ از محدوده ۶۰ روز اخیر (${fmt(low60)} تا ${fmt(high60)} تومان) قرار دارد.`);
-
-  const ma20 = closes.slice(-20).reduce((a, b) => a + b, 0) / 20;
-  if (current > ma20 * 1.02) parts.push(`قیمت بالاتر از میانگین متحرک ۲۰ روزه (${fmt(ma20)} تومان) است که روند کوتاه‌مدت صعودی را تأیید می‌کند.`);
-  else if (current < ma20 * 0.98) parts.push(`قیمت پایین‌تر از میانگین متحرک ۲۰ روزه (${fmt(ma20)} تومان) است که فشار فروش کوتاه‌مدت را نشان می‌دهد.`);
-  else parts.push(`قیمت در نزدیکی میانگین متحرک ۲۰ روزه (${fmt(ma20)} تومان) در حال تعادل است.`);
-
-  const last5 = closes.slice(-5);
-  const ret5 = ((last5[last5.length - 1] - last5[0]) / last5[0] * 100).toFixed(2);
-  if (ret5 > 3) parts.push(`بازده ۵ روز اخیر ${ret5}٪ مثبت بوده و مومنتوم کوتاه‌مدت قوی است.`);
-  else if (ret5 < -3) parts.push(`بازده ۵ روز اخیر ${ret5}٪ منفی بوده و فشار فروش قابل‌توجه است.`);
-
-  if (sig?.eps && sig?.pe) {
-    parts.push(`نسبت P/E سهم ${fmt(sig.pe, 1)} در مقایسه با EPS برآوردی ${fmt(sig.eps)} ریال، ارزیابی بنیادی را ممکن می‌سازد.`);
-  }
-
-  return parts;
 }
 
 export default function StockPage() {
@@ -70,6 +34,14 @@ export default function StockPage() {
   const [realLegal, setRealLegal] = useState(null);
   const [news, setNews] = useState(null);
   const [fundamentals, setFundamentals] = useState(null);
+  const [chartH, setChartH] = useState(400);
+
+  useEffect(() => {
+    const update = () => setChartH(window.innerWidth < 640 ? 300 : 440);
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
 
   useEffect(() => {
     const load = async (f) => {
@@ -92,8 +64,6 @@ export default function StockPage() {
   const fund = fundamentals?.[symbol] || {};
   const rl = realLegal?.[symbol] || {};
 
-  const analysis = useMemo(() => analyzeStock(chartData, sig), [chartData, sig]);
-
   const stockNews = useMemo(() => {
     if (!news?.items || !sig) return [];
     const keywords = [symbol, sig.name?.split(' ')[0], sig.sector?.split(' ')[0]].filter(Boolean);
@@ -103,7 +73,7 @@ export default function StockPage() {
   }, [news, symbol, sig]);
 
   if (!charts || !indicators || !signals) {
-    return <div className="max-w-7xl mx-auto px-4 py-8"><div className="h-96 glass rounded-xl shimmer" /></div>;
+    return <div className="max-w-7xl mx-auto px-3 md:px-6 py-6"><div className="h-96 glass rounded-xl shimmer" /></div>;
   }
 
   if (chartData.length === 0) {
@@ -111,7 +81,7 @@ export default function StockPage() {
       <div className="max-w-2xl mx-auto px-4 py-20 text-center">
         <AlertTriangle className="w-16 h-16 text-danger mx-auto mb-4" />
         <h1 className="text-2xl font-bold text-white mb-2">سهم پیدا نشد</h1>
-        <p className="text-slate-400 mb-6">نماد «{symbol}» در دیتابیس موجود نیست.</p>
+        <p className="text-slate-300 mb-6">نماد «{symbol}» در دیتابیس موجود نیست.</p>
         <Link href="/dashboard" className="btn-primary"><ArrowRight className="w-4 h-4" /> بازگشت</Link>
       </div>
     );
@@ -122,51 +92,28 @@ export default function StockPage() {
   const change = prevBar ? ((lastBar.c - prevBar.c) / prevBar.c * 100) : 0;
   const conf = sig ? SIGNAL[sig.signal] : null;
 
-  const buyRealPct = rl.buyRealVol && rl.sellRealVol
+  const buyRealPct = (rl.buyRealVol != null && rl.sellRealVol != null && (rl.buyRealVol + rl.sellRealVol) > 0)
     ? (rl.buyRealVol / (rl.buyRealVol + rl.sellRealVol) * 100) : null;
-  const smartMoney = rl.buyLegalVol != null && rl.sellLegalVol != null
+  const smartMoney = (rl.buyLegalVol != null && rl.sellLegalVol != null && (rl.buyLegalVol + rl.sellLegalVol) > 0)
     ? ((rl.buyLegalVol - rl.sellLegalVol) / (rl.buyLegalVol + rl.sellLegalVol) * 100) : null;
 
-  // Compute RTM & PA from chart
-  const closes = chartData.map(r => r.c);
-  const highs = chartData.map(r => r.h);
-  const lows = chartData.map(r => r.l);
-  const last20High = Math.max(...highs.slice(-20));
-  const last20Low = Math.min(...lows.slice(-20));
-  const prev20High = highs.length > 20 ? Math.max(...highs.slice(-40, -20)) : last20High;
-  const prev20Low = lows.length > 20 ? Math.min(...lows.slice(-40, -20)) : last20Low;
-  const bosBull = last20High > prev20High ? 1 : 0;
-  const bosBear = last20Low < prev20Low ? 1 : 0;
-  const avgBody = chartData.slice(-20).reduce((a, b) => a + Math.abs(b.c - b.o), 0) / 20;
-  const lastBody = Math.abs(lastBar.c - lastBar.o);
-  const isHammer = lastBar.c > lastBar.o && (lastBar.o - lastBar.l) > 2 * lastBody;
-  const isShootingStar = lastBar.c < lastBar.o && (lastBar.h - lastBar.o) > 2 * lastBody;
-  const isDoji = lastBody < (lastBar.h - lastBar.l) * 0.1;
-
-  // 10 indicators + RTM + PA
+  // فقط ۱۰ اندیکاتور
   const indicatorCards = [
-    { key: 'rsi', label: 'RSI', value: ind.rsi, unit: '', ref: '۳۰/۷۰', href: 'rsi' },
-    { key: 'macd', label: 'MACD', value: ind.macd, unit: '', ref: 'خط صفر', href: 'macd' },
-    { key: 'stoch', label: 'Stochastic', value: ind.stoch_k, unit: '%', ref: '۲۰/۸۰', href: 'stochastic' },
-    { key: 'adx', label: 'ADX', value: ind.adx, unit: '', ref: '>۲۵ قوی', href: 'adx' },
-    { key: 'atr', label: 'ATR', value: ind.atr, unit: '', ref: `${ind.atr_pct}٪ نوسان`, href: 'atr' },
-    { key: 'bb', label: 'Bollinger %B', value: ind.bb_pct, unit: '', ref: '۰-۱', href: 'bollinger' },
-    { key: 'cci', label: 'CCI', value: ind.cci, unit: '', ref: '±۱۰۰', href: 'cci' },
-    { key: 'mfi', label: 'MFI', value: ind.mfi, unit: '', ref: '۲۰/۸۰', href: 'mfi' },
-    { key: 'willr', label: 'Williams %R', value: ind.willr, unit: '', ref: '-۲۰/-۸۰', href: 'williams' },
-    { key: 'obv', label: 'OBV Slope', value: ind.obv_slope, unit: '', ref: 'روند حجم', href: 'obv' },
-    { key: 'bos', label: 'BOS', value: bosBull ? 'صعودی' : bosBear ? 'نزولی' : 'خنثی', unit: '', ref: 'RTM', href: 'rtm' },
-    { key: 'choch', label: 'CHoCH', value: bosBear && !bosBull ? 'تأیید' : '—', unit: '', ref: 'RTM', href: 'rtm' },
-    { key: 'fvg', label: 'FVG', value: lastBar.h > prevBar?.h && lastBar.l > prevBar?.l ? 'Bull' : lastBar.h < prevBar?.h && lastBar.l < prevBar?.l ? 'Bear' : '—', unit: '', ref: 'RTM', href: 'rtm' },
-    { key: 'pa1', label: 'Hammer', value: isHammer ? '✓' : '—', unit: '', ref: 'PA', href: 'price-action' },
-    { key: 'pa2', label: 'Shooting Star', value: isShootingStar ? '✓' : '—', unit: '', ref: 'PA', href: 'price-action' },
-    { key: 'pa3', label: 'Doji', value: isDoji ? '✓' : '—', unit: '', ref: 'PA', href: 'price-action' },
+    { key: 'rsi', label: 'RSI', value: ind.rsi, unit: '', ref: '۳۰ / ۷۰', icon: Activity, href: 'rsi', color: (v) => v > 70 ? 'text-danger' : v < 30 ? 'text-success' : 'text-white' },
+    { key: 'macd', label: 'MACD', value: ind.macd, unit: '', ref: 'خط صفر', icon: TrendingUp, href: 'macd', color: () => ind.macd_hist > 0 ? 'text-success' : 'text-danger' },
+    { key: 'stoch', label: 'Stochastic', value: ind.stoch_k, unit: '%', ref: '۲۰ / ۸۰', icon: Gauge, href: 'stochastic', color: (v) => v > 80 ? 'text-danger' : v < 20 ? 'text-success' : 'text-white' },
+    { key: 'adx', label: 'ADX', value: ind.adx, unit: '', ref: 'قدرت روند', icon: BarChart3, href: 'adx', color: (v) => v > 25 ? 'text-success' : 'text-slate-400' },
+    { key: 'atr', label: 'ATR', value: ind.atr, unit: '', ref: `${ind.atr_pct ? ind.atr_pct.toFixed(1) + '٪ نوسان' : 'نوسان'}`, icon: Activity, href: 'atr', color: () => 'text-warning' },
+    { key: 'bb', label: 'Bollinger %B', value: ind.bb_pct, unit: '', ref: '۰ — ۱', icon: Layers, href: 'bollinger', color: (v) => v > 0.9 ? 'text-danger' : v < 0.1 ? 'text-success' : 'text-white' },
+    { key: 'cci', label: 'CCI', value: ind.cci, unit: '', ref: '±۱۰۰', icon: Target, href: 'cci', color: (v) => v > 100 ? 'text-danger' : v < -100 ? 'text-success' : 'text-white' },
+    { key: 'mfi', label: 'MFI', value: ind.mfi, unit: '', ref: '۲۰ / ۸۰', icon: DollarSign, href: 'mfi', color: (v) => v > 80 ? 'text-danger' : v < 20 ? 'text-success' : 'text-white' },
+    { key: 'willr', label: 'Williams %R', value: ind.willr, unit: '', ref: '-۲۰ / -۸۰', icon: TrendingDown, href: 'williams', color: (v) => v > -20 ? 'text-danger' : v < -80 ? 'text-success' : 'text-white' },
+    { key: 'obv', label: 'OBV Slope', value: ind.obv_slope, unit: '', ref: 'روند حجم', icon: BarChart3, href: 'obv', color: (v) => v > 0 ? 'text-success' : 'text-danger' },
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div className="max-w-7xl mx-auto px-3 md:px-6 lg:px-8 py-4 md:py-8 space-y-4 md:space-y-6">
 
-      {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-xs text-slate-400">
         <Link href="/dashboard" className="hover:text-primary">داشبورد</Link>
         <ArrowRight className="w-3 h-3 rotate-180" />
@@ -174,33 +121,33 @@ export default function StockPage() {
       </div>
 
       {/* Header */}
-      <div className="glass-strong p-5 rounded-2xl relative overflow-hidden">
+      <div className="glass-strong p-4 md:p-6 rounded-2xl relative overflow-hidden">
         <div className="absolute top-0 left-0 w-96 h-96 bg-primary/8 rounded-full blur-3xl" />
         <div className="relative">
-          <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-3xl font-black text-white">{symbol}</h1>
+          <div className="flex flex-wrap items-start justify-between gap-3 md:gap-4 mb-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 md:gap-3 mb-2 flex-wrap">
+                <h1 className="text-2xl md:text-4xl font-black text-white">{symbol}</h1>
                 {conf && (
-                  <span className={`text-xs px-3 py-1 rounded-full flex items-center gap-1 ${conf.bg} text-${conf.color} border ${conf.border}`}>
+                  <span className={`text-[10px] md:text-xs px-2.5 py-1 rounded-full flex items-center gap-1 ${conf.bg} ${conf.text} border ${conf.border}`}>
                     <conf.icon className="w-3 h-3" /> {conf.label}
                   </span>
                 )}
               </div>
-              <p className="text-sm text-slate-300 mb-1">{sig?.name || '—'}</p>
+              <p className="text-sm md:text-base text-slate-300 mb-1">{sig?.name || '—'}</p>
               {sig?.sector && (
                 <p className="text-xs text-primary flex items-center gap-1">
                   <Building2 className="w-3 h-3" /> {sig.sector}
                 </p>
               )}
             </div>
-            <div className="text-left">
-              <div className="num text-3xl md:text-4xl font-black text-white">
+            <div className="text-left flex-shrink-0">
+              <div className="num text-2xl md:text-4xl font-black text-white">
                 {fmt(lastBar.c)}
-                <span className="text-sm text-slate-400 mr-1 font-normal">تومان</span>
+                <span className="text-xs md:text-sm text-slate-400 mr-1 font-normal">تومان</span>
               </div>
-              <div className={`num text-sm font-bold flex items-center gap-1 justify-end mt-1 ${change >= 0 ? 'text-success' : 'text-danger'}`}>
-                {change >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+              <div className={`num text-xs md:text-sm font-bold flex items-center gap-1 justify-end mt-1 ${change >= 0 ? 'text-success' : 'text-danger'}`}>
+                {change >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
                 {change >= 0 ? '+' : ''}{change.toFixed(2)}٪
               </div>
             </div>
@@ -208,11 +155,11 @@ export default function StockPage() {
 
           {sig && (
             <div>
-              <div className="flex justify-between text-xs text-slate-400 mb-1.5">
+              <div className="flex justify-between text-[11px] md:text-xs text-slate-400 mb-1.5">
                 <span>امتیاز تحلیل Javid LM</span>
                 <span className="num font-bold text-white">{Math.round(sig.prob * 100)} / ۱۰۰</span>
               </div>
-              <div className="w-full h-2.5 bg-slate-700 rounded-full overflow-hidden">
+              <div className="w-full h-2 md:h-2.5 bg-slate-700 rounded-full overflow-hidden">
                 <div className={`h-full ${
                   sig.signal === 'BUY' ? 'bg-gradient-to-l from-success to-primary' :
                   sig.signal === 'SELL' ? 'bg-danger' : 'bg-slate-500'
@@ -223,156 +170,156 @@ export default function StockPage() {
         </div>
       </div>
 
-      <TradeSetup
-        symbol={symbol}
-        close={lastBar.c}
-        atr={ind.atr}
-        atr_pct={ind.atr_pct}
-        prob={sig?.prob}
-      />
+      {/* Trade Setup */}
+      <TradeSetup symbol={symbol} close={lastBar.c} atr={ind.atr} atr_pct={ind.atr_pct} prob={sig?.prob} />
 
       {/* Chart */}
-      <div className="glass-strong p-4 rounded-2xl">
+      <div className="glass-strong p-3 md:p-4 rounded-2xl">
         <div className="flex items-center gap-2 mb-3">
           <LineChart className="w-4 h-4 text-primary" />
           <span className="text-sm font-bold text-white">نمودار قیمت</span>
         </div>
-        <div className="rounded-xl overflow-hidden bg-bg/40 border border-border/50 p-2">
-          <StockChart data={chartData} height={400} />
+        <div className="rounded-xl overflow-hidden bg-bg/40 border border-border/50 p-1 md:p-2">
+          <StockChart data={chartData} height={chartH} />
         </div>
       </div>
 
-      {/* Indicators Grid */}
+      {/* 10 Indicators */}
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-primary" />
-            اندیکاتورها و سیگنال‌ها
+        <div className="flex items-center justify-between mb-3 md:mb-4">
+          <h2 className="text-base md:text-lg font-bold text-white flex items-center gap-2">
+            <BarChart3 className="w-4 md:w-5 h-4 md:h-5 text-primary" />
+            ۱۰ اندیکاتور تکنیکال
           </h2>
-          <span className="text-xs text-slate-400">کلیک برای تحلیل کامل</span>
+          <span className="text-[10px] md:text-xs text-slate-400 hidden sm:block">کلیک برای تحلیل</span>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3">
-          {indicatorCards.map((x) => (
-            <Link key={x.key}
-              href={`/predictions/${encodeURIComponent(symbol)}/indicators/${x.href}`}
-              className="glass p-4 rounded-xl hover:border-primary/40 hover:scale-[1.02] transition-all group cursor-pointer">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-medium text-slate-400">{x.label}</span>
-                <ArrowLeft className="w-3.5 h-3.5 text-slate-500 group-hover:text-primary transition-colors rotate-180" />
-              </div>
-              <div className="num text-lg font-bold text-white">
-                {x.value != null ? (typeof x.value === 'number' ? x.value.toFixed(2) : x.value) : '—'}
-                <span className="text-xs text-slate-500 mr-0.5">{x.unit}</span>
-              </div>
-              <div className="text-[9px] text-slate-500 mt-1">{x.ref}</div>
-            </Link>
-          ))}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-3">
+          {indicatorCards.map((x) => {
+            const display = x.value != null ? (typeof x.value === 'number' ? x.value.toFixed(2) : x.value) : '—';
+            const colorClass = typeof x.value === 'number' ? x.color(x.value) : 'text-white';
+            const Icon = x.icon;
+            return (
+              <Link key={x.key}
+                href={`/predictions/${encodeURIComponent(symbol)}/indicators/${x.href}`}
+                className="glass p-3 md:p-4 rounded-xl hover:border-primary/40 hover:scale-[1.02] transition-all group cursor-pointer">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-1.5">
+                    <Icon className="w-3.5 h-3.5 text-slate-500 group-hover:text-primary transition-colors" />
+                    <span className="text-[10px] md:text-[11px] font-medium text-slate-400">{x.label}</span>
+                  </div>
+                  <ArrowLeft className="w-3 h-3 text-slate-600 group-hover:text-primary transition-colors rotate-180" />
+                </div>
+                <div className={`num text-base md:text-lg font-bold ${colorClass}`}>
+                  {display}
+                  <span className="text-[10px] md:text-xs text-slate-500 mr-0.5">{x.unit}</span>
+                </div>
+                <div className="text-[9px] md:text-[10px] text-slate-500 mt-1">{x.ref}</div>
+              </Link>
+            );
+          })}
         </div>
       </div>
 
-      {/* Support / Resistance */}
-      <div className="grid md:grid-cols-2 gap-3">
-        <div className="glass p-5 rounded-xl">
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-5 h-5 text-danger" />
-            <h3 className="font-bold text-white">مقاومت‌های کلیدی</h3>
+      {/* S/R */}
+      <div className="grid md:grid-cols-2 gap-3 md:gap-4">
+        <div className="glass p-4 md:p-5 rounded-xl">
+          <div className="flex items-center gap-2 mb-3 md:mb-4">
+            <TrendingUp className="w-4 md:w-5 h-4 md:h-5 text-danger" />
+            <h3 className="text-sm md:text-base font-bold text-white">مقاومت‌های کلیدی</h3>
           </div>
           <div className="space-y-2">
             {ind.resistances?.length > 0 ? ind.resistances.map((r, i) => (
               <div key={i} className="flex items-center justify-between py-2 border-b border-border/30 last:border-0">
                 <span className="text-xs text-slate-500">R{i + 1}</span>
                 <span className="num font-bold text-danger">{fmt(r)}</span>
-                <span className="text-[10px] text-slate-500">+{((r - lastBar.c) / lastBar.c * 100).toFixed(1)}٪</span>
+                <span className="text-[10px] text-slate-400">+{((r - lastBar.c) / lastBar.c * 100).toFixed(1)}٪</span>
               </div>
-            )) : <div className="text-sm text-slate-500">مقاومتی نزدیک نیست</div>}
+            )) : <div className="text-sm text-slate-400">مقاومت نزدیکی وجود ندارد</div>}
           </div>
         </div>
-        <div className="glass p-5 rounded-xl">
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingDown className="w-5 h-5 text-success" />
-            <h3 className="font-bold text-white">حمایت‌های کلیدی</h3>
+        <div className="glass p-4 md:p-5 rounded-xl">
+          <div className="flex items-center gap-2 mb-3 md:mb-4">
+            <TrendingDown className="w-4 md:w-5 h-4 md:h-5 text-success" />
+            <h3 className="text-sm md:text-base font-bold text-white">حمایت‌های کلیدی</h3>
           </div>
           <div className="space-y-2">
             {ind.supports?.length > 0 ? ind.supports.map((s, i) => (
               <div key={i} className="flex items-center justify-between py-2 border-b border-border/30 last:border-0">
                 <span className="text-xs text-slate-500">S{i + 1}</span>
                 <span className="num font-bold text-success">{fmt(s)}</span>
-                <span className="text-[10px] text-slate-500">-{((lastBar.c - s) / lastBar.c * 100).toFixed(1)}٪</span>
+                <span className="text-[10px] text-slate-400">-{((lastBar.c - s) / lastBar.c * 100).toFixed(1)}٪</span>
               </div>
-            )) : <div className="text-sm text-slate-500">حمایتی نزدیک نیست</div>}
+            )) : <div className="text-sm text-slate-400">حمایت نزدیکی وجود ندارد</div>}
           </div>
         </div>
       </div>
 
       {/* Fibonacci */}
       {ind.fib && (
-        <div className="glass p-5 rounded-xl">
-          <div className="flex items-center gap-2 mb-4">
-            <Layers className="w-5 h-5 text-accent" />
-            <h3 className="font-bold text-white">سطوح فیبوناچی (۵۲ هفته)</h3>
+        <div className="glass p-4 md:p-5 rounded-xl">
+          <div className="flex items-center gap-2 mb-3 md:mb-4">
+            <Layers className="w-4 md:w-5 h-4 md:h-5 text-accent" />
+            <h3 className="text-sm md:text-base font-bold text-white">سطوح فیبوناچی (۵۲ هفته)</h3>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div className="grid grid-cols-3 md:grid-cols-4 gap-1.5 md:gap-2">
             {Object.entries(ind.fib).map(([k, v]) => {
               const val = parseFloat(v);
               const isNear = Math.abs(val - lastBar.c) / lastBar.c < 0.03;
               return (
-                <div key={k} className={`p-2.5 rounded-lg ${isNear ? 'bg-primary/20 border border-primary/50' : 'bg-bg/40 border border-border/30'}`}>
-                  <div className="text-[10px] text-slate-400">{k}٪</div>
-                  <div className={`num text-sm font-bold ${isNear ? 'text-primary' : 'text-white'}`}>{fmt(val)}</div>
+                <div key={k} className={`p-2 md:p-2.5 rounded-lg ${isNear ? 'bg-primary/20 border border-primary/50' : 'bg-bg/40 border border-border/30'}`}>
+                  <div className="text-[9px] md:text-[10px] text-slate-400">{k}٪</div>
+                  <div className={`num text-xs md:text-sm font-bold ${isNear ? 'text-primary' : 'text-white'}`}>{fmt(val)}</div>
                 </div>
               );
             })}
-          </div>
-          <div className="text-[10px] text-slate-500 text-center mt-3">
-            بازه: {fmt(ind.low52)} تا {fmt(ind.high52)}
           </div>
         </div>
       )}
 
       {/* Fundamentals */}
-      <div className="glass p-5 rounded-xl">
-        <div className="flex items-center gap-2 mb-4">
-          <DollarSign className="w-5 h-5 text-warning" />
-          <h3 className="font-bold text-white">داده‌های بنیادی</h3>
+      <div className="glass p-4 md:p-5 rounded-xl">
+        <div className="flex items-center gap-2 mb-3 md:mb-4">
+          <DollarSign className="w-4 md:w-5 h-4 md:h-5 text-warning" />
+          <h3 className="text-sm md:text-base font-bold text-white">داده‌های بنیادی</h3>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="bg-bg/40 rounded-lg p-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
+          <div className="bg-bg/40 rounded-lg p-2.5 md:p-3">
             <div className="text-[10px] text-slate-400 mb-1">EPS برآوردی</div>
-            <div className="num text-base font-bold text-white">{sig?.eps ? fmt(sig.eps) : '—'} <span className="text-xs text-slate-500">ریال</span></div>
+            <div className="num text-sm md:text-base font-bold text-white">{sig?.eps ? fmt(sig.eps) : '—'} <span className="text-[10px] text-slate-500">ریال</span></div>
           </div>
-          <div className="bg-bg/40 rounded-lg p-3">
+          <div className="bg-bg/40 rounded-lg p-2.5 md:p-3">
             <div className="text-[10px] text-slate-400 mb-1">P/E سهم</div>
-            <div className="num text-base font-bold text-white">{fund?.estimatedEPS && lastBar.c ? fmt(lastBar.c / parseFloat(fund.estimatedEPS), 2) : '—'}</div>
+            <div className="num text-sm md:text-base font-bold text-white">{fund?.estimatedEPS && lastBar.c ? fmt(lastBar.c / parseFloat(fund.estimatedEPS), 2) : '—'}</div>
           </div>
-          <div className="bg-bg/40 rounded-lg p-3">
+          <div className="bg-bg/40 rounded-lg p-2.5 md:p-3">
             <div className="text-[10px] text-slate-400 mb-1">P/E صنعت</div>
-            <div className="num text-base font-bold text-white">{sig?.pe ? fmt(sig.pe, 2) : '—'}</div>
+            <div className="num text-sm md:text-base font-bold text-white">{sig?.pe ? fmt(sig.pe, 2) : '—'}</div>
           </div>
-          <div className="bg-bg/40 rounded-lg p-3">
+          <div className="bg-bg/40 rounded-lg p-2.5 md:p-3">
             <div className="text-[10px] text-slate-400 mb-1">صنعت</div>
             <div className="text-xs font-bold text-white truncate">{sig?.sector?.slice(0, 20) || '—'}</div>
           </div>
         </div>
       </div>
 
-      {/* Real/Legal Flow */}
-      <div className="glass p-5 rounded-xl">
-        <div className="flex items-center gap-2 mb-4">
-          <Users className="w-5 h-5 text-primary" />
-          <h3 className="font-bold text-white">جریان حقیقی و حقوقی</h3>
+      {/* Real/Legal */}
+      <div className="glass p-4 md:p-5 rounded-xl">
+        <div className="flex items-center gap-2 mb-3 md:mb-4">
+          <Users className="w-4 md:w-5 h-4 md:h-5 text-primary" />
+          <h3 className="text-sm md:text-base font-bold text-white">جریان حقیقی و حقوقی</h3>
         </div>
         {(rl.buyRealVol != null || rl.sellRealVol != null) ? (
           <>
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="bg-success/10 border border-success/30 rounded-xl p-3">
-                <div className="text-[10px] text-success/80 mb-1">خرید حقیقی (حجم)</div>
-                <div className="num text-lg font-bold text-success">{fmt(rl.buyRealVol)}</div>
-                <div className="text-[10px] text-slate-400 mt-1">{fmt(rl.buyReal)} معامله</div>
+            <div className="grid grid-cols-2 gap-2 md:gap-3 mb-3 md:mb-4">
+              <div className="bg-success/10 border border-success/30 rounded-xl p-2.5 md:p-3">
+                <div className="text-[10px] text-success/80 mb-1">خرید حقیقی</div>
+                <div className="num text-base md:text-lg font-bold text-success">{fmt(rl.buyRealVol || 0)}</div>
+                <div className="text-[9px] text-slate-400 mt-1">{fmt(rl.buyReal || 0)} معامله</div>
               </div>
-              <div className="bg-danger/10 border border-danger/30 rounded-xl p-3">
-                <div className="text-[10px] text-danger/80 mb-1">فروش حقیقی (حجم)</div>
-                <div className="num text-lg font-bold text-danger">{fmt(rl.sellRealVol)}</div>
-                <div className="text-[10px] text-slate-400 mt-1">{fmt(rl.sellReal)} معامله</div>
+              <div className="bg-danger/10 border border-danger/30 rounded-xl p-2.5 md:p-3">
+                <div className="text-[10px] text-danger/80 mb-1">فروش حقیقی</div>
+                <div className="num text-base md:text-lg font-bold text-danger">{fmt(rl.sellRealVol || 0)}</div>
+                <div className="text-[9px] text-slate-400 mt-1">{fmt(rl.sellReal || 0)} معامله</div>
               </div>
             </div>
 
@@ -389,48 +336,42 @@ export default function StockPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-3 mb-3">
+            <div className="grid grid-cols-2 gap-2 md:gap-3 mb-3">
               <div className="bg-bg/40 rounded-lg p-2.5">
                 <div className="text-[10px] text-slate-400">خرید حقوقی</div>
-                <div className="num text-sm font-bold text-white">{fmt(rl.buyLegalVol)}</div>
+                <div className="num text-xs md:text-sm font-bold text-white">{fmt(rl.buyLegalVol || 0)}</div>
               </div>
               <div className="bg-bg/40 rounded-lg p-2.5">
                 <div className="text-[10px] text-slate-400">فروش حقوقی</div>
-                <div className="num text-sm font-bold text-white">{fmt(rl.sellLegalVol)}</div>
+                <div className="num text-xs md:text-sm font-bold text-white">{fmt(rl.sellLegalVol || 0)}</div>
               </div>
             </div>
 
             {smartMoney != null && (
-              <div className={`flex items-center justify-between p-3 rounded-lg ${smartMoney > 0 ? 'bg-success/10 border border-success/30' : 'bg-danger/10 border border-danger/30'}`}>
+              <div className={`flex items-center justify-between p-2.5 md:p-3 rounded-lg ${smartMoney > 0 ? 'bg-success/10 border border-success/30' : 'bg-danger/10 border border-danger/30'}`}>
                 <span className="text-xs flex items-center gap-1.5 text-slate-300">
                   <Zap className={`w-3.5 h-3.5 ${smartMoney > 0 ? 'text-success' : 'text-danger'}`} /> پول هوشمند
                 </span>
-                <span className={`num text-base font-bold ${smartMoney > 0 ? 'text-success' : 'text-danger'}`}>
+                <span className={`num text-sm md:text-base font-bold ${smartMoney > 0 ? 'text-success' : 'text-danger'}`}>
                   {smartMoney > 0 ? '+' : ''}{smartMoney.toFixed(1)}٪
                 </span>
               </div>
             )}
           </>
         ) : (
-          <p className="text-sm text-slate-500">داده حقیقی/حقوقی برای این سهم در دسترس نیست</p>
+          <p className="text-sm text-slate-400">داده حقیقی/حقوقی برای این سهم در دسترس نیست</p>
         )}
       </div>
 
       {/* Comprehensive Analysis */}
-      <ComprehensiveAnalysis
-        symbol={symbol}
-        sig={sig}
-        ind={ind}
-        fund={fund}
-        chart={chartData}
-      />
+      <ComprehensiveAnalysis symbol={symbol} sig={sig} ind={ind} fund={fund} chart={chartData} />
 
-      {/* Stock-specific News */}
+      {/* Stock News */}
       {stockNews.length > 0 && (
-        <div className="glass p-5 rounded-xl">
-          <div className="flex items-center gap-2 mb-4">
-            <Info className="w-5 h-5 text-accent" />
-            <h3 className="font-bold text-white">اخبار مرتبط با {symbol}</h3>
+        <div className="glass p-4 md:p-5 rounded-xl">
+          <div className="flex items-center gap-2 mb-3 md:mb-4">
+            <Info className="w-4 md:w-5 h-4 md:h-5 text-accent" />
+            <h3 className="text-sm md:text-base font-bold text-white">اخبار مرتبط با {symbol}</h3>
           </div>
           <div className="space-y-2">
             {stockNews.map((n, i) => (
@@ -446,10 +387,10 @@ export default function StockPage() {
         </div>
       )}
 
-      {/* Single Disclaimer */}
-      <div className="flex items-start gap-3 p-4 rounded-xl bg-danger/8 border border-danger/25">
-        <AlertTriangle className="w-5 h-5 text-danger flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-danger/90">این تحلیل صرفاً آموزشی است و نه توصیه معاملاتی.</p>
+      {/* Disclaimer */}
+      <div className="flex items-start gap-3 p-3 md:p-4 rounded-xl bg-danger/8 border border-danger/25">
+        <AlertTriangle className="w-4 md:w-5 h-4 md:h-5 text-danger flex-shrink-0 mt-0.5" />
+        <p className="text-xs md:text-sm text-danger/90">این تحلیل صرفاً آموزشی است و نه توصیه معاملاتی.</p>
       </div>
     </div>
   );
