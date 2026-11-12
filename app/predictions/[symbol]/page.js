@@ -11,6 +11,7 @@ import {
 
 const StockChart = dynamic(() => import('@/components/StockChart'), { ssr: false });
 import TradeSetup from '@/components/TradeSetup';
+import ComprehensiveAnalysis from '@/components/ComprehensiveAnalysis';
 
 const SIGNAL = {
   BUY: { label: 'توجه بالا', color: 'success', bg: 'bg-success/10', border: 'border-success/30', icon: TrendingUp },
@@ -123,7 +124,7 @@ export default function StockPage() {
 
   const buyRealPct = rl.buyRealVol && rl.sellRealVol
     ? (rl.buyRealVol / (rl.buyRealVol + rl.sellRealVol) * 100) : null;
-  const smartMoney = rl.buyLegalVol && rl.sellLegalVol
+  const smartMoney = rl.buyLegalVol != null && rl.sellLegalVol != null
     ? ((rl.buyLegalVol - rl.sellLegalVol) / (rl.buyLegalVol + rl.sellLegalVol) * 100) : null;
 
   // Compute RTM & PA from chart
@@ -416,23 +417,13 @@ export default function StockPage() {
       </div>
 
       {/* Comprehensive Analysis */}
-      <div className="glass-strong p-6 rounded-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
-        <div className="relative">
-          <div className="flex items-center gap-2 mb-4">
-            <Sparkles className="w-5 h-5 text-accent" />
-            <h3 className="text-lg font-bold text-white">تحلیل جامع سهم</h3>
-          </div>
-          <div className="space-y-3">
-            {analysis.length > 0 ? analysis.map((p, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-                <p className="text-sm text-slate-300 leading-relaxed">{p}</p>
-              </div>
-            )) : <p className="text-sm text-slate-400">داده کافی برای تحلیل موجود نیست</p>}
-          </div>
-        </div>
-      </div>
+      <ComprehensiveAnalysis
+        symbol={symbol}
+        sig={sig}
+        ind={ind}
+        fund={fund}
+        chart={chartData}
+      />
 
       {/* Stock-specific News */}
       {stockNews.length > 0 && (
