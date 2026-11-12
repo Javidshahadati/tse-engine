@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Activity, AlertTriangle } from 'lucide-react';
+import { Activity, AlertTriangle, Sparkles } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -8,7 +8,7 @@ export default function Footer() {
         <div className="grid md:grid-cols-3 gap-8 mb-10">
           <div className="md:col-span-2">
             <div className="flex items-center gap-3 mb-4">
-              <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-primary via-primary2 to-accent flex items-center justify-center shadow-lg shadow-primary/20">
+              <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-primary via-primary2 to-accent flex items-center justify-center shadow-lg shadow-primary/30">
                 <Activity className="w-5 h-5 text-bg" strokeWidth={2.5} />
               </div>
               <div>
@@ -23,8 +23,7 @@ export default function Footer() {
 
           <div>
             <h4 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-              <span className="w-1 h-4 bg-primary rounded-full" />
-              دسترسی سریع
+              <span className="w-1 h-4 bg-primary rounded-full" /> دسترسی سریع
             </h4>
             <ul className="space-y-2.5 text-sm">
               <li><Link href="/" className="text-slate-400 hover:text-primary transition-colors">صفحه اصلی</Link></li>
@@ -42,20 +41,25 @@ export default function Footer() {
               <p className="text-danger font-bold text-sm mb-1">سلب مسئولیت</p>
               <p className="text-danger/80 text-xs leading-relaxed">
                 این تحلیل صرفاً آموزشی و پژوهشی است و به‌هیچ‌وجه توصیه معاملاتی، خرید یا فروش محسوب نمی‌شود.
-                تصمیم‌گیری نهایی و مسئولیت آن کاملاً بر عهده کاربر است.
+                تصمیم‌گیری نهایی و مسئولیت آن کاملاً برعهده کاربر است.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-border/40 text-center">
-          <div className="text-xs text-slate-500 flex items-center justify-center gap-2 flex-wrap">
-            <span className="num">© {new Date().getFullYear()}</span>
-            <span className="w-1 h-1 rounded-full bg-primary/50" />
-            <span className="font-semibold text-slate-400">TSE.Engine</span>
-            <span className="w-1 h-1 rounded-full bg-primary/50" />
-            <span>Crafted by <span className="text-primary font-semibold">Javid Shahadati</span></span>
+        <div className="mt-8 pt-6 border-t border-border/40 flex justify-center">
+          <div className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-gradient-to-l from-primary/10 via-accent/10 to-primary2/10 border border-primary/25">
+            <Sparkles className="w-3.5 h-3.5 text-primary" />
+            <span className="text-xs text-slate-400">Crafted with</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-primary/60" />
+            <span className="text-xs font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent">
+              Javid Shahadati
+            </span>
+            <Sparkles className="w-3.5 h-3.5 text-accent" />
           </div>
+        </div>
+        <div className="mt-4 text-center text-[10px] text-slate-600 num">
+          © {new Date().getFullYear()} — All Rights Reserved
         </div>
       </div>
     </footer>
