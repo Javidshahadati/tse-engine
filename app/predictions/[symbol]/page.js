@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 
 const StockChart = dynamic(() => import('@/components/StockChart'), { ssr: false });
+import TradeSetup from '@/components/TradeSetup';
 
 const SIGNAL = {
   BUY: { label: 'توجه بالا', color: 'success', bg: 'bg-success/10', border: 'border-success/30', icon: TrendingUp },
@@ -221,6 +222,14 @@ export default function StockPage() {
         </div>
       </div>
 
+      <TradeSetup
+        symbol={symbol}
+        close={lastBar.c}
+        atr={ind.atr}
+        atr_pct={ind.atr_pct}
+        prob={sig?.prob}
+      />
+
       {/* Chart */}
       <div className="glass-strong p-4 rounded-2xl">
         <div className="flex items-center gap-2 mb-3">
@@ -351,7 +360,7 @@ export default function StockPage() {
           <Users className="w-5 h-5 text-primary" />
           <h3 className="font-bold text-white">جریان حقیقی و حقوقی</h3>
         </div>
-        {rl.buyRealVol ? (
+        {(rl.buyRealVol != null || rl.sellRealVol != null) ? (
           <>
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="bg-success/10 border border-success/30 rounded-xl p-3">
