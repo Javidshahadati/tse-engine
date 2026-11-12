@@ -1,4 +1,4 @@
-"""Feature builder - Step 5.5: 99 features (87 + 12 cross-sectional)."""
+"""Feature builder - Step 8 (post-leak-fix): 103 features."""
 import json, gzip
 import pandas as pd
 import numpy as np
@@ -11,11 +11,10 @@ from features.cross_sectional import build_cross_sectional, FEATURE_NAMES as CS_
 
 DATA = Path('data'); OUT = Path('outputs'); OUT.mkdir(exist_ok=True)
 RTM_F = ['BOS_Bull','BOS_Bear','CHoCH_Bull','CHoCH_Bear','FVG_Bull','FVG_Bear']
-PER_STOCK_F = TECH_F + RTM_F + PA_F + STR_F
-ALL_F = PER_STOCK_F + CS_F
+ALL_F = TECH_F + RTM_F + PA_F + STR_F + CS_F
 
 print('=' * 55)
-print(f'TSE.Engine Builder - Step 5.5 ({len(ALL_F)} features)')
+print(f'TSE.Engine Builder - Step 8 ({len(ALL_F)} features)')
 print('=' * 55)
 
 print('\n[1/5] Loading...')
@@ -23,7 +22,7 @@ with gzip.open(DATA / 'all_history.json.gz', 'rb') as f:
     history = json.loads(f.read().decode('utf-8'))
 print(f'  {len(history)} stocks')
 
-print('\n[2/5] Building per-stock features...')
+print('\n[2/5] Building...')
 all_dfs, skipped, errors = [], 0, []
 for i, (sym, stock) in enumerate(history.items(), 1):
     try:
@@ -47,18 +46,14 @@ print(f'  Processed: {len(all_dfs)} | Skipped: {skipped} | Errors: {len(errors)}
 
 print('\n[3/5] Combining...')
 combined = pd.concat(all_dfs, ignore_index=True)
-before = len(combined)
-print(f'  {before:,} rows')
+before = len(combined); print(f'  {before:,} rows')
 
-print('\n[4/5] Warmup drop + cross-sectional features...')
+print('\n[4/5] Cleanup...')
 combined = combined.dropna(subset=['EMA200','Ichimoku_SenkouB']).reset_index(drop=True)
 print(f'  After warmup: {len(combined):,}')
-
-print('  Computing 12 cross-sectional features (this takes ~1-2 min)...')
+print('  Computing cross-sectional...')
 cs = build_cross_sectional(combined)
 combined = pd.concat([combined, cs], axis=1)
-print(f'  CS done')
-
 feat_cols = [c for c in combined.columns if c not in ['symbol','date','close']]
 nan_cnt = combined[feat_cols].isna().sum().sum()
 combined[feat_cols] = combined[feat_cols].replace([np.inf,-np.inf], np.nan).fillna(0)
@@ -70,7 +65,7 @@ size_mb = (OUT / 'features.parquet').stat().st_size / 1e6
 print(f'  {size_mb:.1f} MB')
 
 summary = {
-    'step': '5.5', 'stocks': len(all_dfs), 'skipped': skipped, 'errors': len(errors),
+    'step': '8', 'stocks': len(all_dfs), 'skipped': skipped, 'errors': len(errors),
     'rows': len(combined), 'features': len(ALL_F), 'feature_names': ALL_F,
     'size_mb': round(size_mb, 2),
     'date_min': int(combined['date'].min()), 'date_max': int(combined['date'].max()),
@@ -78,8 +73,6 @@ summary = {
 with open(OUT / 'summary.json','w',encoding='utf-8') as f:
     json.dump(summary, f, ensure_ascii=False, indent=2)
 
-print('\n' + '=' * 55)
-print(f'✅ DONE: {len(combined):,} rows, {len(ALL_F)} features, {size_mb:.1f} MB')
-print('=' * 55)
+print(f'\n✅ DONE: {len(combined):,} rows, {len(ALL_F)} features, {size_mb:.1f} MB')
 if errors:
     for e in errors[:3]: print(f'  {e["sym"]}: {e["err"]}')
