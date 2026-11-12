@@ -384,9 +384,6 @@ export default function StockPage() {
 
       {/* Comprehensive Analysis */}
       <ComprehensiveAnalysis symbol={symbol} sig={sig} ind={ind} fund={fund} chart={chartData} />
-      </div>
-        </div>
-      )}
-      </div>
+    </div>
   );
 }
