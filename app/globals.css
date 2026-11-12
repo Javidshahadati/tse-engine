@@ -181,3 +181,8 @@ p, span, label { letter-spacing: 0.005em; }
   .data-table th { font-size: 0.65rem; padding: 0.5rem; }
   .data-table td { padding: 0.5rem; }
 }
+
+/* Desktop zoom-in (subtle) */
+@media (min-width: 1024px) {
+  html { font-size: 17px; }
+}
