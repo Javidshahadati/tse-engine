@@ -1,4 +1,4 @@
-"""Builder - Step 14: 68 features (64 tech + 4 fundamental)."""
+"""Builder - Step 14.1: 68 features (64 tech + 4 fundamental) - FIXED dropna."""
 import json, gzip
 import pandas as pd
 import numpy as np
@@ -13,7 +13,7 @@ RTM_F = ['BOS_Bull','BOS_Bear','CHoCH_Bull','CHoCH_Bear','FVG_Bull','FVG_Bear']
 ALL_F = TECH_F + RTM_F + PA_F + FUND_F
 
 print('=' * 55)
-print(f'TSE.Engine Builder - Step 14 ({len(ALL_F)} features)')
+print(f'TSE.Engine Builder - Step 14.1 ({len(ALL_F)} features)')
 print('=' * 55)
 
 print('\n[1/5] Loading...')
@@ -50,7 +50,8 @@ combined = pd.concat(all_dfs, ignore_index=True)
 before = len(combined); print(f'  {before:,} rows')
 
 print('\n[4/5] Cleanup...')
-combined = combined.dropna(subset=['EMA200','Ichimoku_SenkouB']).reset_index(drop=True)
+# FIX: only EMA200 (no Ichimoku since structural removed)
+combined = combined.dropna(subset=['EMA200']).reset_index(drop=True)
 print(f'  After warmup: {len(combined):,}')
 feat_cols = [c for c in combined.columns if c not in ['symbol','date','close']]
 nan_cnt = combined[feat_cols].isna().sum().sum()
@@ -63,7 +64,7 @@ size_mb = (OUT / 'features.parquet').stat().st_size / 1e6
 print(f'  {size_mb:.1f} MB')
 
 summary = {
-    'step': '14', 'stocks': len(all_dfs), 'skipped': skipped, 'errors': len(errors),
+    'step': '14.1', 'stocks': len(all_dfs), 'skipped': skipped, 'errors': len(errors),
     'rows': len(combined), 'features': len(ALL_F), 'feature_names': ALL_F,
     'size_mb': round(size_mb, 2),
     'date_min': int(combined['date'].min()), 'date_max': int(combined['date'].max()),
