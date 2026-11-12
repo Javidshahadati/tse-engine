@@ -23,6 +23,8 @@ jobs:
         run: python -m features.builder
       - name: Train models
         run: python scripts/train.py
+      - name: Backtest
+        run: python scripts/backtest.py
       - name: Upload outputs
         uses: actions/upload-artifact@v4
         with:
