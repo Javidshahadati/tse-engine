@@ -21,10 +21,9 @@ function resample(data, timeframe) {
   return result;
 }
 
-export default function StockChart({ data, height = 400 }) {
+export default function StockChart({ data, height = 440 }) {
   const containerRef = useRef(null);
   const chartRef = useRef(null);
-  const seriesRef = useRef(null);
   const [tf, setTf] = useState('1D');
 
   const displayData = resample(data || [], tf);
@@ -41,10 +40,10 @@ export default function StockChart({ data, height = 400 }) {
         height,
         layout: { background: { type: ColorType.Solid, color: 'transparent' },
                   textColor: '#94a3b8', fontFamily: 'Vazirmatn, sans-serif' },
-        grid: { vertLines: { color: 'rgba(30, 42, 68, 0.3)' },
-                horzLines: { color: 'rgba(30, 42, 68, 0.3)' } },
+        grid: { vertLines: { color: 'rgba(30, 42, 68, 0.2)' },
+                horzLines: { color: 'rgba(30, 42, 68, 0.2)' } },
         crosshair: { mode: CrosshairMode.Normal },
-        rightPriceScale: { borderColor: '#1e2a44' },
+        rightPriceScale: { borderColor: '#1e2a44', scaleMargins: { top: 0.1, bottom: 0.3 } },
         timeScale: { borderColor: '#1e2a44', timeVisible: true },
       });
 
@@ -52,6 +51,15 @@ export default function StockChart({ data, height = 400 }) {
         upColor: '#10b981', downColor: '#f43f5e',
         borderUpColor: '#10b981', borderDownColor: '#f43f5e',
         wickUpColor: '#10b981', wickDownColor: '#f43f5e',
+      });
+
+      const volumeSeries = chart.addHistogramSeries({
+        priceFormat: { type: 'volume' },
+        priceScaleId: 'volume',
+      });
+
+      chart.priceScale('volume').applyOptions({
+        scaleMargins: { top: 0.75, bottom: 0 },
       });
 
       const toTime = (t) => {
@@ -63,9 +71,14 @@ export default function StockChart({ data, height = 400 }) {
         time: toTime(r.t), open: r.o, high: r.h, low: r.l, close: r.c,
       })));
 
+      volumeSeries.setData(displayData.map(r => ({
+        time: toTime(r.t),
+        value: r.v || 0,
+        color: r.c >= r.o ? 'rgba(16, 185, 129, 0.5)' : 'rgba(244, 63, 94, 0.5)',
+      })));
+
       chart.timeScale().fitContent();
       chartRef.current = chart;
-      seriesRef.current = candleSeries;
 
       const ro = new ResizeObserver(() => {
         if (containerRef.current) chart.applyOptions({ width: containerRef.current.clientWidth });
