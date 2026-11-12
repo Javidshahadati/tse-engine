@@ -98,6 +98,34 @@ const INDICATORS = {
     tips: ['مثل استوکاستیک ولی مقیاس منفی', 'بهترین عملکرد در بازارهای رِنج', 'با RSI تأیید سیگنال'],
     use: 'برای شناسایی سریع اشباع خرید/فروش در کوتاه‌مدت.',
   },
+  rtm: {
+    name: 'RTM', full: 'تحلیل ساختار بازار',
+    category: 'ساختار',
+    intro: 'تحلیل ساختار بازار (Real-Time Market structure) به شناسایی نقاط تغییر ساختار (BOS)، تغییر شخصیت (CHoCH) و شکاف‌های ارزش منصفانه (FVG) می‌پردازد.',
+    how: 'BOS (Break of Structure) شکست ساختار قبلی را نشان می‌دهد. CHoCH (Change of Character) تغییر روند. FVG (Fair Value Gap) شکاف بین کندل‌ها که ممکن است پر شود.',
+    formula: 'BOS صعودی: High جدید > High قبلی\nBOS نزولی: Low جدید < Low قبلی',
+    tips: ['BOS صعودی = ادامه روند صعودی', 'CHoCH = تغییر روند احتمالی', 'FVG = منطقه پر شدن قیمت'],
+    use: 'برای تشخیص ساختار قیمت و نقاط تغییر روند.',
+    conditions: [
+      { if: 'BOS صعودی تایید شود', then: 'احتمال ادامه روند صعودی' },
+      { if: 'CHoCH نزولی رخ دهد', then: 'احتمال تغییر روند از صعودی به نزولی' },
+      { if: 'FVG پر شود', then: 'احتمال ادامه حرکت در جهت اصلی' },
+    ],
+  },
+  'price-action': {
+    name: 'Price Action', full: 'کنش قیمت',
+    category: 'ساختار',
+    intro: 'تحلیل کنش قیمت بر اساس الگوهای کندلی و رفتار مستقیم قیمت بدون استفاده از اندیکاتورهای پیچیده انجام می‌شود.',
+    how: 'الگوهای مهم شامل Doji (تعادل)، Hammer (بازگشت صعودی)، Shooting Star (بازگشت نزولی)، Engulfing (تسلط یکی از طرفین) است. الگوهای کندلی در سطوح کلیدی معتبرترند.',
+    formula: 'Doji: |Close - Open| < 10٪ دامنه\nHammer: سایه پایین > ۲ برابر بدنه',
+    tips: ['الگوها در سطوح کلیدی معتبرترند', 'ترکیب با حجم = تایید بیشتر', 'یک الگوی تنها کافی نیست'],
+    use: 'برای تشخیص نقاط بازگشت یا ادامه روند بر اساس رفتار قیمت.',
+    conditions: [
+      { if: 'Hammer در سطح حمایت', then: 'احتمال بازگشت صعودی' },
+      { if: 'Shooting Star در مقاومت', then: 'احتمال بازگشت نزولی' },
+      { if: 'Doji در روند قوی', then: 'احتمال توقف یا تغییر روند' },
+    ],
+  },
   obv: {
     name: 'OBV', full: 'حجم متعادل‌شده',
     category: 'حجم',
@@ -328,6 +356,29 @@ export default function IndicatorPage() {
         </div>
       </div>
 
+      {/* Conditions */}
+      {config.conditions && config.conditions.length > 0 && (
+        <div className="glass p-4 md:p-6 rounded-2xl">
+          <div className="flex items-center gap-2 mb-3 md:mb-4">
+            <Lightbulb className="w-5 h-5 text-warning" />
+            <h3 className="text-sm md:text-base font-bold text-white">اگر شرایط زیر رخ دهد...</h3>
+          </div>
+          <div className="space-y-2">
+            {config.conditions.map((c, i) => (
+              <div key={i} className="flex items-start gap-2 p-2.5 rounded-lg bg-bg/40 border border-border/40">
+                <div className="text-[10px] px-1.5 py-0.5 rounded bg-primary/15 text-primary font-bold flex-shrink-0 mt-0.5">
+                  اگر
+                </div>
+                <div className="flex-1">
+                  <div className="text-xs md:text-sm text-white font-medium mb-0.5">{c.if}</div>
+                  <div className="text-[11px] md:text-xs text-slate-400">← {c.then}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* About / How */}
       <div className="grid md:grid-cols-2 gap-3 md:gap-4">
         <div className="glass p-4 md:p-6 rounded-2xl">
@@ -346,20 +397,6 @@ export default function IndicatorPage() {
           <p className="text-xs md:text-sm text-slate-300 leading-relaxed">{config.how}</p>
         </div>
       </div>
-
-      {/* Formula */}
-      <div className="glass-strong p-4 md:p-6 rounded-2xl">
-        <div className="flex items-center gap-2 mb-3 md:mb-4">
-          <Calculator className="w-5 h-5 text-accent" />
-          <h3 className="text-sm md:text-base font-bold text-white">فرمول محاسبه</h3>
-        </div>
-        <div className="bg-bg/60 rounded-xl p-3 md:p-4 border border-border/40 overflow-x-auto">
-          <pre className="text-xs md:text-sm text-primary font-mono leading-relaxed whitespace-pre-wrap" dir="ltr">
-            {config.formula}
-          </pre>
-        </div>
-      </div>
-
       {/* Tips */}
       <div className="glass p-4 md:p-6 rounded-2xl">
         <div className="flex items-center gap-2 mb-3 md:mb-4">
@@ -381,12 +418,6 @@ export default function IndicatorPage() {
           <p className="text-xs md:text-sm text-slate-200">{config.use}</p>
         </div>
       </div>
-
-      {/* Disclaimer */}
-      <div className="flex items-start gap-3 p-3 md:p-4 rounded-xl bg-danger/8 border border-danger/25">
-        <AlertTriangle className="w-4 md:w-5 h-4 md:h-5 text-danger flex-shrink-0 mt-0.5" />
-        <p className="text-xs md:text-sm text-danger/90">این تحلیل صرفاً آموزشی است و نه توصیه معاملاتی.</p>
       </div>
-    </div>
   );
 }
