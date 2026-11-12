@@ -1,4 +1,4 @@
-"""Backtest vs Benchmark - Step 8.8 (alpha test)."""
+"""Regime-Adaptive Backtest - Step 9."""
 import json
 import numpy as np
 import pandas as pd
@@ -28,20 +28,18 @@ SAFE_FEATURES = [
 ]
 
 THRESHOLD_LABEL = 0.017
-THRESHOLD_BUY = 0.70
 COMMISSION = 0.017
 SLIPPAGE_PER_SIDE = 0.015
 MAX_RETURN_PER_TRADE = 0.25
-MAX_POSITIONS = 5
 INITIAL_CAPITAL = 1_000_000
 HOLD_DAYS = 5
 TDPY = 252
 
 print('=' * 65)
-print('BACKTEST vs BENCHMARK - Step 8.8')
+print('REGIME-ADAPTIVE BACKTEST - Step 9')
 print('=' * 65)
 
-print('\n[1/3] Loading...')
+print('\n[1/4] Loading + computing market breadth...')
 df = pd.read_parquet(OUT / 'features.parquet')
 df = df.sort_values(['symbol','date']).reset_index(drop=True)
 df['future_ret_5d'] = df.groupby('symbol')['close'].shift(-5) / df['close'] - 1
@@ -49,10 +47,44 @@ df['label'] = (df['future_ret_5d'] > THRESHOLD_LABEL).astype(int)
 df = df.dropna(subset=['future_ret_5d']).reset_index(drop=True)
 feat_cols = [c for c in SAFE_FEATURES if c in df.columns]
 pos_rate = df['label'].mean()
-print(f'  Rows: {len(df):,}')
+
+# Compute market breadth per date (from features we already have)
+df['above20'] = (df['close'] > df.groupby('symbol')['close'].transform(lambda x: x.rolling(20).mean())).astype(float)
+breadth = df.groupby('date')['above20'].mean().rename('breadth20')
+
+# Market 5d return
+market_ret = df.groupby('date')['close'].apply(lambda x: x.pct_change().mean()).rename('mkt_ret')
+mkt_5d = market_ret.rolling(5).sum().rename('mkt_ret_5d')
+
+regime_df = pd.concat([breadth, mkt_5d], axis=1).reset_index()
+regime_df.columns = ['date', 'breadth20', 'mkt_ret_5d']
+
+def classify_regime(b, m):
+    """0=bear, 1=mixed, 2=bull"""
+    if b > 0.65 and m > 0.02:
+        return 2
+    elif b < 0.35:
+        return 0
+    else:
+        return 1
+
+regime_df['regime'] = regime_df.apply(lambda r: classify_regime(r['breadth20'], r['mkt_ret_5d']), axis=1)
+regime_map = dict(zip(regime_df['date'], regime_df['regime']))
+print(f'  Breadth computed for {len(regime_df)} dates')
+print(f'  Regime distribution: {regime_df["regime"].value_counts().to_dict()}')
 
 
-def run_backtest(test_df, probs, fold_id):
+def get_regime_params(regime):
+    """Adaptive parameters per regime."""
+    if regime == 2:   # bull - go wide, track market
+        return {'max_pos': 20, 'threshold': 0.55, 'name': 'BULL'}
+    elif regime == 0: # bear - concentrate, defensive
+        return {'max_pos': 5, 'threshold': 0.72, 'name': 'BEAR'}
+    else:             # mixed - balanced
+        return {'max_pos': 10, 'threshold': 0.65, 'name': 'MIXED'}
+
+
+def run_backtest_adaptive(test_df, probs, fold_id):
     test_df = test_df.copy()
     test_df['prob'] = probs
     test_df['fut_ret_capped'] = test_df['future_ret_5d'].clip(upper=MAX_RETURN_PER_TRADE)
@@ -64,26 +96,42 @@ def run_backtest(test_df, probs, fold_id):
 
     cash = float(INITIAL_CAPITAL)
     positions = []; trades = []; equity = []
-    per_pos = INITIAL_CAPITAL / MAX_POSITIONS
+    regime_log = {'BULL': 0, 'MIXED': 0, 'BEAR': 0}
+    regime_trades = {'BULL': 0, 'MIXED': 0, 'BEAR': 0}
+    regime_returns = {'BULL': [], 'MIXED': [], 'BEAR': []}
 
     for i, d in enumerate(unique_dates):
+        regime = regime_map.get(int(d), 1)
+        params = get_regime_params(regime)
+        regime_log[params['name']] += 1
+        max_pos = params['max_pos']
+        thresh = params['threshold']
+        per_pos = INITIAL_CAPITAL / max_pos
+
+        # Mark to market
         for pos in positions:
             cp = price_lookup.get((pos['sym'], d))
             if cp is not None and pos['entry_price'] > 0:
                 pos['mv'] = pos['size'] * cp / pos['entry_price']
+
+        # Close expired
         still = []
         for pos in positions:
             if i >= pos['exit_idx']:
                 net = pos['fut_ret'] - COMMISSION - 2*SLIPPAGE_PER_SIDE
                 proceeds = pos['size'] * (1 + net); cash += proceeds
-                trades.append({'net': net, 'gross': pos['fut_ret']})
+                trades.append({'net': net, 'gross': pos['fut_ret'], 'regime': pos['regime']})
+                regime_trades[pos['regime']] += 1
+                regime_returns[pos['regime']].append(net)
             else:
                 still.append(pos)
         positions = still
-        available = MAX_POSITIONS - len(positions)
+
+        # Open
+        available = max_pos - len(positions)
         if available > 0 and d in grouped.groups:
             day = grouped.get_group(d)
-            sigs = day[day['prob'] > THRESHOLD_BUY]
+            sigs = day[day['prob'] > thresh]
             held = {p['sym'] for p in positions}
             new = sigs[~sigs['symbol'].isin(held)]
             for _, r in new.head(available).iterrows():
@@ -92,9 +140,11 @@ def run_backtest(test_df, probs, fold_id):
                 positions.append({
                     'sym': r['symbol'], 'entry_price': float(r['close']),
                     'entry_idx': i, 'exit_idx': i + HOLD_DAYS,
-                    'size': size, 'fut_ret': float(r['fut_ret_capped']), 'mv': size,
+                    'size': size, 'fut_ret': float(r['fut_ret_capped']),
+                    'mv': size, 'regime': params['name'],
                 })
-        equity.append({'date': int(d), 'equity': cash + sum(p['mv'] for p in positions)})
+
+        equity.append({'date': int(d), 'equity': cash + sum(p['mv'] for p in positions), 'regime': params['name']})
 
     eq = pd.DataFrame(equity)
     eq['ret'] = eq['equity'].pct_change().fillna(0)
@@ -114,64 +164,40 @@ def run_backtest(test_df, probs, fold_id):
         al = float(ls.mean()) if len(ls)>0 else 0
         rr = abs(aw/al) if al != 0 else 0
     else: wr = ar = rr = 0
+
+    per_regime = {}
+    for name in ['BULL','MIXED','BEAR']:
+        rets = regime_returns[name]
+        per_regime[name] = {
+            'days': regime_log[name],
+            'trades': regime_trades[name],
+            'avg_return': round(float(np.mean(rets)),4) if rets else 0,
+            'winrate': round(float(np.mean([r>0 for r in rets])),4) if rets else 0,
+        }
+
     return {
         'n_trades': len(tr), 'total_return': round(total_ret,4),
         'cagr': round(cagr,4), 'sharpe': round(sharpe,2),
         'max_dd': round(max_dd,4), 'winrate': round(wr,4),
         'avg_ret_net': round(ar,4), 'rr': round(rr,2),
+        'per_regime': per_regime,
     }
 
 
 def compute_benchmark(test_df):
-    """Equal-weight market: buy every stock at first day, hold till end."""
     test_df = test_df.sort_values(['symbol','date'])
     first_close = test_df.groupby('symbol').first()['close']
     last_close = test_df.groupby('symbol').last()['close']
     rets = (last_close / first_close - 1).dropna()
     ew_return = float(rets.mean())
-    ew_median = float(rets.median())
-    pct_positive = float((rets > 0).mean())
-
-    # Benchmark equity curve: simulate buy-and-hold all stocks, equal weight
     unique_dates = sorted(test_df['date'].unique())
     n_days = len(unique_dates)
-    first_day = unique_dates[0]
-
-    # Get first-day close per symbol
-    day0 = test_df[test_df['date'] == first_day].set_index('symbol')['close']
-
-    # For each date, compute average normalized price
-    equity = []
-    for d in unique_dates:
-        day_d = test_df[test_df['date'] == d].set_index('symbol')['close']
-        common = day0.index.intersection(day_d.index)
-        if len(common) == 0: continue
-        norm = (day_d[common] / day0[common]).mean()
-        equity.append({'date': int(d), 'equity': norm * INITIAL_CAPITAL})
-
-    eq = pd.DataFrame(equity)
-    if len(eq) < 2:
-        return {'ew_return': 0, 'ew_median': 0, 'pct_positive': 0,
-                'bench_cagr': 0, 'bench_sharpe': 0, 'bench_max_dd': 0}
-    eq['ret'] = eq['equity'].pct_change().fillna(0)
     years = n_days / TDPY
     bench_cagr = float((1+ew_return)**(1/years)-1) if years > 0 else 0
-    dm = eq['ret'].mean(); ds = eq['ret'].std()
-    bench_sharpe = float(dm/ds*np.sqrt(TDPY)) if ds > 0 else 0
-    eq['peak'] = eq['equity'].cummax()
-    bench_dd = float((eq['equity']/eq['peak']-1).min())
-
-    return {
-        'ew_return': round(ew_return,4),
-        'ew_median': round(ew_median,4),
-        'pct_positive': round(pct_positive,4),
-        'bench_cagr': round(bench_cagr,4),
-        'bench_sharpe': round(bench_sharpe,2),
-        'bench_max_dd': round(bench_dd,4),
-    }
+    return {'ew_return': round(ew_return,4), 'bench_cagr': round(bench_cagr,4)}
 
 
-print('\n[2/3] Walk-forward + benchmark...')
+print('\n[2/4] Walk-forward with adaptive strategy...')
 udates = sorted(df['date'].unique()); n = len(udates)
 bounds = [udates[int(n*p)] for p in [0.5, 0.625, 0.75, 0.875]]
 tests = [(bounds[0],bounds[1]),(bounds[1],bounds[2]),(bounds[2],bounds[3]),(bounds[3],udates[-1]+1)]
@@ -195,49 +221,48 @@ for k, (s, e) in enumerate(tests, 1):
     prob = m.predict_proba(te[feat_cols].values)[:, 1]
     auc = roc_auc_score(te['label'].values, prob)
 
-    bt = run_backtest(te, prob, k)
+    bt = run_backtest_adaptive(te, prob, k)
     bench = compute_benchmark(te)
-    alpha_cagr = round(bt['cagr'] - bench['bench_cagr'], 4)
-    alpha_sharpe = round(bt['sharpe'] - bench['bench_sharpe'], 2)
-    alpha_return = round(bt['total_return'] - bench['ew_return'], 4)
+    alpha = round(bt['cagr'] - bench['bench_cagr'], 4)
+    alpha_ret = round(bt['total_return'] - bench['ew_return'], 4)
 
     result = {**bt, **bench, 'fold': k, 'auc': round(float(auc),4),
-              'alpha_cagr': alpha_cagr, 'alpha_sharpe': alpha_sharpe,
-              'alpha_return': alpha_return}
+              'alpha_cagr': alpha, 'alpha_return': alpha_ret}
     all_results.append(result)
 
-    print(f'    Model: CAGR={bt["cagr"]:.1%} Sharpe={bt["sharpe"]:.2f} WR={bt["winrate"]:.1%}')
-    print(f'    Bench: CAGR={bench["bench_cagr"]:.1%} Sharpe={bench["bench_sharpe"]:.2f} positive={bench["pct_positive"]:.0%}')
-    print(f'    ALPHA: CAGR={alpha_cagr:+.1%} Sharpe={alpha_sharpe:+.2f} Return={alpha_return:+.1%}')
+    print(f'    Adaptive: CAGR={bt["cagr"]:.1%} Sharpe={bt["sharpe"]:.2f} WR={bt["winrate"]:.1%} trades={bt["n_trades"]}')
+    print(f'    Bench:    CAGR={bench["bench_cagr"]:.1%}')
+    print(f'    Alpha:    {alpha:+.1%}  | Return alpha: {alpha_ret:+.1%}')
+    print(f'    Regime days: {bt["per_regime"]}')
 
-print('\n[3/3] Saving...')
-# Overall verdict based on average alpha
+print('\n[3/4] Computing overall...')
 avg_alpha_cagr = round(float(np.mean([r['alpha_cagr'] for r in all_results])),4)
-avg_alpha_sharpe = round(float(np.mean([r['alpha_sharpe'] for r in all_results])),2)
+avg_alpha_ret = round(float(np.mean([r['alpha_return'] for r in all_results])),4)
+avg_sharpe = round(float(np.mean([r['sharpe'] for r in all_results])),2)
 
-if avg_alpha_cagr > 0.20 and avg_alpha_sharpe > 0.5:
-    verdict = 'STRONG_ALPHA'
-elif avg_alpha_cagr > 0.05 and avg_alpha_sharpe > 0:
-    verdict = 'MODERATE_ALPHA'
-elif avg_alpha_cagr > -0.05:
-    verdict = 'BETA_ONLY'
+if avg_alpha_ret > 0.03:
+    verdict = 'ADAPTIVE_BEATS_BENCH'
+elif avg_alpha_ret > -0.03:
+    verdict = 'NEUTRAL'
 else:
-    verdict = 'UNDERPERFORMS'
+    verdict = 'BENCH_STILL_WINS'
 
 final = {
-    'diagnostic': 'benchmark_comparison',
+    'diagnostic': 'regime_adaptive',
     'avg_alpha_cagr': avg_alpha_cagr,
-    'avg_alpha_sharpe': avg_alpha_sharpe,
+    'avg_alpha_return': avg_alpha_ret,
+    'avg_sharpe': avg_sharpe,
     'verdict': verdict,
     'folds': all_results,
 }
 with open(OUT / 'backtest_diag.json','w',encoding='utf-8') as f:
     json.dump(final, f, ensure_ascii=False, indent=2)
 
-print('\n' + '=' * 65)
+print('\n[4/4] Summary:')
+print('=' * 65)
 for r in all_results:
-    print(f"  Fold {r['fold']}: Model_CAGR={r['cagr']:>7.1%} | Bench={r['bench_cagr']:>7.1%} | ALPHA={r['alpha_cagr']:>+7.1%}")
-print(f"  Avg Alpha CAGR: {avg_alpha_cagr:+.1%}")
-print(f"  Avg Alpha Sharpe: {avg_alpha_sharpe:+.2f}")
+    print(f"  Fold {r['fold']}: ADAPT_CAGR={r['cagr']:>7.1%} BENCH={r['bench_cagr']:>7.1%} ALPHA={r['alpha_return']:>+7.1%}")
+print(f"  Avg Alpha Return: {avg_alpha_ret:+.1%}")
+print(f"  Avg Sharpe: {avg_sharpe:.2f}")
 print(f"  VERDICT: {verdict}")
 print('=' * 65)
