@@ -1,8 +1,9 @@
-name: Build Features
+name: Build & Train
 on:
   push:
     paths:
       - 'features/**'
+      - 'scripts/**'
       - 'requirements.txt'
       - '.github/workflows/build_features.yml'
   workflow_dispatch:
@@ -10,7 +11,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -18,11 +19,15 @@ jobs:
           python-version: '3.11'
       - name: Install deps
         run: pip install -r requirements.txt
-      - name: Run builder
+      - name: Build features
         run: python -m features.builder
-      - name: Upload artifact
+      - name: Train models
+        run: python scripts/train.py
+      - name: Upload outputs
         uses: actions/upload-artifact@v4
         with:
-          name: features-output
-          path: outputs/
+          name: outputs
+          path: |
+            outputs/
+            models/
           retention-days: 7
