@@ -1,4 +1,4 @@
-"""Backtest with REALISTIC assumptions - Step 8.7."""
+"""Backtest vs Benchmark - Step 8.8 (alpha test)."""
 import json
 import numpy as np
 import pandas as pd
@@ -27,23 +27,18 @@ SAFE_FEATURES = [
     'Consolidation','ConsecUp_3','ConsecDown_3',
 ]
 
-# ─── REALISTIC parameters ───
 THRESHOLD_LABEL = 0.017
-THRESHOLD_BUY = 0.70             # بالا بردن آستانه (از 0.60)
-COMMISSION = 0.017               # کارمزد رفت و برگشت
-SLIPPAGE_PER_SIDE = 0.015        # ۱.۵٪ هر طرف اسلیپیج
-MAX_RETURN_PER_TRADE = 0.25      # سقف ۲۵٪ (۴-۵ روز limit up)
-MAX_POSITIONS = 5                # کاهش از ۱۰ به ۵ (واقعی‌تر)
+THRESHOLD_BUY = 0.70
+COMMISSION = 0.017
+SLIPPAGE_PER_SIDE = 0.015
+MAX_RETURN_PER_TRADE = 0.25
+MAX_POSITIONS = 5
 INITIAL_CAPITAL = 1_000_000
 HOLD_DAYS = 5
 TDPY = 252
 
 print('=' * 65)
-print('REALISTIC BACKTEST - Step 8.7')
-print(f'  THRESHOLD_BUY: {THRESHOLD_BUY} (was 0.60)')
-print(f'  SLIPPAGE: {SLIPPAGE_PER_SIDE*2:.1%} round-trip')
-print(f'  MAX_RETURN: {MAX_RETURN_PER_TRADE:.0%} cap')
-print(f'  MAX_POSITIONS: {MAX_POSITIONS} (was 10)')
+print('BACKTEST vs BENCHMARK - Step 8.8')
 print('=' * 65)
 
 print('\n[1/3] Loading...')
@@ -54,25 +49,21 @@ df['label'] = (df['future_ret_5d'] > THRESHOLD_LABEL).astype(int)
 df = df.dropna(subset=['future_ret_5d']).reset_index(drop=True)
 feat_cols = [c for c in SAFE_FEATURES if c in df.columns]
 pos_rate = df['label'].mean()
-print(f'  Rows: {len(df):,} | Features: {len(feat_cols)}')
+print(f'  Rows: {len(df):,}')
 
 
 def run_backtest(test_df, probs, fold_id):
     test_df = test_df.copy()
     test_df['prob'] = probs
-    test_df = test_df.sort_values(['date','prob'], ascending=[True,False]).reset_index(drop=True)
-
-    # ─── Apply cap on future_ret ───
     test_df['fut_ret_capped'] = test_df['future_ret_5d'].clip(upper=MAX_RETURN_PER_TRADE)
+    test_df = test_df.sort_values(['date','prob'], ascending=[True,False]).reset_index(drop=True)
 
     unique_dates = sorted(test_df['date'].unique())
     price_lookup = test_df.set_index(['symbol','date'])['close'].to_dict()
     grouped = test_df.groupby('date')
 
     cash = float(INITIAL_CAPITAL)
-    positions = []
-    trades = []
-    equity = []
+    positions = []; trades = []; equity = []
     per_pos = INITIAL_CAPITAL / MAX_POSITIONS
 
     for i, d in enumerate(unique_dates):
@@ -80,24 +71,15 @@ def run_backtest(test_df, probs, fold_id):
             cp = price_lookup.get((pos['sym'], d))
             if cp is not None and pos['entry_price'] > 0:
                 pos['mv'] = pos['size'] * cp / pos['entry_price']
-
         still = []
         for pos in positions:
             if i >= pos['exit_idx']:
-                # ─── Realistic net return ───
-                gross = pos['fut_ret']
-                slippage = 2 * SLIPPAGE_PER_SIDE
-                net = gross - COMMISSION - slippage
-                proceeds = pos['size'] * (1 + net)
-                cash += proceeds
-                trades.append({
-                    'fold': fold_id, 'gross': gross, 'net': net,
-                    'pnl': proceeds - pos['size'],
-                })
+                net = pos['fut_ret'] - COMMISSION - 2*SLIPPAGE_PER_SIDE
+                proceeds = pos['size'] * (1 + net); cash += proceeds
+                trades.append({'net': net, 'gross': pos['fut_ret']})
             else:
                 still.append(pos)
         positions = still
-
         available = MAX_POSITIONS - len(positions)
         if available > 0 and d in grouped.groups:
             day = grouped.get_group(d)
@@ -110,12 +92,9 @@ def run_backtest(test_df, probs, fold_id):
                 positions.append({
                     'sym': r['symbol'], 'entry_price': float(r['close']),
                     'entry_idx': i, 'exit_idx': i + HOLD_DAYS,
-                    'size': size, 'fut_ret': float(r['fut_ret_capped']),
-                    'mv': size,
+                    'size': size, 'fut_ret': float(r['fut_ret_capped']), 'mv': size,
                 })
-
-        pv = cash + sum(p['mv'] for p in positions)
-        equity.append({'date': int(d), 'equity': pv})
+        equity.append({'date': int(d), 'equity': cash + sum(p['mv'] for p in positions)})
 
     eq = pd.DataFrame(equity)
     eq['ret'] = eq['equity'].pct_change().fillna(0)
@@ -123,40 +102,76 @@ def run_backtest(test_df, probs, fold_id):
     n_days = len(eq); years = n_days / TDPY
     cagr = float((1+total_ret)**(1/years)-1) if years > 0 else 0
     eq['peak'] = eq['equity'].cummax()
-    eq['dd'] = eq['equity'] / eq['peak'] - 1
-    max_dd = float(eq['dd'].min())
+    max_dd = float((eq['equity']/eq['peak']-1).min())
     dm = eq['ret'].mean(); ds = eq['ret'].std()
     sharpe = float(dm/ds*np.sqrt(TDPY)) if ds > 0 else 0
-
     tr = pd.DataFrame(trades)
     if len(tr) > 0:
-        wr = float((tr['net'] > 0).mean())
+        wr = float((tr['net']>0).mean())
         ar = float(tr['net'].mean())
         w = tr.loc[tr['net']>0, 'net']; ls = tr.loc[tr['net']<=0, 'net']
-        aw = float(w.mean()) if len(w) > 0 else 0
-        al = float(ls.mean()) if len(ls) > 0 else 0
+        aw = float(w.mean()) if len(w)>0 else 0
+        al = float(ls.mean()) if len(ls)>0 else 0
         rr = abs(aw/al) if al != 0 else 0
-        gross_avg = float(tr['gross'].mean())
-    else:
-        wr = ar = rr = gross_avg = 0
-
+    else: wr = ar = rr = 0
     return {
-        'n_days': n_days, 'n_trades': len(tr),
-        'total_return': round(total_ret, 4),
-        'cagr': round(cagr, 4),
-        'sharpe': round(sharpe, 2),
-        'max_dd': round(max_dd, 4),
-        'winrate': round(wr, 4),
-        'avg_ret_net': round(ar, 4),
-        'avg_ret_gross': round(gross_avg, 4),
-        'avg_win': round(aw, 4),
-        'avg_loss': round(al, 4),
-        'rr': round(rr, 2),
-        'final_equity': round(float(eq['equity'].iloc[-1]), 2),
+        'n_trades': len(tr), 'total_return': round(total_ret,4),
+        'cagr': round(cagr,4), 'sharpe': round(sharpe,2),
+        'max_dd': round(max_dd,4), 'winrate': round(wr,4),
+        'avg_ret_net': round(ar,4), 'rr': round(rr,2),
     }
 
 
-print('\n[2/3] Walk-forward per-fold...')
+def compute_benchmark(test_df):
+    """Equal-weight market: buy every stock at first day, hold till end."""
+    test_df = test_df.sort_values(['symbol','date'])
+    first_close = test_df.groupby('symbol').first()['close']
+    last_close = test_df.groupby('symbol').last()['close']
+    rets = (last_close / first_close - 1).dropna()
+    ew_return = float(rets.mean())
+    ew_median = float(rets.median())
+    pct_positive = float((rets > 0).mean())
+
+    # Benchmark equity curve: simulate buy-and-hold all stocks, equal weight
+    unique_dates = sorted(test_df['date'].unique())
+    n_days = len(unique_dates)
+    first_day = unique_dates[0]
+
+    # Get first-day close per symbol
+    day0 = test_df[test_df['date'] == first_day].set_index('symbol')['close']
+
+    # For each date, compute average normalized price
+    equity = []
+    for d in unique_dates:
+        day_d = test_df[test_df['date'] == d].set_index('symbol')['close']
+        common = day0.index.intersection(day_d.index)
+        if len(common) == 0: continue
+        norm = (day_d[common] / day0[common]).mean()
+        equity.append({'date': int(d), 'equity': norm * INITIAL_CAPITAL})
+
+    eq = pd.DataFrame(equity)
+    if len(eq) < 2:
+        return {'ew_return': 0, 'ew_median': 0, 'pct_positive': 0,
+                'bench_cagr': 0, 'bench_sharpe': 0, 'bench_max_dd': 0}
+    eq['ret'] = eq['equity'].pct_change().fillna(0)
+    years = n_days / TDPY
+    bench_cagr = float((1+ew_return)**(1/years)-1) if years > 0 else 0
+    dm = eq['ret'].mean(); ds = eq['ret'].std()
+    bench_sharpe = float(dm/ds*np.sqrt(TDPY)) if ds > 0 else 0
+    eq['peak'] = eq['equity'].cummax()
+    bench_dd = float((eq['equity']/eq['peak']-1).min())
+
+    return {
+        'ew_return': round(ew_return,4),
+        'ew_median': round(ew_median,4),
+        'pct_positive': round(pct_positive,4),
+        'bench_cagr': round(bench_cagr,4),
+        'bench_sharpe': round(bench_sharpe,2),
+        'bench_max_dd': round(bench_dd,4),
+    }
+
+
+print('\n[2/3] Walk-forward + benchmark...')
 udates = sorted(df['date'].unique()); n = len(udates)
 bounds = [udates[int(n*p)] for p in [0.5, 0.625, 0.75, 0.875]]
 tests = [(bounds[0],bounds[1]),(bounds[1],bounds[2]),(bounds[2],bounds[3]),(bounds[3],udates[-1]+1)]
@@ -169,7 +184,7 @@ xgb_params = {
     'n_jobs': -1, 'random_state': 42,
 }
 
-all_fold_results = []
+all_results = []
 for k, (s, e) in enumerate(tests, 1):
     print(f'\n  Fold {k}: {s} -> {e}')
     tr = df[df['date'] < s].copy()
@@ -181,35 +196,48 @@ for k, (s, e) in enumerate(tests, 1):
     auc = roc_auc_score(te['label'].values, prob)
 
     bt = run_backtest(te, prob, k)
-    bt['fold'] = k
-    bt['auc'] = round(float(auc), 4)
-    all_fold_results.append(bt)
-    print(f'    AUC={auc:.3f} | trades={bt["n_trades"]} WR={bt["winrate"]:.1%} '
-          f'avg_net={bt["avg_ret_net"]:.2%} | Sharpe={bt["sharpe"]:.2f} '
-          f'CAGR={bt["cagr"]:.1%} DD={bt["max_dd"]:.1%}')
+    bench = compute_benchmark(te)
+    alpha_cagr = round(bt['cagr'] - bench['bench_cagr'], 4)
+    alpha_sharpe = round(bt['sharpe'] - bench['bench_sharpe'], 2)
+    alpha_return = round(bt['total_return'] - bench['ew_return'], 4)
+
+    result = {**bt, **bench, 'fold': k, 'auc': round(float(auc),4),
+              'alpha_cagr': alpha_cagr, 'alpha_sharpe': alpha_sharpe,
+              'alpha_return': alpha_return}
+    all_results.append(result)
+
+    print(f'    Model: CAGR={bt["cagr"]:.1%} Sharpe={bt["sharpe"]:.2f} WR={bt["winrate"]:.1%}')
+    print(f'    Bench: CAGR={bench["bench_cagr"]:.1%} Sharpe={bench["bench_sharpe"]:.2f} positive={bench["pct_positive"]:.0%}')
+    print(f'    ALPHA: CAGR={alpha_cagr:+.1%} Sharpe={alpha_sharpe:+.2f} Return={alpha_return:+.1%}')
 
 print('\n[3/3] Saving...')
-result = {
-    'diagnostic': 'realistic_backtest',
-    'params': {
-        'threshold_buy': THRESHOLD_BUY,
-        'slippage_round_trip': 2*SLIPPAGE_PER_SIDE,
-        'max_return_cap': MAX_RETURN_PER_TRADE,
-        'max_positions': MAX_POSITIONS,
-        'commission': COMMISSION,
-    },
-    'folds': all_fold_results,
-    'verdict': 'OK' if all(f['sharpe'] < 5 for f in all_fold_results) else 'STILL_BUG',
+# Overall verdict based on average alpha
+avg_alpha_cagr = round(float(np.mean([r['alpha_cagr'] for r in all_results])),4)
+avg_alpha_sharpe = round(float(np.mean([r['alpha_sharpe'] for r in all_results])),2)
+
+if avg_alpha_cagr > 0.20 and avg_alpha_sharpe > 0.5:
+    verdict = 'STRONG_ALPHA'
+elif avg_alpha_cagr > 0.05 and avg_alpha_sharpe > 0:
+    verdict = 'MODERATE_ALPHA'
+elif avg_alpha_cagr > -0.05:
+    verdict = 'BETA_ONLY'
+else:
+    verdict = 'UNDERPERFORMS'
+
+final = {
+    'diagnostic': 'benchmark_comparison',
+    'avg_alpha_cagr': avg_alpha_cagr,
+    'avg_alpha_sharpe': avg_alpha_sharpe,
+    'verdict': verdict,
+    'folds': all_results,
 }
 with open(OUT / 'backtest_diag.json','w',encoding='utf-8') as f:
-    json.dump(result, f, ensure_ascii=False, indent=2)
+    json.dump(final, f, ensure_ascii=False, indent=2)
 
 print('\n' + '=' * 65)
-print('SUMMARY:')
-for r in all_fold_results:
-    print(f"  Fold {r['fold']}: Sharpe={r['sharpe']:>5} CAGR={r['cagr']:>8.1%} "
-          f"WR={r['winrate']:.1%} avg_net={r['avg_ret_net']:.2%} trades={r['n_trades']}")
-print(f"VERDICT: {result['verdict']}")
+for r in all_results:
+    print(f"  Fold {r['fold']}: Model_CAGR={r['cagr']:>7.1%} | Bench={r['bench_cagr']:>7.1%} | ALPHA={r['alpha_cagr']:>+7.1%}")
+print(f"  Avg Alpha CAGR: {avg_alpha_cagr:+.1%}")
+print(f"  Avg Alpha Sharpe: {avg_alpha_sharpe:+.2f}")
+print(f"  VERDICT: {verdict}")
 print('=' * 65)
-print('\nFULL JSON:')
-print(json.dumps(result, ensure_ascii=False, indent=2))
