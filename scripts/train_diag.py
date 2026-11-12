@@ -1,29 +1,46 @@
-"""DIAGNOSTIC: train only on 64 safe features (technical + RTM + PA)."""
+"""DIAGNOSTIC: train only on 64 safe features (no imports from features/)."""
 import json
 import numpy as np
 import pandas as pd
 import xgboost as xgb
 from pathlib import Path
 from sklearn.metrics import roc_auc_score
-from features.technical import FEATURE_NAMES as TECH_F
-from features.price_action import FEATURE_NAMES as PA_F
 
 OUT = Path('outputs')
 
-RTM_F = ['BOS_Bull','BOS_Bear','CHoCH_Bull','CHoCH_Bear','FVG_Bull','FVG_Bear']
-SAFE_FEATURES = TECH_F + RTM_F + PA_F  # 64 features
+# Safe feature names (hardcoded, no import needed)
+SAFE_FEATURES = [
+    # technical (30)
+    'RSI','RSI_slope','MACD','MACD_Sig','MACD_Hist','MACD_slope',
+    'EMA20','EMA50','EMA200','SMA20','BB_pct','BB_width','ATR_pct',
+    'Stoch','Stoch_D','WillR','CCI','MFI','OBV_slope','ADX',
+    'Return_1d','Return_5d','Return_20d','Volatility_20d',
+    'Price_EMA50_ratio','Price_EMA200_ratio','Volume_ratio',
+    'High_Low_range','Close_Open','Gap',
+    # rtm (6)
+    'BOS_Bull','BOS_Bear','CHoCH_Bull','CHoCH_Bear','FVG_Bull','FVG_Bear',
+    # price action (28)
+    'Doji','Hammer','ShootingStar','BullEngulf','BearEngulf',
+    'InsideBar','OutsideBar',
+    'Body_pct','UpperWick_pct','LowerWick_pct','ClosePosition',
+    'IsLimitUp','IsLimitDown',
+    'DistToHigh20','DistToLow20','DistToHigh50','DistToLow50',
+    'RangePos20','BodyRange_ratio',
+    'Uptrend','Downtrend',
+    'BreakHigh20','BreakLow20','BreakHigh50','BreakLow50',
+    'Consolidation','ConsecUp_3','ConsecDown_3',
+]
 
 THRESHOLD_LABEL = 0.017
 THRESHOLD_BUY = 0.60
 
 print('=' * 60)
-print(f'DIAGNOSTIC: 64 SAFE features only')
-print(f'(technical {len(TECH_F)} + rtm {len(RTM_F)} + PA {len(PA_F)})')
+print(f'DIAGNOSTIC: 64 safe features (no structural, no CS)')
 print('=' * 60)
 
 print('\n[1/4] Loading features.parquet...')
 df = pd.read_parquet(OUT / 'features.parquet')
-print(f'  Total: {len(df):,} rows')
+print(f'  Total: {len(df):,} rows, {df["symbol"].nunique()} stocks')
 
 df = df.sort_values(['symbol','date']).reset_index(drop=True)
 df['future_ret_5d'] = df.groupby('symbol')['close'].shift(-5) / df['close'] - 1
@@ -35,7 +52,7 @@ missing = [f for f in SAFE_FEATURES if f not in df.columns]
 
 print(f'  Features used: {len(feat_cols)} / {len(SAFE_FEATURES)}')
 if missing:
-    print(f'  ⚠️  Missing: {missing}')
+    print(f'  Missing: {missing}')
 
 pos_rate = df['label'].mean()
 print(f'  Positive rate: {pos_rate:.2%}')
@@ -90,6 +107,12 @@ mean_gap = float(np.mean([f['auc_gap'] for f in fold_metrics]))
 mean_auc = float(np.mean([f['auc_test'] for f in fold_metrics]))
 total_signals = sum(f['n_signals'] for f in fold_metrics)
 
+verdict = (
+    'LEAK_IN_STRUCTURAL_OR_CS' if mean_gap < 0.08
+    else 'LEAK_ALSO_IN_SAFE_FEATURES' if mean_gap < 0.15
+    else 'SEVERE_OVERFIT_OR_LABEL_ISSUE'
+)
+
 result = {
     'diagnostic': 'scenario_A_64_features',
     'features_count': len(feat_cols),
@@ -101,18 +124,14 @@ result = {
     'mean_auc_gap': round(mean_gap,4),
     'total_signals': total_signals,
     'folds': fold_metrics,
-    'verdict': (
-        'LEAK_IN_STRUCTURAL_OR_CS' if mean_gap < 0.08
-        else 'LEAK_ALSO_IN_SAFE_FEATURES' if mean_gap < 0.15
-        else 'SEVERE_OVERFIT_OR_LABEL_ISSUE'
-    ),
+    'verdict': verdict,
 }
 with open(OUT / 'metrics_diag.json', 'w', encoding='utf-8') as f:
     json.dump(result, f, ensure_ascii=False, indent=2)
 
 print('=' * 60)
 print(f'  Mean AUC test:  {mean_auc:.4f}')
-print(f'  Mean AUC gap:   {mean_gap:.4f}  ← THIS IS THE KEY METRIC')
+print(f'  Mean AUC gap:   {mean_gap:.4f}  ← KEY METRIC')
 print(f'  Total signals:  {total_signals:,}')
-print(f'  VERDICT: {result["verdict"]}')
+print(f'  VERDICT: {verdict}')
 print('=' * 60)
