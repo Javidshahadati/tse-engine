@@ -177,32 +177,34 @@ function TickerTape({ signals }) {
     .sort((a, b) => Math.abs(b.change_pct || 0) - Math.abs(a.change_pct || 0))
     .slice(0, 100);
   if (top.length === 0) return null;
-
   const itemW = 155;
   const totalW = top.length * itemW * 2;
-
+  const duration = top.length * 0.8;
+  const Item = ({ s, k }) => {
+    const cp = s.change_pct || 0;
+    const up = cp >= 0;
+    return (
+      <Link key={k} href={`/predictions/${encodeURIComponent(s.symbol)}`}
+        className="flex items-center gap-2 px-3 whitespace-nowrap hover:bg-white/10 transition-colors flex-shrink-0"
+        style={{ width: `${itemW}px` }}>
+        <span className="text-xs font-bold" style={{ color: '#ffffff' }}>{s.symbol}</span>
+        <span className="num text-xs font-bold" style={{ color: up ? '#10b981' : '#f43f5e' }}>
+          {up ? '▲' : '▼'} {Math.abs(cp).toFixed(2)}٪
+        </span>
+      </Link>
+    );
+  };
   return (
     <div className="glass rounded-xl overflow-hidden relative">
-      <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-bg to-transparent z-10 pointer-events-none" />
-      <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-bg to-transparent z-10 pointer-events-none" />
+      <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-bg to-transparent z-10 pointer-events-none" />
+      <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-bg to-transparent z-10 pointer-events-none" />
       <div className="flex py-2.5" style={{
         width: `${totalW}px`,
-        animation: `ticker-scroll ${top.length * 1.8}s linear infinite`,
+        animation: `ticker-scroll ${duration}s linear infinite`,
+        willChange: 'transform',
       }}>
-        {[...top, ...top].map((s, i) => {
-          const cp = s.change_pct || 0;
-          const up = cp >= 0;
-          return (
-            <Link key={i} href={`/predictions/${encodeURIComponent(s.symbol)}`}
-              className="flex items-center gap-2 px-3 whitespace-nowrap hover:bg-white/10 transition-colors flex-shrink-0"
-              style={{ width: `${itemW}px` }}>
-              <span className="text-xs font-bold text-white">{s.symbol}</span>
-              <span className={`num text-xs font-bold ${up ? 'text-success' : 'text-danger'}`}>
-                {up ? '▲' : '▼'} {Math.abs(cp).toFixed(2)}٪
-              </span>
-            </Link>
-          );
-        })}
+        {top.map((s, i) => <Item key={i} s={s} k={i} />)}
+        {top.map((s, i) => <Item key={`d-${i}`} s={s} k={`d-${i}`} />)}
       </div>
     </div>
   );
