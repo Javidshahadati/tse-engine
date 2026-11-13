@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Brain, Cpu, Database, Layers, Sparkles, Zap, ArrowLeft, Activity, Network, GitBranch } from 'lucide-react';
+import { Brain, Cpu, Database, Sparkles, Activity, ArrowLeft, Network, Shield } from 'lucide-react';
 
 function NeuralNet() {
   const [t, setT] = useState(0);
@@ -80,6 +80,7 @@ function NeuralNet() {
 export default function About() {
   return (
     <div className="relative">
+      {/* Hero */}
       <section className="min-h-screen flex items-center justify-center px-4 py-20 relative overflow-hidden">
         <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-float" />
         <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
@@ -87,7 +88,7 @@ export default function About() {
         <div className="max-w-5xl mx-auto text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8">
             <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm text-slate-300">درباره ما</span>
+            <span className="text-sm text-white font-semibold">درباره ما</span>
           </div>
 
           <h1 className="text-5xl md:text-7xl font-black mb-6 leading-tight">
@@ -95,7 +96,7 @@ export default function About() {
           </h1>
 
           <p className="text-xl md:text-2xl text-white mb-3 font-bold">موتور یادگیری ماشین اختصاصی</p>
-          <p className="text-lg text-slate-200 mb-12 max-w-2xl mx-auto leading-relaxed font-medium">
+          <p className="text-base text-slate-200 mb-12 max-w-2xl mx-auto leading-relaxed font-medium">
             Javid LM یک معماری چندلایه از مدل‌های یادگیری ماشین است که با ترکیب تکنیک‌های Gradient Boosting
             و تحلیل هم‌زمان ۱۰۴ فیچر تکنیکال و بنیادی، به امتیازدهی و پیش‌بینی الگوهای قیمتی در بازار سرمایه ایران می‌پردازد.
           </p>
@@ -118,6 +119,7 @@ export default function About() {
         </div>
       </section>
 
+      {/* Architecture */}
       <section className="section">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
@@ -129,58 +131,84 @@ export default function About() {
             {[
               { icon: Database, title: 'لایه داده', desc: 'استخراج و پردازش ۱۰۴ فیچر تکنیکال و بنیادی از ۶۰۲ سهم — شامل اندیکاتورهای کلاسیک، تحلیل ساختار بازار (RTM)، کنش قیمت (Price Action) و نسبت‌های بنیادی.', color: 'from-primary/20 to-primary/5', iconColor: 'text-primary' },
               { icon: Brain, title: 'موتور ترکیبی', desc: 'Javid LM یک ensemble دو لایه است: دو مدل Gradient Boosting به‌صورت موازی روی داده آموزش می‌بینند و خروجی احتمالاتی آن‌ها با روش میانگین‌گیری وزنی ترکیب می‌شود.', color: 'from-accent/20 to-accent/5', iconColor: 'text-accent' },
-              { icon: Zap, title: 'لایه تصمیم', desc: 'امتیاز نهایی با اعمال فاز بازار (صعودی/مختلط/نزولی) و وزن‌دهی تطبیقی محاسبه می‌شود. این لایه تضمین می‌کند که مدل در شرایط مختلف بازار رفتار متناسبی داشته باشد.', color: 'from-success/20 to-success/5', iconColor: 'text-success' },
+              { icon: Shield, title: 'لایه تصمیم', desc: 'امتیاز نهایی با اعمال فاز بازار (صعودی/مختلط/نزولی) و وزن‌دهی تطبیقی محاسبه می‌شود. این لایه تضمین می‌کند که مدل در شرایط مختلف بازار رفتار متناسبی داشته باشد.', color: 'from-success/20 to-success/5', iconColor: 'text-success' },
             ].map((x, i) => (
               <div key={i} className={`glass p-6 rounded-xl bg-gradient-to-br ${x.color}`}>
                 <div className="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center mb-4">
                   <x.icon className={`w-6 h-6 ${x.iconColor}`} />
                 </div>
                 <h3 className="font-bold text-white mb-2">{x.title}</h3>
-                <p className="text-sm text-slate-400 leading-relaxed">{x.desc}</p>
+                <p className="text-sm text-slate-300 leading-relaxed">{x.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="section">
+      {/* How it works - NEW ANIMATION */}
+      <section className="section overflow-hidden">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">چطور کار می‌کند؟</h2>
+            <p className="text-slate-200 font-medium">چرخه پردازش داده تا خروجی نهایی</p>
           </div>
-          <div className="flex flex-col md:flex-row gap-6 md:gap-4 mt-10">
+
+          <div className="relative flex flex-col md:flex-row items-center justify-between gap-8 md:gap-4">
+            {/* Connector Line Background */}
+            <div className="hidden md:block absolute top-1/2 left-[10%] right-[10%] h-[2px] bg-gradient-to-l from-primary/10 via-primary/40 to-primary/10 -translate-y-1/2 z-0" />
+            
             {[
-              { n: '۱', title: 'جمع‌آوری', desc: 'داده OHLCV از TSETMC', icon: Database },
-              { n: '۲', title: 'محاسبه', desc: '۱۰۴ فیچر تکنیکال + بنیادی', icon: Cpu },
-              { n: '۳', title: 'پیش‌بینی', desc: 'Javid LM ensemble', icon: Brain },
-              { n: '۴', title: 'امتیازدهی', desc: 'خروجی ۰ تا ۱۰۰', icon: Activity },
+              { title: 'جمع‌آوری', desc: 'داده OHLCV', icon: Database, anim: 'animate-bounce', color: 'text-blue-400', shadow: 'shadow-blue-500/30' },
+              { title: 'محاسبه', desc: '۱۰۴ فیچر تکنیکال', icon: Cpu, anim: 'animate-pulse', color: 'text-purple-400', shadow: 'shadow-purple-500/30' },
+              { title: 'پیش‌بینی', desc: 'Javid LM ensemble', icon: Brain, anim: 'animate-pulse', color: 'text-cyan-400', shadow: 'shadow-cyan-500/30' },
+              { title: 'امتیازدهی', desc: 'خروجی ۰ تا ۱۰۰', icon: Activity, anim: 'animate-ping', color: 'text-green-400', shadow: 'shadow-green-500/30' },
             ].map((s, i) => (
-              <div key={i} className="glass p-5 rounded-xl relative overflow-hidden text-center group hover:scale-[1.03] hover:border-primary/50 transition-all duration-300 cursor-default fade-up" style={{ animationDelay: `${i * 150}ms` }}>
-                <div className="num text-6xl font-black text-primary/10 absolute top-2 left-1/2 -translate-x-1/2">{s.n}</div>
-                <div className="relative">
-                  <s.icon className="w-8 h-8 text-primary mx-auto mb-3 animate-pulse group-hover:rotate-12 group-hover:scale-125 transition-all duration-300" />
-                  <h3 className="font-bold text-white text-sm mb-1">{s.title}</h3>
-                  <p className="text-[11px] text-slate-400">{s.desc}</p>
+              <div key={i} className="relative z-10 flex flex-col items-center group w-full md:w-1/4">
+                <div className="relative w-20 h-20 mb-4 rounded-2xl bg-bg/80 backdrop-blur-xl border border-white/10 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500">
+                  <s.icon className={`w-10 h-10 ${s.color} ${s.anim}`} style={{ animationDuration: '2s' }} />
+                  
+                  {/* Glow effect on hover */}
+                  <div className={`absolute inset-0 rounded-2xl bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity blur-md ${s.shadow}`} />
                 </div>
+                <h3 className="font-bold text-white text-base mb-1">{s.title}</h3>
+                <p className="text-xs text-slate-300 font-medium text-center">{s.desc}</p>
+                
+                {/* Animated Data Packets (Mobile) */}
+                {i < 3 && (
+                  <div className="md:hidden h-8 w-[2px] bg-primary/20 relative my-2">
+                    <div className="w-2 h-2 rounded-full bg-primary absolute -left-[3px] animate-[flowY_2s_ease-in-out_infinite]" />
+                  </div>
+                )}
               </div>
             ))}
           </div>
         </div>
       </section>
 
+      {/* CTA */}
       <section className="section">
         <div className="max-w-4xl mx-auto glass-strong glow-border p-10 md:p-16 rounded-3xl text-center relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
           <div className="relative">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">آماده تحلیل هوشمند هستید؟</h2>
-            <p className="text-slate-400 mb-8 max-w-xl mx-auto">همین حالا داشبورد کامل را باز کنید.</p>
+            <p className="text-slate-200 mb-8 max-w-xl mx-auto font-medium">همین حالا داشبورد کامل را باز کنید.</p>
             <Link href="/dashboard" className="btn-primary text-base px-10 py-4 inline-flex">
               <Activity className="w-5 h-5" /> شروع تحلیل
             </Link>
           </div>
         </div>
       </section>
+      
+      {/* Global CSS for animations */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes flowY {
+          0% { top: 0; opacity: 0; }
+          20% { opacity: 1; }
+          80% { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
+        }
+      `}} />
     </div>
   );
 }
