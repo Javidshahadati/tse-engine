@@ -24,64 +24,70 @@ function SectorModal({ open, onClose, value, onSelect, sectors }) {
   useEffect(() => {
     if (open) {
       setQ('');
-      const t = setTimeout(() => inputRef.current?.focus(), 100);
-      return () => clearTimeout(t);
+      document.body.style.overflow = 'hidden';
+      const t = setTimeout(() => inputRef.current?.focus(), 150);
+      return () => {
+        document.body.style.overflow = '';
+        clearTimeout(t);
+      };
     }
   }, [open]);
 
   if (!open) return null;
 
   const filtered = q.trim() ? sectors.filter(s => s.includes(q)) : sectors;
-
   const pick = (s) => { onSelect(s); onClose(); };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm"
+    <div className="fixed inset-0 z-[9999] bg-black/85 overflow-y-auto"
       onClick={onClose}>
-      <div className="glass-strong w-full max-w-md rounded-2xl overflow-hidden shadow-2xl border border-primary/30"
+      <div className="flex min-h-full items-center justify-center p-4 py-8"
         onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-4 border-b border-border/40">
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-primary" />
-            <h3 className="font-bold text-white text-sm">انتخاب صنعت</h3>
-          </div>
-          <button onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div className="p-3 border-b border-border/40">
-          <div className="relative">
-            <Search className="w-4 h-4 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2" />
-            <input ref={inputRef} type="text" placeholder="جستجوی صنعت..." value={q}
-              onChange={(e) => setQ(e.target.value)}
-              className="w-full bg-bg/60 rounded-lg py-2.5 pr-10 pl-3 text-sm text-white placeholder:text-slate-500 focus:outline-none border border-border/50 focus:border-primary/50" />
-          </div>
-        </div>
-
-        <div className="max-h-[60vh] overflow-y-auto">
-          <button onClick={() => pick('ALL')}
-            className={`w-full text-right px-4 py-3 hover:bg-primary/10 transition-colors border-b border-border/20 flex items-center justify-between ${
-              value === 'ALL' ? 'bg-primary/15' : ''
-            }`}>
-            <span className={`text-sm ${value === 'ALL' ? 'text-primary font-bold' : 'text-white'}`}>همه صنایع</span>
-            {value === 'ALL' && <div className="w-1.5 h-1.5 rounded-full bg-primary" />}
-          </button>
-          {filtered.length > 0 ? filtered.map(s => (
-            <button key={s} onClick={() => pick(s)}
-              className={`w-full text-right px-4 py-3 hover:bg-primary/10 transition-colors border-b border-border/20 last:border-0 flex items-center justify-between ${
-                value === s ? 'bg-primary/15' : ''
-              }`}>
-              <span className={`text-sm ${value === s ? 'text-primary font-bold' : 'text-white'}`}>{s}</span>
-              {value === s && <div className="w-1.5 h-1.5 rounded-full bg-primary" />}
-            </button>
-          )) : (
-            <div className="p-8 text-center text-sm text-slate-500">
-              <Search className="w-8 h-8 mx-auto mb-2 opacity-40" />
-              نتیجه‌ای برای «{q}» یافت نشد
+        <div className="glass-strong w-full max-w-md rounded-2xl overflow-hidden shadow-2xl border border-primary/30 my-auto">
+          <div className="flex items-center justify-between p-4 border-b border-border/40">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-primary" />
+              <h3 className="font-bold text-white text-sm">انتخاب صنعت</h3>
+              <span className="text-[10px] text-slate-500">({sectors.length})</span>
             </div>
-          )}
+            <button onClick={onClose}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="p-3 border-b border-border/40">
+            <div className="relative">
+              <Search className="w-4 h-4 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2" />
+              <input ref={inputRef} type="text" inputMode="search" placeholder="جستجوی صنعت..." value={q}
+                onChange={(e) => setQ(e.target.value)}
+                className="w-full bg-bg/60 rounded-lg py-2.5 pr-10 pl-3 text-sm text-white placeholder:text-slate-500 focus:outline-none border border-border/50 focus:border-primary/50" />
+            </div>
+          </div>
+
+          <div className="max-h-[55vh] sm:max-h-[60vh] overflow-y-auto overscroll-contain">
+            <button onClick={() => pick('ALL')}
+              className={`w-full text-right px-4 py-3.5 hover:bg-primary/10 active:bg-primary/20 transition-colors border-b border-border/20 flex items-center justify-between ${
+                value === 'ALL' ? 'bg-primary/15' : ''
+              }`}>
+              <span className={`text-sm ${value === 'ALL' ? 'text-primary font-bold' : 'text-white'}`}>همه صنایع</span>
+              {value === 'ALL' && <div className="w-1.5 h-1.5 rounded-full bg-primary" />}
+            </button>
+            {filtered.length > 0 ? filtered.map(s => (
+              <button key={s} onClick={() => pick(s)}
+                className={`w-full text-right px-4 py-3.5 hover:bg-primary/10 active:bg-primary/20 transition-colors border-b border-border/20 last:border-0 flex items-center justify-between ${
+                  value === s ? 'bg-primary/15' : ''
+                }`}>
+                <span className={`text-sm ${value === s ? 'text-primary font-bold' : 'text-white'}`}>{s}</span>
+                {value === s && <div className="w-1.5 h-1.5 rounded-full bg-primary" />}
+              </button>
+            )) : (
+              <div className="p-8 text-center text-sm text-slate-500">
+                <Search className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                نتیجه‌ای برای «{q}» یافت نشد
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
