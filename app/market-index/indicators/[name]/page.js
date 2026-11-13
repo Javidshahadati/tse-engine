@@ -245,6 +245,18 @@ function analyze(name, val, ind) {
     case 'obv':
       if (val > 0) return { level: 'bullish', text: `OBV مثبت — ورود پول.` };
       return { level: 'bearish', text: `OBV منفی — خروج پول.` };
+    case 'rtm':
+      if (val === 'BOS صعودی') return { level: 'bullish', text: 'ساختار شاخص کل صعودی: شاخص از سقف اخیر عبور کرده و BOS صعودی تشکیل شده.' };
+      if (val === 'BOS نزولی') return { level: 'bearish', text: 'ساختار شاخص کل نزولی: شاخص زیر کف اخیر رفته و BOS نزولی تشکیل شده.' };
+      if (val === 'خنثی') return { level: 'neutral', text: 'شاخص کل بین سقف و کف اخیر در حال نوسان است.' };
+      return { level: 'info', text: 'داده کافی نیست' };
+    case 'pa':
+      if (val === 'Hammer') return { level: 'bullish', text: 'الگوی Hammer در شاخص کل: احتمال بازگشت صعودی.' };
+      if (val === 'Shooting Star') return { level: 'bearish', text: 'الگوی Shooting Star در شاخص کل: احتمال بازگشت نزولی.' };
+      if (val === 'Doji') return { level: 'neutral', text: 'Doji در شاخص: تعادل بین خریدار و فروشنده.' };
+      if (val === 'Bullish Marubozu') return { level: 'bullish', text: 'Marubozu صعودی: قدرت خریداران در شاخص.' };
+      if (val === 'Bearish Marubozu') return { level: 'bearish', text: 'Marubozu نزولی: قدرت فروشندگان در شاخص.' };
+      return { level: 'info', text: 'کندل آخر الگوی خاصی نشان نمی‌دهد.' };
     default:
       return { level: 'info', text: 'برای تحلیل دقیق‌تر به چارت مراجعه کنید.' };
   }
@@ -305,7 +317,40 @@ export default function MarketIndicatorPage() {
   }
 
   const ind = computed.ind;
-  const valueMap = { rsi: ind.rsi, macd: ind.macd, stochastic: ind.stoch, adx: null, atr: ind.atr, bollinger: ind.bbPct, cci: ind.cci, mfi: null, willr: ind.willr, obv: null, rtm: null, pa: null };
+  const valueMap = { rsi: ind.rsi, macd: ind.macd, stochastic: ind.stoch, adx: null, atr: ind.atr, bollinger: ind.bbPct, cci: ind.cci, mfi: null, willr: ind.willr, obv: null, rtm: rtmData ? (rtmData.bosBull ? 'BOS صعودی' : rtmData.bosBear ? 'BOS نزولی' : 'خنثی') : null, pa: paData ? paData.pattern : null };
+  // RTM computation
+  const rows = computed.rows;
+  const rtmData = (() => {
+    if (rows.length < 20) return null;
+    const highs = rows.map(r => (r.h && r.h > 0) ? r.h : r.c);
+    const lows = rows.map(r => (r.l && r.l > 0) ? r.l : r.c);
+    const cur = rows[rows.length - 1];
+    const recentHigh = Math.max(...highs.slice(-15, -5));
+    const recentLow = Math.min(...lows.slice(-15, -5));
+    return { bosBull: cur.c > recentHigh, bosBear: cur.c < recentLow, recentHigh, recentLow };
+  })();
+  const paData = (() => {
+    if (rows.length < 3) return null;
+    const last = rows[rows.length - 1];
+    const prev = rows[rows.length - 2];
+    const o = prev.c;
+    const c = last.c;
+    const h = (last.h && last.h > 0) ? last.h : c;
+    const l = (last.l && last.l > 0) ? last.l : c;
+    const body = Math.abs(c - o);
+    const range = h - l;
+    if (range === 0) return { pattern: 'کندل عادی', signal: 'neutral', desc: 'کندل بدون دامنه' };
+    const upper = h - Math.max(c, o);
+    const lower = Math.min(c, o) - l;
+    const br = body / range, ur = upper / range, lr = lower / range;
+    if (br < 0.1) return { pattern: 'Doji', signal: 'neutral', desc: 'تعادل' };
+    if (lr > 0.6 && ur < 0.15 && c >= o) return { pattern: 'Hammer', signal: 'bullish', desc: 'بازگشت صعودی' };
+    if (ur > 0.6 && lr < 0.15 && c <= o) return { pattern: 'Shooting Star', signal: 'bearish', desc: 'بازگشت نزولی' };
+    if (c > o && br > 0.85) return { pattern: 'Bullish Marubozu', signal: 'bullish', desc: 'قدرت خریداران' };
+    if (c < o && br > 0.85) return { pattern: 'Bearish Marubozu', signal: 'bearish', desc: 'قدرت فروشندگان' };
+    return { pattern: 'کندل عادی', signal: 'neutral', desc: 'الگوی خاص' };
+  })();
+
   const val = valueMap[name];
   const analysis = analyze(name, val, ind);
   const style = LEVEL[analysis.level] || LEVEL.info;
