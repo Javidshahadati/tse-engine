@@ -158,7 +158,7 @@ export default function About() {
               <div key={i} className="glass p-5 rounded-xl relative overflow-hidden text-center group hover:scale-[1.03] hover:border-primary/50 transition-all duration-300 cursor-default fade-up" style={{ animationDelay: `${i * 150}ms` }}>
                 <div className="num text-6xl font-black text-primary/10 absolute top-2 left-1/2 -translate-x-1/2">{s.n}</div>
                 <div className="relative">
-                  <s.icon className="w-8 h-8 text-primary mx-auto mb-3" />
+                  <s.icon className="w-8 h-8 text-primary mx-auto mb-3 animate-pulse group-hover:scale-110 transition-transform" />
                   <h3 className="font-bold text-white text-sm mb-1">{s.title}</h3>
                   <p className="text-[11px] text-slate-400">{s.desc}</p>
                 </div>

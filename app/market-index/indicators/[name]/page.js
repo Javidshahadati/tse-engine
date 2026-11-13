@@ -224,6 +224,8 @@ const LEVEL = {
   bearish: { text: 'text-danger', bg: 'bg-danger/10', border: 'border-danger/40', label: 'نزولی' },
   neutral: { text: 'text-slate-300', bg: 'bg-slate-500/10', border: 'border-slate-500/40', label: 'خنثی' },
   info: { text: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/40', label: 'اطلاعات' },
+  'extreme-bull': { text: 'text-success', bg: 'bg-success/20', border: 'border-success/50', label: 'صعودی شدید' },
+  'extreme-bear': { text: 'text-danger', bg: 'bg-danger/20', border: 'border-danger/50', label: 'نزولی شدید' },
   unknown: { text: 'text-slate-300', bg: 'bg-slate-500/10', border: 'border-slate-500/40', label: 'نامشخص' },
 };
 
