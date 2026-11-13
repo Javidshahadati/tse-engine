@@ -317,7 +317,7 @@ export default function MarketIndicatorPage() {
     return <div className="max-w-7xl mx-auto px-3 py-6"><div className="h-96 glass rounded-xl shimmer" /></div>;
   }
 
-  const ind = computed.ind;
+  const ind = computed.ind || computed.indicators || {};
   const valueMap = { rsi: ind.rsi, macd: ind.macd, stochastic: ind.stoch, adx: null, atr: ind.atr, bollinger: ind.bbPct, cci: ind.cci, mfi: null, willr: ind.willr, obv: null, rtm: rtmData ? (rtmData.bosBull ? 'BOS صعودی' : rtmData.bosBear ? 'BOS نزولی' : 'خنثی') : null, pa: paData ? paData.pattern : null };
   // RTM computation
   const rows = computed.rows;

@@ -281,7 +281,7 @@ p, span, label, div { text-rendering: geometricPrecision; }
 /* Ticker animation */
 @keyframes ticker-scroll {
   from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  to { transform: translateX(50%); }
 }
 
 /* Fibonacci high-contrast override */
