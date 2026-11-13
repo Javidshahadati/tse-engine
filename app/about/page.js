@@ -148,7 +148,7 @@ export default function About() {
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">چطور کار می‌کند؟</h2>
           </div>
-          <div className="grid md:grid-cols-4 gap-4">
+          <div className="flex flex-col md:flex-row gap-6 md:gap-4 mt-10">
             {[
               { n: '۱', title: 'جمع‌آوری', desc: 'داده OHLCV از TSETMC', icon: Database },
               { n: '۲', title: 'محاسبه', desc: '۱۰۴ فیچر تکنیکال + بنیادی', icon: Cpu },
