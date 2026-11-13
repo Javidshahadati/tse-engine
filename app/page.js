@@ -231,15 +231,15 @@ export default function Home() {
         <div className="max-w-5xl mx-auto text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8 animate-fade-in">
             <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm text-slate-300">موتور تحلیل هوشمند نسل جدید</span>
+            <span className="text-sm text-white font-semibold">موتور تحلیل هوشمند نسل جدید</span>
           </div>
 
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-6 leading-tight">
             <span className="gradient-text">TSE.Engine</span>
           </h1>
 
-          <p className="text-xl md:text-2xl text-slate-300 mb-3 font-medium">موتور تحلیل هوشمند بورس تهران</p>
-          <p className="text-base md:text-lg text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-white mb-3 font-bold">موتور تحلیل هوشمند بورس تهران</p>
+          <p className="text-lg md:text-xl text-slate-200 mb-10 max-w-2xl mx-auto leading-relaxed font-medium">
             تحلیل داده‌محور بازار سرمایه ایران با موتور Javid LM —
             <span className="text-primary font-semibold"> ۶۰۶ سهم، ۹۹ فیچر تکنیکال و بنیادی، ۲۰ سال تاریخچه شاخص</span>
           </p>
@@ -287,7 +287,7 @@ export default function Home() {
                 <Sparkles className="w-3.5 h-3.5" /> ویژگی‌ها
               </div>
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">همه‌چیز برای تحلیل حرفه‌ای</h2>
-              <p className="text-slate-400">ابزارهای کامل تحلیل تکنیکال و بنیادی در یک پلتفرم</p>
+              <p className="text-slate-200 font-medium">ابزارهای کامل تحلیل تکنیکال و بنیادی در یک پلتفرم</p>
             </div>
           </SectionObserver>
 
@@ -315,7 +315,7 @@ export default function Home() {
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
             <div className="relative">
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">آماده تحلیل هوشمند هستید؟</h2>
-              <p className="text-slate-400 mb-8 max-w-xl mx-auto">همین حالا داشبورد کامل را باز کنید.</p>
+              <p className="text-slate-200 mb-8 max-w-xl mx-auto font-medium">همین حالا داشبورد کامل را باز کنید.</p>
               <Link href="/dashboard" className="btn-primary text-base px-10 py-4 inline-flex">
                 <BarChart3 className="w-5 h-5" /> شروع تحلیل
               </Link>

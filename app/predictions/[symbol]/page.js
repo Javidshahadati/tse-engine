@@ -19,6 +19,15 @@ const SIGNAL = {
   SELL: { label: 'ریسک بالا', bg: 'bg-danger/10', border: 'border-danger/30', icon: TrendingDown, text: 'text-danger' },
 };
 
+function fmtShort(n) {
+  if (n == null) return '—';
+  const abs = Math.abs(n);
+  if (abs >= 1e9) return (n/1e9).toFixed(1) + ' میلیارد';
+  if (abs >= 1e6) return (n/1e6).toFixed(1) + ' میلیون';
+  if (abs >= 1e3) return (n/1e3).toFixed(0) + ' هزار';
+  return n.toLocaleString('fa-IR');
+}
+
 function fmt(n, d = 0) {
   if (n == null) return '—';
   return Number(n).toLocaleString('fa-IR', { maximumFractionDigits: d });
@@ -59,6 +68,15 @@ export default function StockPage() {
   }, []);
 
   const chartData = charts?.[symbol] || [];
+  let sr = { supports: [], resistances: [] };
+  if (chartData.length >= 50) {
+    const closes = chartData.map(r => r.c);
+    const ma20 = closes.slice(-20).reduce((a, b) => a + b, 0) / 20;
+    const ma50 = closes.slice(-50).reduce((a, b) => a + b, 0) / 50;
+    const last = closes[closes.length - 1];
+    sr.supports = [Math.min(ma20, ma50)];
+    sr.resistances = [last * 1.05, last * 1.10];
+  }
   const ind = indicators?.[symbol] || {};
   const sig = signals?.signals?.find(s => s.symbol === symbol);
   const fund = fundamentals?.[symbol] || {};
@@ -332,12 +350,12 @@ export default function StockPage() {
             <div className="grid grid-cols-2 gap-2 md:gap-3 mb-3 md:mb-4">
               <div className="bg-success/10 border border-success/30 rounded-xl p-2.5 md:p-3">
                 <div className="text-[10px] text-success/80 mb-1">خرید حقیقی</div>
-                <div className="num text-base md:text-lg font-bold text-success">{fmt(rl.buyRealVol || 0)}</div>
+                <div className="num text-base md:text-lg font-bold text-success">{fmtShort(rl.buyRealVol || 0)}</div>
                 <div className="text-[9px] text-slate-400 mt-1">{fmt(rl.buyReal || 0)} معامله</div>
               </div>
               <div className="bg-danger/10 border border-danger/30 rounded-xl p-2.5 md:p-3">
                 <div className="text-[10px] text-danger/80 mb-1">فروش حقیقی</div>
-                <div className="num text-base md:text-lg font-bold text-danger">{fmt(rl.sellRealVol || 0)}</div>
+                <div className="num text-base md:text-lg font-bold text-danger">{fmtShort(rl.sellRealVol || 0)}</div>
                 <div className="text-[9px] text-slate-400 mt-1">{fmt(rl.sellReal || 0)} معامله</div>
               </div>
             </div>
@@ -358,11 +376,11 @@ export default function StockPage() {
             <div className="grid grid-cols-2 gap-2 md:gap-3 mb-3">
               <div className="bg-bg/40 rounded-lg p-2.5">
                 <div className="text-[10px] text-slate-400">خرید حقوقی</div>
-                <div className="num text-xs md:text-sm font-bold text-white">{fmt(rl.buyLegalVol || 0)}</div>
+                <div className="num text-xs md:text-sm font-bold text-white">{fmtShort(rl.buyLegalVol || 0)}</div>
               </div>
               <div className="bg-bg/40 rounded-lg p-2.5">
                 <div className="text-[10px] text-slate-400">فروش حقوقی</div>
-                <div className="num text-xs md:text-sm font-bold text-white">{fmt(rl.sellLegalVol || 0)}</div>
+                <div className="num text-xs md:text-sm font-bold text-white">{fmtShort(rl.sellLegalVol || 0)}</div>
               </div>
             </div>
 
