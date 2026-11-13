@@ -375,6 +375,8 @@ export default function MarketIndicatorPage() {
   })();
 
   const val = valueMap[name];
+  const safeVal = val !== undefined ? val : null;
+  const displayVal = safeVal != null ? (typeof safeVal === 'string' ? safeVal : fmt(safeVal)) : '—';
   const analysis = analyze(name, val, ind);
   const style = LEVEL[analysis.level] || LEVEL.info || LEVEL.unknown || { text: 'text-slate-300', bg: 'bg-slate-500/10', border: 'border-slate-500/40', label: 'نامشخص' };
 
@@ -399,7 +401,7 @@ export default function MarketIndicatorPage() {
             </div>
             <div className="text-left">
               <div className="text-[10px] text-slate-400 mb-1">مقدار فعلی</div>
-              <div className="num text-3xl md:text-5xl font-black text-white">{val != null ? fmt(val) : '—'}</div>
+              <div className="num text-3xl md:text-5xl font-black text-white">{displayVal}</div>
               <div className={`mt-2 inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg ${style.bg} ${style.text} border ${style.border}`}>
                 <Activity className="w-3.5 h-3.5" /> {style.label}
               </div>
