@@ -59,7 +59,7 @@ function LiveEngine() {
     }
   }
 
-  const signalLabels = ['در حال پردازش...', 'RSI: +۲.۳', 'MACD: صعودی', 'امتیاز: ۸۹', 'سیگنال: توجه بالا', 'ذخیره...'];
+  const signalLabels = ['در حال پردازش...', 'RSI: +۲.۳', 'MACD: صعودی', 'امتیاز: ۸۹', 'توجه بالا', 'ذخیره...'];
 
   return (
     <div className="relative">

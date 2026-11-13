@@ -170,7 +170,7 @@ function generateAnalysis(c, ind, fib, sr) {
     else if (ind.rsi < 30) parts.push(`RSI در ناحیه اشباع فروش (${ind.rsi.toFixed(1)}) است و پتانسیل بازگشت صعودی دیده می‌شود.`);
     else parts.push(`RSI در محدوده خنثی (${ind.rsi.toFixed(1)}) قرار دارد.`);
   }
-  if (ind.macd != null) parts.push(ind.macd > 0 ? 'MACD سیگنال صعودی می‌دهد.' : 'MACD سیگنال نزولی می‌دهد.');
+  if (ind.macd != null) parts.push(ind.macd > 0 ? 'MACD نشانه صعودی دارد.' : 'MACD نشانه نزولی دارد.');
   if (sr.resistances.length > 0) parts.push(`نزدیک‌ترین مقاومت: ${fmt(sr.resistances[0].level)} (${((sr.resistances[0].level - c) / c * 100).toFixed(1)}٪ بالاتر).`);
   if (sr.supports.length > 0) parts.push(`نزدیک‌ترین حمایت: ${fmt(sr.supports[0].level)} (${((c - sr.supports[0].level) / c * 100).toFixed(1)}٪ پایین‌تر).`);
   return parts;

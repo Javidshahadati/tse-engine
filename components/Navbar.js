@@ -2,12 +2,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import { Activity, Menu, X, BarChart3, Info, Home } from 'lucide-react';
+import { Activity, Menu, X, BarChart3, Info, Home, Star } from 'lucide-react';
 
 const NAV_LINKS = [
   { href: '/', label: 'صفحه اصلی', icon: Home },
   { href: '/dashboard', label: 'داشبورد', icon: BarChart3 },
   { href: '/about', label: 'درباره ما', icon: Info },
+  { href: '/watchlist', label: 'واچ‌لیست', icon: Star },
 ];
 
 export default function Navbar() {

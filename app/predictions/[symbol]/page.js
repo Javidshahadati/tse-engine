@@ -11,6 +11,7 @@ import {
 
 const StockChart = dynamic(() => import('@/components/StockChart'), { ssr: false });
 import RiskProfile from '@/components/RiskProfile';
+import WatchlistButton from '@/components/WatchlistButton';
 import ComprehensiveAnalysis from '@/components/ComprehensiveAnalysis';
 
 const SIGNAL = {
@@ -164,7 +165,10 @@ export default function StockPage() {
           <div className="flex flex-wrap items-start justify-between gap-3 md:gap-4 mb-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 md:gap-3 mb-2 flex-wrap">
-                <h1 className="text-2xl md:text-4xl font-black text-white">{symbol}</h1>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl md:text-4xl font-black text-white">{symbol}</h1>
+                  <WatchlistButton symbol={symbol} />
+                </div>
                 {conf && (
                   <span className={`text-[10px] md:text-xs px-2.5 py-1 rounded-full flex items-center gap-1 ${conf.bg} ${conf.text} border ${conf.border}`}>
                     <conf.icon className="w-3 h-3" /> {conf.label}
