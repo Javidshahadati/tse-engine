@@ -12,7 +12,9 @@ const IndexChart = dynamic(() => import('@/components/IndexChart'), { ssr: false
 
 function fmt(n, d = 2) {
   if (n == null) return '—';
-  return Number(n).toLocaleString('fa-IR', { maximumFractionDigits: d });
+  const num = Number(n);
+  if (isNaN(num)) return n;
+  return num.toLocaleString('fa-IR', { maximumFractionDigits: d });
 }
 
 function calcRSI(c, p = 14) {
@@ -161,6 +163,26 @@ const CONFIG = {
     conditions: [
       { if: 'بالاتر از -۲۰', then: 'احتمال اصلاح' },
       { if: 'زیر -۸۰', then: 'احتمال بازگشت' },
+    ],
+  },
+  rtm: {
+    name: 'RTM', full: 'تحلیل ساختار بازار', category: 'ساختار',
+    intro: 'تحلیل ساختار بازار به شناسایی BOS، CHoCH و FVG می‌پردازد.',
+    how: 'BOS = شکست ساختار، CHoCH = تغییر شخصیت، FVG = شکاف ارزش.',
+    tips: ['BOS صعودی = ادامه روند', 'CHoCH = تغییر روند', 'FVG = منطقه پر شدن'],
+    conditions: [
+      { if: 'BOS صعودی', then: 'ادامه روند صعودی' },
+      { if: 'CHoCH نزولی', then: 'تغییر روند' },
+    ],
+  },
+  pa: {
+    name: 'Price Action', full: 'کنش قیمت', category: 'ساختار',
+    intro: 'الگوهای کندلی و رفتار مستقیم قیمت.',
+    how: 'Doji = تعادل، Hammer = بازگشت صعودی، Shooting Star = بازگشت نزولی.',
+    tips: ['الگوها در سطوح کلیدی معتبر', 'با حجم تایید شود', 'یک الگو تنها کافی نیست'],
+    conditions: [
+      { if: 'Hammer در حمایت', then: 'بازگشت صعودی' },
+      { if: 'Shooting Star در مقاومت', then: 'بازگشت نزولی' },
     ],
   },
   obv: {
