@@ -3,7 +3,7 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import {
   Search, Filter, X, TrendingUp, TrendingDown, Activity, ArrowLeft,
-  ChevronDown, RotateCcw, BarChart3, Sparkles
+  ChevronDown, RotateCcw, Sparkles
 } from 'lucide-react';
 
 const SIGNAL = {
@@ -17,113 +17,94 @@ function fmt(n, d = 0) {
   return Number(n).toLocaleString('fa-IR', { maximumFractionDigits: d });
 }
 
-function SectorSelector({ value, onChange, sectors }) {
-  const [open, setOpen] = useState(false);
+function SectorModal({ open, onClose, value, onSelect, sectors }) {
   const [q, setQ] = useState('');
   const inputRef = useRef(null);
 
   useEffect(() => {
     if (open) {
+      setQ('');
       const t = setTimeout(() => inputRef.current?.focus(), 100);
       return () => clearTimeout(t);
     }
   }, [open]);
 
-  const filtered = q.trim()
-    ? sectors.filter(s => s.includes(q))
-    : sectors;
+  if (!open) return null;
 
-  const select = (s) => {
-    onChange(s);
-    setOpen(false);
-    setQ('');
-  };
+  const filtered = q.trim() ? sectors.filter(s => s.includes(q)) : sectors;
+
+  const pick = (s) => { onSelect(s); onClose(); };
 
   return (
-    <>
-      <button onClick={() => setOpen(true)} type="button"
-        className={`w-full glass rounded-lg py-2.5 px-3 text-sm text-right flex items-center justify-between transition-colors border ${
-          value !== 'ALL' ? 'border-primary/50 text-primary' : 'text-white border-border/50'
-        }`}>
-        <span className="truncate">{value === 'ALL' ? 'همه صنایع' : value}</span>
-        <ChevronDown className="w-4 h-4 flex-shrink-0 text-slate-400" />
-      </button>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm"
+      onClick={onClose}>
+      <div className="glass-strong w-full max-w-md rounded-2xl overflow-hidden shadow-2xl border border-primary/30"
+        onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-4 border-b border-border/40">
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-primary" />
+            <h3 className="font-bold text-white text-sm">انتخاب صنعت</h3>
+          </div>
+          <button onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
 
-      {open && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm"
-          onClick={() => setOpen(false)}>
-          <div className="glass-strong w-full max-w-md rounded-2xl overflow-hidden shadow-2xl border border-primary/30"
-            onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-border/40">
-              <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4 text-primary" />
-                <h3 className="font-bold text-white text-sm">انتخاب صنعت</h3>
-              </div>
-              <button onClick={() => setOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="p-3 border-b border-border/40">
-              <div className="relative">
-                <Search className="w-4 h-4 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2" />
-                <input ref={inputRef} type="text" placeholder="جستجوی صنعت..." value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  className="w-full bg-bg/60 rounded-lg py-2.5 pr-10 pl-3 text-sm text-white placeholder:text-slate-500 focus:outline-none border border-border/50 focus:border-primary/50" />
-              </div>
-            </div>
-
-            <div className="max-h-[60vh] overflow-y-auto">
-              <button onClick={() => select('ALL')}
-                className={`w-full text-right px-4 py-3 hover:bg-primary/10 transition-colors border-b border-border/20 flex items-center justify-between ${
-                  value === 'ALL' ? 'bg-primary/15' : ''
-                }`}>
-                <span className={`text-sm ${value === 'ALL' ? 'text-primary font-bold' : 'text-white'}`}>همه صنایع</span>
-                {value === 'ALL' && <div className="w-1.5 h-1.5 rounded-full bg-primary" />}
-              </button>
-              {filtered.length > 0 ? filtered.map(s => (
-                <button key={s} onClick={() => select(s)}
-                  className={`w-full text-right px-4 py-3 hover:bg-primary/10 transition-colors border-b border-border/20 last:border-0 flex items-center justify-between ${
-                    value === s ? 'bg-primary/15' : ''
-                  }`}>
-                  <span className={`text-sm ${value === s ? 'text-primary font-bold' : 'text-white'}`}>{s}</span>
-                  {value === s && <div className="w-1.5 h-1.5 rounded-full bg-primary" />}
-                </button>
-              )) : (
-                <div className="p-8 text-center text-sm text-slate-500">
-                  <Search className="w-8 h-8 mx-auto mb-2 opacity-40" />
-                  نتیجه‌ای برای «{q}» یافت نشد
-                </div>
-              )}
-            </div>
+        <div className="p-3 border-b border-border/40">
+          <div className="relative">
+            <Search className="w-4 h-4 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2" />
+            <input ref={inputRef} type="text" placeholder="جستجوی صنعت..." value={q}
+              onChange={(e) => setQ(e.target.value)}
+              className="w-full bg-bg/60 rounded-lg py-2.5 pr-10 pl-3 text-sm text-white placeholder:text-slate-500 focus:outline-none border border-border/50 focus:border-primary/50" />
           </div>
         </div>
-      )}
-    </>
+
+        <div className="max-h-[60vh] overflow-y-auto">
+          <button onClick={() => pick('ALL')}
+            className={`w-full text-right px-4 py-3 hover:bg-primary/10 transition-colors border-b border-border/20 flex items-center justify-between ${
+              value === 'ALL' ? 'bg-primary/15' : ''
+            }`}>
+            <span className={`text-sm ${value === 'ALL' ? 'text-primary font-bold' : 'text-white'}`}>همه صنایع</span>
+            {value === 'ALL' && <div className="w-1.5 h-1.5 rounded-full bg-primary" />}
+          </button>
+          {filtered.length > 0 ? filtered.map(s => (
+            <button key={s} onClick={() => pick(s)}
+              className={`w-full text-right px-4 py-3 hover:bg-primary/10 transition-colors border-b border-border/20 last:border-0 flex items-center justify-between ${
+                value === s ? 'bg-primary/15' : ''
+              }`}>
+              <span className={`text-sm ${value === s ? 'text-primary font-bold' : 'text-white'}`}>{s}</span>
+              {value === s && <div className="w-1.5 h-1.5 rounded-full bg-primary" />}
+            </button>
+          )) : (
+            <div className="p-8 text-center text-sm text-slate-500">
+              <Search className="w-8 h-8 mx-auto mb-2 opacity-40" />
+              نتیجه‌ای برای «{q}» یافت نشد
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
 function RangeSlider({ label, value, onChange, min, max, step = 1, unit = '', defaultValue }) {
-  const [v, setV] = useState(value);
-  const isActive = v !== defaultValue;
+  const isActive = value !== defaultValue;
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
         <span className={`text-[11px] font-semibold ${isActive ? 'text-primary' : 'text-slate-400'}`}>{label}</span>
         <span className={`num text-xs font-bold ${isActive ? 'text-primary' : 'text-slate-300'}`}>
-          {v.toLocaleString('fa-IR', { maximumFractionDigits: 1 })}{unit}
+          {value.toLocaleString('fa-IR', { maximumFractionDigits: 1 })}{unit}
         </span>
       </div>
-      <input type="range" min={min} max={max} step={step} value={v}
-        onChange={(e) => { const n = parseFloat(e.target.value); setV(n); onChange(n); }}
-        className={`w-full h-1.5 rounded-full appearance-none cursor-pointer ${
-          isActive ? 'bg-primary/30' : 'bg-slate-700'
-        }`}
+      <input type="range" min={min} max={max} step={step} value={value}
+        onChange={(e) => onChange(parseFloat(e.target.value))}
+        className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
         style={{
           background: isActive
-            ? `linear-gradient(to left, #06b6d4 0%, #06b6d4 ${((v - min) / (max - min)) * 100}%, #334155 ${((v - min) / (max - min)) * 100}%, #334155 100%)`
-            : undefined
+            ? `linear-gradient(to left, #06b6d4 0%, #06b6d4 ${((value - min) / (max - min)) * 100}%, #334155 ${((value - min) / (max - min)) * 100}%, #334155 100%)`
+            : '#334155'
         }}
       />
     </div>
@@ -134,7 +115,6 @@ export default function ScreenerPage() {
   const [signals, setSignals] = useState(null);
   const [indicators, setIndicators] = useState(null);
 
-  // Filters
   const [minScore, setMinScore] = useState(0);
   const [minRSI, setMinRSI] = useState(0);
   const [maxRSI, setMaxRSI] = useState(100);
@@ -145,6 +125,7 @@ export default function ScreenerPage() {
   const [sectorFilter, setSectorFilter] = useState('ALL');
   const [search, setSearch] = useState('');
   const [showAll, setShowAll] = useState(false);
+  const [sectorOpen, setSectorOpen] = useState(false);
 
   useEffect(() => {
     const load = async (f) => {
@@ -209,7 +190,11 @@ export default function ScreenerPage() {
   ].filter(Boolean).length;
 
   if (!signals || !indicators) {
-    return <div className="max-w-7xl mx-auto px-3 md:px-6 py-6"><div className="h-96 glass rounded-xl shimmer" /></div>;
+    return (
+      <div className="max-w-7xl mx-auto px-3 md:px-6 py-6">
+        <div className="h-96 glass rounded-xl shimmer" />
+      </div>
+    );
   }
 
   const displayList = showAll ? results : results.slice(0, 50);
@@ -217,7 +202,6 @@ export default function ScreenerPage() {
   return (
     <div className="max-w-7xl mx-auto px-3 md:px-6 lg:px-8 py-4 md:py-8 space-y-4 md:space-y-6">
 
-      {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Link href="/dashboard" className="text-slate-400 hover:text-primary text-xs flex items-center gap-1">
@@ -246,7 +230,6 @@ export default function ScreenerPage() {
         </div>
       </div>
 
-      {/* Filters Panel */}
       <div className="glass-strong p-4 md:p-6 rounded-2xl">
         <div className="flex items-center gap-2 mb-4">
           <Sparkles className="w-4 h-4 text-accent" />
@@ -254,7 +237,6 @@ export default function ScreenerPage() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-4 md:gap-6">
-          {/* Column 1 */}
           <div className="space-y-4">
             <RangeSlider label="حداقل امتیاز مدل" value={minScore} onChange={setMinScore}
               min={0} max={100} step={5} unit="" defaultValue={0} />
@@ -283,7 +265,6 @@ export default function ScreenerPage() {
               min={0} max={100} step={1} unit="" defaultValue={100} />
           </div>
 
-          {/* Column 2 */}
           <div className="space-y-4">
             <div>
               <div className="text-[11px] font-semibold text-slate-400 mb-2">وضعیت</div>
@@ -306,7 +287,13 @@ export default function ScreenerPage() {
 
             <div>
               <div className="text-[11px] font-semibold text-slate-400 mb-2">صنعت</div>
-              <SectorSelector value={sectorFilter} onChange={setSectorFilter} sectors={sectors} />
+              <button onClick={() => setSectorOpen(true)} type="button"
+                className={`w-full glass rounded-lg py-2.5 px-3 text-sm text-right flex items-center justify-between transition-colors border ${
+                  sectorFilter !== 'ALL' ? 'border-primary/50 text-primary' : 'text-white border-border/50'
+                }`}>
+                <span className="truncate">{sectorFilter === 'ALL' ? 'همه صنایع' : sectorFilter}</span>
+                <ChevronDown className="w-4 h-4 flex-shrink-0 text-slate-400" />
+              </button>
             </div>
 
             <div>
@@ -322,7 +309,14 @@ export default function ScreenerPage() {
         </div>
       </div>
 
-      {/* Results */}
+      <SectorModal
+        open={sectorOpen}
+        onClose={() => setSectorOpen(false)}
+        value={sectorFilter}
+        onSelect={setSectorFilter}
+        sectors={sectors}
+      />
+
       {results.length === 0 ? (
         <div className="glass p-12 rounded-2xl text-center">
           <Filter className="w-16 h-16 text-slate-500/40 mx-auto mb-4" />
@@ -333,99 +327,98 @@ export default function ScreenerPage() {
           </button>
         </div>
       ) : (
-<div className="glass rounded-xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full data-table text-sm">
-                <thead>
-                  <tr>
-                    <th className="w-8 text-center">#</th>
-                    <th>نماد</th>
-                    <th className="hidden sm:table-cell">نام</th>
-                    <th className="hidden md:table-cell">صنعت</th>
-                    <th>قیمت</th>
-                    <th>امتیاز</th>
-                    <th className="hidden lg:table-cell">RSI</th>
-                    <th>تغییر</th>
-                    <th className="hidden sm:table-cell">وضعیت</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {displayList.map((s, i) => {
-                    const ind = indicators[s.symbol] || {};
-                    const conf = SIGNAL[s.signal];
-                    const ConfIcon = conf.icon;
-                    const cp = s.change_pct || 0;
-                    const up = cp > 0;
-                    const down = cp < 0;
-                    const nameColor = up ? 'text-success' : down ? 'text-danger' : 'text-slate-300';
-                    return (
-                      <tr key={s.symbol}>
-                        <td className="num text-[10px] text-slate-500 text-center">{fmt(i + 1)}</td>
-                        <td>
-                          <Link href={`/predictions/${encodeURIComponent(s.symbol)}`}
-                            className={`font-black text-sm hover:underline transition-colors ${nameColor}`}>
-                            {s.symbol}
-                          </Link>
-                        </td>
-                        <td className="hidden sm:table-cell text-slate-400 text-xs">{s.name}</td>
-                        <td className="hidden md:table-cell">
-                          <span className="text-[10px] text-slate-400">{s.sector?.slice(0, 20)}</span>
-                        </td>
-                        <td>
-                          <span className={`num text-xs font-bold ${nameColor}`}>{fmt(s.close)}</span>
-                        </td>
-                        <td>
-                          <div className="flex items-center gap-1.5">
-                            <span className="num font-bold text-white text-xs">{Math.round(s.prob * 100)}</span>
-                            <div className="w-10 h-1 bg-slate-700 rounded-full overflow-hidden hidden sm:block">
-                              <div className={`h-full ${
-                                s.signal === 'BUY' ? 'bg-gradient-to-l from-success to-primary' :
-                                s.signal === 'SELL' ? 'bg-danger' : 'bg-slate-500'
-                              }`} style={{ width: `${s.prob * 100}%` }} />
-                            </div>
+        <div className="glass rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full data-table text-sm">
+              <thead>
+                <tr>
+                  <th className="w-8 text-center">#</th>
+                  <th>نماد</th>
+                  <th className="hidden sm:table-cell">نام</th>
+                  <th className="hidden md:table-cell">صنعت</th>
+                  <th>قیمت</th>
+                  <th>امتیاز</th>
+                  <th className="hidden lg:table-cell">RSI</th>
+                  <th>تغییر</th>
+                  <th className="hidden sm:table-cell">وضعیت</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {displayList.map((s, i) => {
+                  const ind = indicators[s.symbol] || {};
+                  const conf = SIGNAL[s.signal];
+                  const ConfIcon = conf.icon;
+                  const cp = s.change_pct || 0;
+                  const up = cp > 0;
+                  const down = cp < 0;
+                  const nameColor = up ? 'text-success' : down ? 'text-danger' : 'text-slate-300';
+                  return (
+                    <tr key={s.symbol}>
+                      <td className="num text-[10px] text-slate-500 text-center">{fmt(i + 1)}</td>
+                      <td>
+                        <Link href={`/predictions/${encodeURIComponent(s.symbol)}`}
+                          className={`font-black text-sm hover:underline transition-colors ${nameColor}`}>
+                          {s.symbol}
+                        </Link>
+                      </td>
+                      <td className="hidden sm:table-cell text-slate-400 text-xs">{s.name}</td>
+                      <td className="hidden md:table-cell">
+                        <span className="text-[10px] text-slate-400">{s.sector?.slice(0, 20)}</span>
+                      </td>
+                      <td>
+                        <span className={`num text-xs font-bold ${nameColor}`}>{fmt(s.close)}</span>
+                      </td>
+                      <td>
+                        <div className="flex items-center gap-1.5">
+                          <span className="num font-bold text-white text-xs">{Math.round(s.prob * 100)}</span>
+                          <div className="w-10 h-1 bg-slate-700 rounded-full overflow-hidden hidden sm:block">
+                            <div className={`h-full ${
+                              s.signal === 'BUY' ? 'bg-gradient-to-l from-success to-primary' :
+                              s.signal === 'SELL' ? 'bg-danger' : 'bg-slate-500'
+                            }`} style={{ width: `${s.prob * 100}%` }} />
                           </div>
-                        </td>
-                        <td className="hidden lg:table-cell">
-                          <span className={`num text-xs ${
-                            ind.rsi > 70 ? 'text-danger' : ind.rsi < 30 ? 'text-success' : 'text-slate-300'
-                          }`}>
-                            {ind.rsi != null ? ind.rsi.toFixed(1) : '—'}
-                          </span>
-                        </td>
-                        <td>
-                          <span className={`num text-[11px] font-black px-1.5 py-0.5 rounded ${
-                            up ? 'text-success bg-success/15' : down ? 'text-danger bg-danger/15' : 'text-slate-400 bg-slate-500/15'
-                          }`}>
-                            {up ? '▲ +' : down ? '▼ ' : ''}{cp.toFixed(2)}٪
-                          </span>
-                        </td>
-                        <td className="hidden sm:table-cell">
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full inline-flex items-center gap-0.5 ${conf.bg} ${conf.color} border ${conf.border}`}>
-                            <ConfIcon className="w-2.5 h-2.5" /> {conf.label}
-                          </span>
-                        </td>
-                        <td>
-                          <Link href={`/predictions/${encodeURIComponent(s.symbol)}`}
-                            className="text-primary hover:underline text-[11px]">
-                            جزئیات
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-            {results.length > 50 && !showAll && (
-              <div className="p-4 text-center border-t border-border/50">
-                <button onClick={() => setShowAll(true)} className="btn-secondary text-sm">
-                  نمایش همه ({fmt(results.length)})
-                </button>
-              </div>
-            )}
+                        </div>
+                      </td>
+                      <td className="hidden lg:table-cell">
+                        <span className={`num text-xs ${
+                          ind.rsi > 70 ? 'text-danger' : ind.rsi < 30 ? 'text-success' : 'text-slate-300'
+                        }`}>
+                          {ind.rsi != null ? ind.rsi.toFixed(1) : '—'}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`num text-[11px] font-black px-1.5 py-0.5 rounded ${
+                          up ? 'text-success bg-success/15' : down ? 'text-danger bg-danger/15' : 'text-slate-400 bg-slate-500/15'
+                        }`}>
+                          {up ? '▲ +' : down ? '▼ ' : ''}{cp.toFixed(2)}٪
+                        </span>
+                      </td>
+                      <td className="hidden sm:table-cell">
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full inline-flex items-center gap-0.5 ${conf.bg} ${conf.color} border ${conf.border}`}>
+                          <ConfIcon className="w-2.5 h-2.5" /> {conf.label}
+                        </span>
+                      </td>
+                      <td>
+                        <Link href={`/predictions/${encodeURIComponent(s.symbol)}`}
+                          className="text-primary hover:underline text-[11px]">
+                          جزئیات
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-        </>
+          {results.length > 50 && !showAll && (
+            <div className="p-4 text-center border-t border-border/50">
+              <button onClick={() => setShowAll(true)} className="btn-secondary text-sm">
+                نمایش همه ({fmt(results.length)})
+              </button>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
