@@ -94,8 +94,8 @@ export default function About() {
             <span className="gradient-text">Javid LM</span>
           </h1>
 
-          <p className="text-xl md:text-2xl text-slate-300 mb-3 font-medium">موتور یادگیری ماشین اختصاصی</p>
-          <p className="text-base text-slate-400 mb-12 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-white mb-3 font-bold">موتور یادگیری ماشین اختصاصی</p>
+          <p className="text-lg text-slate-200 mb-12 max-w-2xl mx-auto leading-relaxed font-medium">
             Javid LM یک معماری چندلایه از مدل‌های یادگیری ماشین است که با ترکیب تکنیک‌های Gradient Boosting
             و تحلیل هم‌زمان ۱۰۴ فیچر تکنیکال و بنیادی، به امتیازدهی و پیش‌بینی الگوهای قیمتی در بازار سرمایه ایران می‌پردازد.
           </p>
@@ -122,7 +122,7 @@ export default function About() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">معماری Javid LM</h2>
-            <p className="text-slate-400">معماری چندلایه‌ی یادگیری ماشین</p>
+            <p className="text-slate-200 font-medium">معماری چندلایه‌ی یادگیری ماشین</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-4">
