@@ -190,7 +190,7 @@ export default function StockPage() {
       </div>
 
       {/* Trade Setup */}
-      <RiskProfile chart={chartData} close={lastBar.c} sig={sig} />
+      <RiskProfile chart={chartData} close={lastBar.c} sig={sig} ind={ind} fund={fund} />
 
       {/* Chart */}
       <div className="glass-strong p-3 md:p-4 rounded-2xl">

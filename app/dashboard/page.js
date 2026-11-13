@@ -118,43 +118,52 @@ function MarketPulse({ buy, hold, sell, total }) {
 }
 
 // Heatmap صنایع
-function SectorHeatmap({ sectors }) {
+function SectorHeatmap({ sectors, onSelect }) {
   const maxCount = Math.max(...sectors.map(s => s.count), 1);
   return (
     <div className="glass-strong p-4 md:p-6 rounded-2xl">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <Layers className="w-5 h-5 text-primary" />
           <h3 className="text-base font-bold text-white">Heatmap صنایع</h3>
         </div>
-        <div className="flex items-center gap-2 text-[10px]">
-          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded bg-success" /><span className="text-slate-400">پرتوجه</span></div>
-          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded bg-slate-500" /><span className="text-slate-400">خنثی</span></div>
-          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded bg-danger" /><span className="text-slate-400">پرریسک</span></div>
+        <div className="flex items-center gap-3 text-[10px]">
+          <div className="flex items-center gap-1"><div className="w-2.5 h-2.5 rounded bg-success" /><span className="text-slate-300 font-medium">پرتوجه</span></div>
+          <div className="flex items-center gap-1"><div className="w-2.5 h-2.5 rounded bg-slate-500" /><span className="text-slate-300 font-medium">خنثی</span></div>
+          <div className="flex items-center gap-1"><div className="w-2.5 h-2.5 rounded bg-danger" /><span className="text-slate-300 font-medium">پرریسک</span></div>
         </div>
       </div>
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1.5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
         {sectors.slice(0, 18).map((sec) => {
           const buyRatio = sec.count > 0 ? (sec.buy / sec.count) : 0;
           const sellRatio = sec.count > 0 ? (sec.sell / sec.count) : 0;
-          let bg = 'bg-slate-500/20';
-          if (buyRatio > 0.4) bg = 'bg-success/30';
-          else if (buyRatio > 0.2) bg = 'bg-success/20';
-          else if (sellRatio > 0.4) bg = 'bg-danger/30';
-          else if (sellRatio > 0.2) bg = 'bg-danger/20';
+          let bg = 'bg-slate-600/40', border = 'border-slate-500/40';
+          if (buyRatio > 0.4) { bg = 'bg-success/40'; border = 'border-success/60'; }
+          else if (buyRatio > 0.2) { bg = 'bg-success/25'; border = 'border-success/40'; }
+          else if (sellRatio > 0.4) { bg = 'bg-danger/40'; border = 'border-danger/60'; }
+          else if (sellRatio > 0.2) { bg = 'bg-danger/25'; border = 'border-danger/40'; }
           const icon = SECTOR_ICONS[sec.name] || '📊';
-          const size = sec.count / maxCount;
           return (
-            <Link key={sec.name}
-              href={`/dashboard?sector=${encodeURIComponent(sec.name)}`}
-              className={`${bg} rounded-lg p-2 hover:scale-105 transition-transform border border-border/30 group`}>
-              <div className="flex items-center gap-1 mb-1">
-                <span className="text-base">{icon}</span>
-                <span className="text-[9px] text-white/80 truncate">{sec.name.slice(0, 10)}</span>
+            <button key={sec.name}
+              onClick={() => onSelect(sec.name)}
+              className={`${bg} ${border} border rounded-lg p-2.5 hover:scale-105 transition-transform text-right`}>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <span className="text-lg">{icon}</span>
+                <span className="text-[10px] text-white font-semibold leading-tight line-clamp-2">{sec.name}</span>
               </div>
-              <div className="num text-xs font-black text-white">{fmt(sec.count)}</div>
-              {sec.buy > 0 && <div className="text-[8px] text-success font-bold mt-0.5">{sec.buy}↑</div>}
-            </Link>
+              <div className="flex items-baseline justify-between gap-1">
+                <div>
+                  <div className="num text-sm font-black text-white">{fmt(sec.count)}</div>
+                  <div className="text-[8px] text-white/70">سهم</div>
+                </div>
+                {sec.buy > 0 && (
+                  <div className="text-right">
+                    <div className="num text-xs font-black text-success">{fmt(sec.buy)}</div>
+                    <div className="text-[8px] text-success/90">↑ توجه</div>
+                  </div>
+                )}
+              </div>
+            </button>
           );
         })}
       </div>
@@ -164,29 +173,36 @@ function SectorHeatmap({ sectors }) {
 
 // Ticker Tape
 function TickerTape({ signals }) {
-  const topBuys = signals.filter(s => s.signal === 'BUY').slice(0, 25);
+  const sorted = [...signals].sort((a, b) => Math.abs(b.change_pct || 0) - Math.abs(a.change_pct || 0));
+  const top = sorted.slice(0, 100);
   const [offset, setOffset] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => setOffset(o => o + 1), 50);
+    const id = setInterval(() => setOffset(o => o + 1), 40);
     return () => clearInterval(id);
   }, []);
-  if (topBuys.length === 0) return null;
-  const itemWidth = 200;
-  const totalWidth = topBuys.length * itemWidth;
+  if (top.length === 0) return null;
+  const itemWidth = 160;
+  const totalWidth = top.length * itemWidth;
   const pos = -(offset % totalWidth);
   return (
     <div className="glass rounded-xl overflow-hidden relative">
-      <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-bg to-transparent z-10" />
-      <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-bg to-transparent z-10" />
-      <div className="flex py-2" style={{ transform: `translateX(${pos}px)`, transition: 'none', width: `${totalWidth * 2}px` }}>
-        {[...topBuys, ...topBuys].map((s, i) => (
-          <div key={i} className="flex items-center gap-2 px-4 whitespace-nowrap" style={{ width: `${itemWidth}px` }}>
-            <span className="text-xs font-bold text-white">{s.symbol}</span>
-            <span className="num text-xs text-success">+{Math.round(s.prob * 100)}</span>
-            <span className="text-[10px] text-slate-500">{s.sector?.slice(0, 8)}</span>
-            <span className="w-1 h-1 rounded-full bg-success" />
-          </div>
-        ))}
+      <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-bg to-transparent z-10 pointer-events-none" />
+      <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-bg to-transparent z-10 pointer-events-none" />
+      <div className="flex py-2.5" style={{ transform: `translateX(${pos}px)`, transition: 'none', width: `${totalWidth * 2}px` }}>
+        {[...top, ...top].map((s, i) => {
+          const cp = s.change_pct || 0;
+          const up = cp >= 0;
+          return (
+            <Link key={i} href={`/predictions/${encodeURIComponent(s.symbol)}`}
+              className="flex items-center gap-2 px-3 whitespace-nowrap hover:bg-white/5 transition-colors"
+              style={{ width: `${itemWidth}px` }}>
+              <span className="text-xs font-bold text-white">{s.symbol}</span>
+              <span className={`num text-xs font-bold flex items-center gap-0.5 ${up ? 'text-success' : 'text-danger'}`}>
+                {up ? '▲' : '▼'} {Math.abs(cp).toFixed(2)}٪
+              </span>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
@@ -401,7 +417,7 @@ export default function Dashboard() {
       </div>
 
       {/* Sector Heatmap */}
-      <SectorHeatmap sectors={sectorList} />
+      <SectorHeatmap sectors={sectorList} onSelect={(name) => { setSectorFilter(name); setShowAll(false); setTimeout(() => document.getElementById('stocks-list')?.scrollIntoView({ behavior: 'smooth' }), 100); }} />
 
       {/* Stocks List */}
       <div id="stocks-list">
