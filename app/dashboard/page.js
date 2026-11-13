@@ -62,7 +62,7 @@ function MarketPulse({ buy, hold, sell, total }) {
             </div>
             <div>
               <div className="text-base font-bold text-white">نبض بازار</div>
-              <div className="text-[11px] text-slate-400">توزیع سیگنال‌های تحلیل</div>
+              <div className="text-[11px] text-slate-400">توزیع تحلیل‌ها</div>
             </div>
           </div>
           <div className="text-left">
@@ -83,7 +83,7 @@ function MarketPulse({ buy, hold, sell, total }) {
               <circle cx={CX} cy={CY} r={R} fill="none" stroke="url(#sellGrad)" strokeWidth={stroke} strokeDasharray={`${(sellPct / 100) * circ} ${circ}`} strokeDashoffset={`-${((buyPct + holdPct) / 100) * circ}`} opacity={animated.sell > 0 ? 1 : 0} style={{ transition: 'opacity 0.3s' }} />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <div className="text-[9px] text-slate-500 mb-1">سیگنال مثبت</div>
+              <div className="text-[9px] text-slate-500 mb-1">توجه مثبت</div>
               <div className="num text-3xl font-black text-success">{buyPct.toFixed(0)}٪</div>
               <div className="text-[9px] text-slate-400 mt-1">{fmt(animated.buy)} سهم</div>
             </div>
