@@ -97,6 +97,54 @@ function calcWilliamsR(h, l, c, p = 14) {
   if (hi === lo) return -50;
   return ((hi - c[c.length - 1]) / (hi - lo)) * -100;
 }
+function calcADX(h, l, c, p = 14) {
+  if (c.length < p * 2) return null;
+  const up = [], dn = [];
+  for (let i = 1; i < c.length; i++) {
+    up.push(Math.max(h[i] - h[i-1], 0));
+    dn.push(Math.max(l[i-1] - l[i], 0));
+  }
+  const trs = [];
+  for (let i = 1; i < c.length; i++) trs.push(Math.max(h[i] - l[i], Math.abs(h[i] - c[i-1]), Math.abs(l[i] - c[i-1])));
+  const pdi = [], ndi = [];
+  let atr = trs.slice(0, p).reduce((a,b) => a+b, 0) / p;
+  let pdm = up.slice(0, p).reduce((a,b) => a+b, 0) / p;
+  let ndm = dn.slice(0, p).reduce((a,b) => a+b, 0) / p;
+  for (let i = p; i < trs.length; i++) {
+    atr = (atr * (p-1) + trs[i]) / p;
+    pdm = (pdm * (p-1) + up[i-1]) / p;
+    ndm = (ndm * (p-1) + dn[i-1]) / p;
+    pdi.push(100 * pdm / (atr || 1));
+    ndi.push(100 * ndm / (atr || 1));
+  }
+  const dx = pdi.map((v, i) => 100 * Math.abs(v - ndi[i]) / ((v + ndi[i]) || 1));
+  if (dx.length < p) return null;
+  return dx.slice(-p).reduce((a,b) => a+b, 0) / p;
+}
+function calcMFI(h, l, c, v, p = 14) {
+  if (c.length < p + 1) return null;
+  let pos = 0, neg = 0;
+  for (let i = c.length - p; i < c.length; i++) {
+    const tp = (h[i] + l[i] + c[i]) / 3;
+    const tpPrev = (h[i-1] + l[i-1] + c[i-1]) / 3;
+    const mf = tp * (v?.[i] || 1);
+    if (tp > tpPrev) pos += mf;
+    else if (tp < tpPrev) neg += mf;
+  }
+  if (neg === 0) return 100;
+  return 100 - 100 / (1 + pos / neg);
+}
+function calcOBVSlope(h, l, c, v, p = 5) {
+  if (c.length < p + 2) return null;
+  let obv = 0;
+  const vals = [];
+  for (let i = 1; i < c.length; i++) {
+    if (c[i] > c[i-1]) obv += v?.[i] || 0;
+    else if (c[i] < c[i-1]) obv -= v?.[i] || 0;
+    vals.push(obv);
+  }
+  return vals[vals.length - 1] - vals[vals.length - p];
+}
 function fibonacci(high, low) {
   const d = high - low;
   return { '0.0': low, '23.6': low + 0.236 * d, '38.2': low + 0.382 * d, '50.0': low + 0.5 * d, '61.8': low + 0.618 * d, '78.6': low + 0.786 * d, '100.0': high };
@@ -151,10 +199,14 @@ export default function MarketIndex() {
     const low52 = Math.min(...closes.slice(-250));
     const e12 = calcEMA(closes, 12), e26 = calcEMA(closes, 26);
     const macd = (e12 != null && e26 != null) ? e12 - e26 : null;
+    const vols = rows.map(r => r.v || 0);
     const indicators = {
       rsi: calcRSI(closes), macd, atr: calcATR(highs, lows, closes),
       stoch: calcStoch(highs, lows, closes), bbPct: calcBB(closes)?.pctB,
       cci: calcCCI(closes), willr: calcWilliamsR(highs, lows, closes),
+      adx: calcADX(highs, lows, closes),
+      mfi: calcMFI(highs, lows, closes, vols),
+      obvSlope: calcOBVSlope(highs, lows, closes, vols),
     };
     const fib = fibonacci(high52, low52);
     const sr = getSR(current, highs, lows, current);
@@ -177,13 +229,13 @@ export default function MarketIndex() {
     { key: 'rsi', label: 'RSI', value: indicators.rsi, ref: '۳۰ / ۷۰', color: (v) => v > 70 ? 'text-danger' : v < 30 ? 'text-success' : 'text-white' },
     { key: 'macd', label: 'MACD', value: indicators.macd, ref: 'خط صفر', color: (v) => v > 0 ? 'text-success' : 'text-danger' },
     { key: 'stoch', label: 'Stochastic', value: indicators.stoch, ref: '۲۰ / ۸۰', color: (v) => v > 80 ? 'text-danger' : v < 20 ? 'text-success' : 'text-white' },
-    { key: 'adx', label: 'ADX', value: null, ref: 'قدرت روند', color: () => 'text-white' },
+    { key: 'adx', label: 'ADX', value: indicators.adx, ref: 'قدرت روند', color: (v) => v > 25 ? 'text-success' : 'text-slate-400' },
     { key: 'atr', label: 'ATR', value: indicators.atr, ref: 'نوسان', color: () => 'text-warning' },
     { key: 'bb', label: 'Bollinger %B', value: indicators.bbPct, ref: '۰ — ۱', color: (v) => v > 0.9 ? 'text-danger' : v < 0.1 ? 'text-success' : 'text-white' },
     { key: 'cci', label: 'CCI', value: indicators.cci, ref: '±۱۰۰', color: (v) => v > 100 ? 'text-danger' : v < -100 ? 'text-success' : 'text-white' },
-    { key: 'mfi', label: 'MFI', value: null, ref: '۲۰ / ۸۰', color: () => 'text-white' },
+    { key: 'mfi', label: 'MFI', value: indicators.mfi, ref: '۲۰ / ۸۰', color: (v) => v > 80 ? 'text-danger' : v < 20 ? 'text-success' : 'text-white' },
     { key: 'willr', label: 'Williams %R', value: indicators.willr, ref: '-۲۰ / -۸۰', color: (v) => v > -20 ? 'text-danger' : v < -80 ? 'text-success' : 'text-white' },
-    { key: 'obv', label: 'OBV Slope', value: null, ref: 'روند حجم', color: () => 'text-white' },
+    { key: 'obv', label: 'OBV Slope', value: indicators.obvSlope, ref: 'روند حجم', color: (v) => v > 0 ? 'text-success' : 'text-danger' },
     { key: 'rtm', label: 'RTM', value: null, ref: 'ساختار', color: () => 'text-slate-400' },
     { key: 'pa', label: 'Price Action', value: null, ref: 'الگو', color: () => 'text-slate-400' },
   ];
@@ -203,21 +255,9 @@ export default function MarketIndex() {
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
 
         <div className="relative p-5 md:p-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2 text-[11px] text-slate-400">
-              <LineChart className="w-4 h-4 text-primary" />
-              شاخص کل بورس تهران
-            </div>
-            <div className="flex gap-1.5">
-              {[30, 90, 250, 1000].map(d => (
-                <button key={d} onClick={() => setRange(d)}
-                  className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all ${
-                    range === d ? 'bg-primary text-bg' : 'glass text-slate-300'
-                  }`}>
-                  {d === 30 ? '۱م' : d === 90 ? '۳م' : d === 250 ? '۱س' : '۴س'}
-                </button>
-              ))}
-            </div>
+          <div className="flex items-center gap-2 mb-6 text-[11px] text-slate-300">
+            <LineChart className="w-4 h-4 text-primary" />
+            شاخص کل بورس تهران
           </div>
 
           <div className="flex flex-wrap items-end gap-6 mb-6">
@@ -261,9 +301,21 @@ export default function MarketIndex() {
 
       {/* Chart Card (جدا) */}
       <div className="glass-strong p-3 md:p-4 rounded-2xl">
-        <div className="flex items-center gap-2 mb-3">
-          <BarChart3 className="w-4 h-4 text-primary" />
-          <span className="text-sm font-bold text-white">نمودار شاخص کل</span>
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-primary" />
+            <span className="text-sm font-bold text-white">نمودار شاخص کل</span>
+          </div>
+          <div className="flex gap-1.5">
+            {[30, 90, 250, 1000].map(d => (
+              <button key={d} onClick={() => setRange(d)}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                  range === d ? 'bg-primary text-bg' : 'glass text-slate-300'
+                }`}>
+                {d === 30 ? '۱م' : d === 90 ? '۳م' : d === 250 ? '۱س' : '۴س'}
+              </button>
+            ))}
+          </div>
         </div>
         <div className="rounded-xl overflow-hidden bg-bg/40 border border-border/50 p-1">
           <IndexChart data={computed.rows.slice(-range)} height={340} />
