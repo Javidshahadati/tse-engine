@@ -205,6 +205,20 @@ function analyze(name, val, ind) {
       if (val < -80) return { level: 'oversold', text: `Williams %R برابر ${val.toFixed(1)} — در ناحیه اشباع فروش.` };
       return { level: 'neutral', text: `Williams %R برابر ${val.toFixed(1)} — در ناحیه خنثی.` };
 
+    case 'rtm':
+      if (val === 'BOS صعودی') return { level: 'bullish', text: 'ساختار بازار صعودی است: قیمت از سقف اخیر عبور کرده و BOS صعودی تشکیل شده. ادامه روند صعودی محتمل است.' };
+      if (val === 'BOS نزولی') return { level: 'bearish', text: 'ساختار بازار نزولی است: قیمت زیر کف اخیر رفته و BOS نزولی تشکیل شده.' };
+      if (val === 'خنثی') return { level: 'neutral', text: 'قیمت هنوز ساختار مشخصی را نشکسته و بین سقف و کف اخیر نوسان می‌کند.' };
+      return { level: 'info', text: 'داده کافی نیست' };
+    case 'price-action':
+      if (val === 'Hammer') return { level: 'bullish', text: 'الگوی Hammer: سایه پایین بلند نشان‌دهنده فشار خرید قوی در انتهای نزول است.' };
+      if (val === 'Shooting Star') return { level: 'bearish', text: 'الگوی Shooting Star: سایه بالای بلند نشان‌دهنده فشار فروش در انتهای صعود است.' };
+      if (val === 'Doji') return { level: 'neutral', text: 'الگوی Doji: تعادل بین خریدار و فروشنده. احتمال توقف یا تغییر روند.' };
+      if (val === 'Bullish Engulfing') return { level: 'bullish', text: 'الگوی Bullish Engulfing: کندل صعودی، کندل نزولی قبل را کاملاً پوشانده. تسلط خریداران.' };
+      if (val === 'Bearish Engulfing') return { level: 'bearish', text: 'الگوی Bearish Engulfing: کندل نزولی، کندل صعودی قبل را کاملاً پوشانده. تسلط فروشندگان.' };
+      if (val === 'Bullish Marubozu') return { level: 'bullish', text: 'Marubozu صعودی: بدنه کامل صعودی بدون سایه. قدرت خریداران.' };
+      if (val === 'Bearish Marubozu') return { level: 'bearish', text: 'Marubozu نزولی: بدنه کامل نزولی بدون سایه. قدرت فروشندگان.' };
+      return { level: 'info', text: 'کندل آخر الگوی خاصی نشان نمی‌دهد.' };
     case 'obv':
       if (val > 0) return { level: 'bullish', text: `شیب OBV مثبت است — ورود پول هوشمند قابل تشخیص است.` };
       return { level: 'bearish', text: `شیب OBV منفی است — خروج پول در حال وقوع است.` };
@@ -269,6 +283,39 @@ export default function IndicatorPage() {
   if (chartData.length === 0) {
     return <div className="max-w-2xl mx-auto px-4 py-20 text-center text-slate-400">داده‌ای برای این سهم موجود نیست.</div>;
   }
+
+  // RTM computation
+  const rtmData = (() => {
+    if (chartData.length < 20) return null;
+    const highs = chartData.map(r => r.h);
+    const lows = chartData.map(r => r.l);
+    const cur = chartData[chartData.length - 1];
+    const recentHigh = Math.max(...highs.slice(-15, -5));
+    const recentLow = Math.min(...lows.slice(-15, -5));
+    const bosBull = cur.c > recentHigh;
+    const bosBear = cur.c < recentLow;
+    return { bosBull, bosBear, recentHigh, recentLow };
+  })();
+  // PA computation
+  const paData = (() => {
+    if (chartData.length < 3) return null;
+    const last = chartData[chartData.length - 1];
+    const prev = chartData[chartData.length - 2];
+    const body = Math.abs(last.c - last.o);
+    const range = last.h - last.l;
+    if (range === 0) return { pattern: 'کندل عادی', signal: 'neutral', desc: 'کندل بدون دامنه' };
+    const upper = last.h - Math.max(last.c, last.o);
+    const lower = Math.min(last.c, last.o) - last.l;
+    const br = body / range, ur = upper / range, lr = lower / range;
+    if (br < 0.1) return { pattern: 'Doji', signal: 'neutral', desc: 'تعادل بین خریدار و فروشنده' };
+    if (lr > 0.6 && ur < 0.15 && last.c >= last.o) return { pattern: 'Hammer', signal: 'bullish', desc: 'احتمال بازگشت صعودی' };
+    if (ur > 0.6 && lr < 0.15 && last.c <= last.o) return { pattern: 'Shooting Star', signal: 'bearish', desc: 'احتمال بازگشت نزولی' };
+    if (last.c > last.o && prev.c < prev.o && last.c > prev.o && last.o < prev.c) return { pattern: 'Bullish Engulfing', signal: 'bullish', desc: 'تسلط خریداران' };
+    if (last.c < last.o && prev.c > prev.o && last.c < prev.o && last.o > prev.c) return { pattern: 'Bearish Engulfing', signal: 'bearish', desc: 'تسلط فروشندگان' };
+    if (br > 0.85 && last.c > last.o) return { pattern: 'Bullish Marubozu', signal: 'bullish', desc: 'قدرت خریداران' };
+    if (br > 0.85 && last.c < last.o) return { pattern: 'Bearish Marubozu', signal: 'bearish', desc: 'قدرت فروشندگان' };
+    return { pattern: 'کندل عادی', signal: 'neutral', desc: 'الگوی خاصی تشخیص داده نشد' };
+  })();
 
   const valueMap = {
     rsi: ind.rsi, macd: ind.macd, stochastic: ind.stoch_k, adx: ind.adx,

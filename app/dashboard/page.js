@@ -173,31 +173,31 @@ function SectorHeatmap({ sectors, onSelect }) {
 
 // Ticker Tape
 function TickerTape({ signals }) {
-  const sorted = [...signals].sort((a, b) => Math.abs(b.change_pct || 0) - Math.abs(a.change_pct || 0));
-  const top = sorted.slice(0, 100);
-  const [offset, setOffset] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => setOffset(o => o + 1), 40);
-    return () => clearInterval(id);
-  }, []);
+  const top = [...signals]
+    .sort((a, b) => Math.abs(b.change_pct || 0) - Math.abs(a.change_pct || 0))
+    .slice(0, 100);
   if (top.length === 0) return null;
-  const itemWidth = 160;
-  const totalWidth = top.length * itemWidth;
-  const pos = -(offset % totalWidth);
+
+  const itemW = 155;
+  const totalW = top.length * itemW * 2;
+
   return (
     <div className="glass rounded-xl overflow-hidden relative">
-      <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-bg to-transparent z-10 pointer-events-none" />
-      <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-bg to-transparent z-10 pointer-events-none" />
-      <div className="flex py-2.5" style={{ transform: `translateX(${pos}px)`, transition: 'none', width: `${totalWidth * 2}px` }}>
+      <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-bg to-transparent z-10 pointer-events-none" />
+      <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-bg to-transparent z-10 pointer-events-none" />
+      <div className="flex py-2.5" style={{
+        width: `${totalW}px`,
+        animation: `ticker-scroll ${top.length * 1.8}s linear infinite`,
+      }}>
         {[...top, ...top].map((s, i) => {
           const cp = s.change_pct || 0;
           const up = cp >= 0;
           return (
             <Link key={i} href={`/predictions/${encodeURIComponent(s.symbol)}`}
-              className="flex items-center gap-2 px-3 whitespace-nowrap hover:bg-white/5 transition-colors"
-              style={{ width: `${itemWidth}px` }}>
+              className="flex items-center gap-2 px-3 whitespace-nowrap hover:bg-white/10 transition-colors flex-shrink-0"
+              style={{ width: `${itemW}px` }}>
               <span className="text-xs font-bold text-white">{s.symbol}</span>
-              <span className={`num text-xs font-bold flex items-center gap-0.5 ${up ? 'text-success' : 'text-danger'}`}>
+              <span className={`num text-xs font-bold ${up ? 'text-success' : 'text-danger'}`}>
                 {up ? '▲' : '▼'} {Math.abs(cp).toFixed(2)}٪
               </span>
             </Link>
