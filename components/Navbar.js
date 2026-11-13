@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import { Activity, Menu, X, BarChart3, Info, Home, Star, Scale, Filter } from 'lucide-react';
+import { Activity, Menu, X, BarChart3, Info, Home, Star, Scale, Filter, Target } from 'lucide-react';
 
 const NAV_LINKS = [
   { href: '/', label: 'صفحه اصلی', icon: Home },
@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { href: '/watchlist', label: 'واچ‌لیست', icon: Star },
   { href: '/compare', label: 'مقایسه', icon: Scale },
   { href: '/screener', label: 'اسکرینر', icon: Filter },
+  { href: '/backtest', label: 'بک‌تست', icon: Target },
 ];
 
 export default function Navbar() {
