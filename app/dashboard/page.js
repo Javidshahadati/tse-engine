@@ -197,7 +197,7 @@ function TickerTape({ signals }) {
       <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-bg to-transparent z-10 pointer-events-none" />
       <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-bg to-transparent z-10 pointer-events-none" />
       <div className="flex py-2.5 w-max" style={{
-        animation: `ticker-scroll 40s linear infinite`,
+        animation: `ticker-scroll 210s linear infinite`,
         willChange: 'transform',
       }}>
         {top.map((s, i) => <Item key={i} s={s} k={i} />)}
