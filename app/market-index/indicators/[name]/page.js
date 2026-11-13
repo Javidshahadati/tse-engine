@@ -3,20 +3,18 @@ import { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import {
-  ArrowRight, TrendingUp, TrendingDown, AlertTriangle, Info,
-  BookOpen, Sparkles, BarChart3, ArrowLeft, Lightbulb, Shield, Activity
-} from 'lucide-react';
+import { ArrowRight, TrendingUp, TrendingDown, AlertTriangle, Info, BookOpen, Sparkles, BarChart3, ArrowLeft, Lightbulb, Shield, Activity } from 'lucide-react';
 
 const IndexChart = dynamic(() => import('@/components/IndexChart'), { ssr: false });
 
 function fmt(n, d = 2) {
   if (n == null) return '—';
   const num = Number(n);
-  if (isNaN(num)) return n;
+  if (isNaN(num)) return String(n);
   return num.toLocaleString('fa-IR', { maximumFractionDigits: d });
 }
 
+// --- توابع محاسباتی ---
 function calcRSI(c, p = 14) {
   if (c.length < p + 1) return null;
   let g = 0, l = 0;
@@ -71,150 +69,68 @@ function calcWilliamsR(h, l, c, p = 14) {
   if (hi === lo) return -50;
   return ((hi - c[c.length - 1]) / (hi - lo)) * -100;
 }
+function calcADX(h, l, c, p = 14) {
+  if (c.length < p * 2) return null;
+  const up = [], dn = [];
+  for (let i = 1; i < c.length; i++) {
+    up.push(Math.max(h[i] - h[i-1], 0));
+    dn.push(Math.max(l[i-1] - l[i], 0));
+  }
+  const trs = [];
+  for (let i = 1; i < c.length; i++) trs.push(Math.max(h[i] - l[i], Math.abs(h[i] - c[i-1]), Math.abs(l[i] - c[i-1])));
+  let atr = trs.slice(0, p).reduce((a,b) => a+b, 0) / p;
+  let pdm = up.slice(0, p).reduce((a,b) => a+b, 0) / p;
+  let ndm = dn.slice(0, p).reduce((a,b) => a+b, 0) / p;
+  const pdi = [], ndi = [];
+  for (let i = p; i < trs.length; i++) {
+    atr = (atr * (p-1) + trs[i]) / p;
+    pdm = (pdm * (p-1) + up[i-1]) / p;
+    ndm = (ndm * (p-1) + dn[i-1]) / p;
+    pdi.push(100 * pdm / (atr || 1));
+    ndi.push(100 * ndm / (atr || 1));
+  }
+  const dx = pdi.map((v, i) => 100 * Math.abs(v - ndi[i]) / ((v + ndi[i]) || 1));
+  if (dx.length < p) return null;
+  return dx.slice(-p).reduce((a,b) => a+b, 0) / p;
+}
+function calcMFI(h, l, c, v, p = 14) {
+  if (c.length < p + 1) return null;
+  let pos = 0, neg = 0;
+  for (let i = c.length - p; i < c.length; i++) {
+    const tp = (h[i] + l[i] + c[i]) / 3;
+    const tpPrev = (h[i-1] + l[i-1] + c[i-1]) / 3;
+    const mf = tp * (v?.[i] || 1);
+    if (tp > tpPrev) pos += mf;
+    else if (tp < tpPrev) neg += mf;
+  }
+  if (neg === 0) return 100;
+  return 100 - 100 / (1 + pos / neg);
+}
+function calcOBVSlope(h, l, c, v, p = 5) {
+  if (c.length < p + 2) return null;
+  let obv = 0;
+  const vals = [];
+  for (let i = 1; i < c.length; i++) {
+    if (c[i] > c[i-1]) obv += v?.[i] || 0;
+    else if (c[i] < c[i-1]) obv -= v?.[i] || 0;
+    vals.push(obv);
+  }
+  return vals[vals.length - 1] - vals[vals.length - p];
+}
 
 const CONFIG = {
-  rsi: {
-    name: 'RSI', full: 'شاخص قدرت نسبی', category: 'مومنتوم',
-    intro: 'شاخص قدرت نسبی سرعت و تغییر حرکت قیمت را اندازه‌گیری می‌کند. در بازه ۰ تا ۱۰۰ نوسان دارد.',
-    how: 'بالاتر از ۷۰ = اشباع خرید، کمتر از ۳۰ = اشباع فروش. بین ۴۰ تا ۶۰ ناحیه خنثی.',
-    tips: ['واگرایی RSI با قیمت = نشانه ضعف روند', 'RSI در روند قوی مدت‌ها بالای ۷۰ می‌ماند', 'ترکیب با حمایت/مقاومت = سیگنال قوی‌تر'],
-    conditions: [
-      { if: 'RSI بالای ۷۰', then: 'احتمال اصلاح یا توقف روند صعودی' },
-      { if: 'RSI زیر ۳۰', then: 'احتمال بازگشت صعودی' },
-      { if: 'واگرایی نزولی', then: 'هشدار ضعف روند صعودی' },
-    ],
-  },
-  macd: {
-    name: 'MACD', full: 'واگرایی میانگین متحرک', category: 'روند',
-    intro: 'MACD از تفاضل دو میانگین متحرک نمایی (۱۲ و ۲۶) محاسبه می‌شود و قدرت روند را نشان می‌دهد.',
-    how: 'MACD بالای صفر = صعودی، پایین = نزولی. کراس خط سیگنال = تغییر روند.',
-    tips: ['کراس صعودی/نزولی = سیگنال اصلی', 'هیستوگرام در حال کاهش = ضعف روند', 'واگرایی MACD قوی‌ترین سیگنال است'],
-    conditions: [
-      { if: 'MACD بالای صفر', then: 'روند صعودی' },
-      { if: 'MACD زیر صفر', then: 'روند نزولی' },
-      { if: 'کراس نزولی', then: 'احتمال تغییر روند به نزولی' },
-    ],
-  },
-  stochastic: {
-    name: 'Stochastic', full: 'استوکاستیک', category: 'مومنتوم',
-    intro: 'موقعیت قیمت بسته‌شدن را نسبت به بالاترین و پایین‌ترین قیمت دوره مشخص می‌کند.',
-    how: 'بالای ۸۰ = اشباع خرید، زیر ۲۰ = اشباع فروش. کراس %K از %D سیگنال است.',
-    tips: ['در بازار رِنج بهتر عمل می‌کند', 'کراس در ناحیه اشباع = قوی‌تر', 'با RSI ترکیب شود'],
-    conditions: [
-      { if: 'بالای ۸۰', then: 'احتمال اصلاح' },
-      { if: 'زیر ۲۰', then: 'احتمال بازگشت صعودی' },
-    ],
-  },
-  adx: {
-    name: 'ADX', full: 'میانگین شاخص جهت‌دار', category: 'روند',
-    intro: 'قدرت روند را بدون توجه به جهت اندازه‌گیری می‌کند.',
-    how: 'بالاتر از ۲۵ = روند قوی، کمتر از ۲۰ = رِنج. بالاتر از ۴۰ = روند بسیار قوی.',
-    tips: ['ADX بالا = از استراتژی روندی استفاده کن', 'ADX پایین = بازار رِنج', 'افت ADX = ضعف روند'],
-    conditions: [
-      { if: 'ADX بالای ۲۵', then: 'بازار روندی' },
-      { if: 'ADX زیر ۲۰', then: 'بازار رِنج' },
-    ],
-  },
-  atr: {
-    name: 'ATR', full: 'میانگین دامنه واقعی', category: 'نوسان',
-    intro: 'میانگین نوسان قیمت را در یک دوره مشخص نشان می‌دهد.',
-    how: 'ATR بالا = نوسان زیاد. برای تعیین حد ضرر و اندازه پوزیشن استفاده می‌شود.',
-    tips: ['حد ضرر = Entry - (1.5 × ATR)', 'ATR نسبی (ATR/Price) بهترین معیار', 'ATR بالا = ریسک بالا'],
-    conditions: [
-      { if: 'ATR نسبی بالای ۵٪', then: 'ریسک بالا' },
-      { if: 'ATR نسبی زیر ۲٪', then: 'نوسان پایین' },
-    ],
-  },
-  bollinger: {
-    name: 'Bollinger %B', full: 'باندهای بولینگر', category: 'نوسان',
-    intro: 'موقعیت قیمت را در باندهای بولینگر (میانگین ± ۲ انحراف معیار) نشان می‌دهد.',
-    how: '%B = ۰ باند پایین، = ۱ باند بالا. تنگی باند = کاهش نوسان.',
-    tips: ['قیمت در باند بالا + RSI بالا = اصلاح', 'Squeeze = آمادگی حرکت بزرگ', 'شکست باند = ادامه روند'],
-    conditions: [
-      { if: '%B > 0.95', then: 'احتمال بازگشت نزولی' },
-      { if: '%B < 0.05', then: 'احتمال بازگشت صعودی' },
-    ],
-  },
-  cci: {
-    name: 'CCI', full: 'شاخص کانال کالا', category: 'مومنتوم',
-    intro: 'چرخه‌های قیمتی را شناسایی می‌کند.',
-    how: 'بالای +۱۰۰ = صعودی قوی، زیر -۱۰۰ = نزولی قوی. کراس صفر = تغییر روند.',
-    tips: ['CCI > 200 = صعودی شدید', 'کراس صفر = سیگنال تغییر', 'در بازارهای کالایی مهم است'],
-    conditions: [
-      { if: 'بالای +۱۰۰', then: 'روند صعودی' },
-      { if: 'زیر -۱۰۰', then: 'روند نزولی' },
-    ],
-  },
-  mfi: {
-    name: 'MFI', full: 'شاخص جریان پول', category: 'حجم',
-    intro: 'ترکیب قیمت و حجم — RSI حجم‌وزنی.',
-    how: 'بالای ۸۰ = اشباع خرید، زیر ۲۰ = اشباع فروش. واگرایی = ضعف روند.',
-    tips: ['واگرایی MFI قوی‌ترین سیگنال', 'MFI > ۸۰ = ورود پول بیش از حد', 'MFI < ۲۰ = خروج پول'],
-    conditions: [
-      { if: 'بالای ۸۰', then: 'احتمال اصلاح' },
-      { if: 'زیر ۲۰', then: 'احتمال بازگشت' },
-    ],
-  },
-  willr: {
-    name: 'Williams %R', full: 'درصد ویلیامز', category: 'مومنتوم',
-    intro: 'برعکس استوکاستیک عمل می‌کند، بین -۲۰ تا -۸۰.',
-    how: 'بالاتر از -۲۰ = اشباع خرید، کمتر از -۸۰ = اشباع فروش.',
-    tips: ['مثل استوکاستیک ولی منفی', 'بهترین در رِنج', 'با RSI تایید'],
-    conditions: [
-      { if: 'بالاتر از -۲۰', then: 'احتمال اصلاح' },
-      { if: 'زیر -۸۰', then: 'احتمال بازگشت' },
-    ],
-  },
-  rtm: {
-    name: 'RTM', full: 'تحلیل ساختار بازار', category: 'ساختار',
-    intro: 'تحلیل ساختار بازار به شناسایی BOS، CHoCH و FVG می‌پردازد.',
-    how: 'BOS = شکست ساختار، CHoCH = تغییر شخصیت، FVG = شکاف ارزش.',
-    tips: ['BOS صعودی = ادامه روند', 'CHoCH = تغییر روند', 'FVG = منطقه پر شدن'],
-    conditions: [
-      { if: 'BOS صعودی', then: 'ادامه روند صعودی' },
-      { if: 'CHoCH نزولی', then: 'تغییر روند' },
-    ],
-  },
-  pa: {
-    name: 'Price Action', full: 'کنش قیمت', category: 'ساختار',
-    intro: 'الگوهای کندلی و رفتار مستقیم قیمت.',
-    how: 'Doji = تعادل، Hammer = بازگشت صعودی، Shooting Star = بازگشت نزولی.',
-    tips: ['الگوها در سطوح کلیدی معتبر', 'با حجم تایید شود', 'یک الگو تنها کافی نیست'],
-    conditions: [
-      { if: 'Hammer در حمایت', then: 'بازگشت صعودی' },
-      { if: 'Shooting Star در مقاومت', then: 'بازگشت نزولی' },
-    ],
-  },
-  obv: {
-    name: 'OBV', full: 'حجم متعادل‌شده', category: 'حجم',
-    intro: 'حجم را با جهت قیمت ترکیب می‌کند.',
-    how: 'OBV + قیمت هم‌جهت = تأیید روند. واگرایی = ضعف.',
-    tips: ['OBV + قیمت هم‌جهت = تایید', 'واگرایی = خروج پول هوشمند', 'تشخیص accumulation'],
-    conditions: [
-      { if: 'OBV + قیمت صعودی', then: 'تایید روند' },
-      { if: 'واگرایی نزولی', then: 'احتمال ضعف' },
-    ],
-  },
-  rtm: {
-    name: 'RTM', full: 'تحلیل ساختار بازار', category: 'ساختار',
-    intro: 'تحلیل ساختار بازار به شناسایی BOS، CHoCH و FVG می‌پردازد.',
-    how: 'BOS = شکست ساختار، CHoCH = تغییر شخصیت، FVG = شکاف ارزش.',
-    tips: ['BOS صعودی = ادامه روند', 'CHoCH = تغییر روند', 'FVG = منطقه پر شدن'],
-    conditions: [
-      { if: 'BOS صعودی', then: 'ادامه روند صعودی' },
-      { if: 'CHoCH نزولی', then: 'تغییر روند' },
-    ],
-  },
-  pa: {
-    name: 'Price Action', full: 'کنش قیمت', category: 'ساختار',
-    intro: 'الگوهای کندلی و رفتار مستقیم قیمت.',
-    how: 'Doji = تعادل، Hammer = بازگشت صعودی، Shooting Star = بازگشت نزولی.',
-    tips: ['الگوها در سطوح کلیدی معتبر', 'با حجم تایید شود', 'یک الگو تنها کافی نیست'],
-    conditions: [
-      { if: 'Hammer در حمایت', then: 'بازگشت صعودی' },
-      { if: 'Shooting Star در مقاومت', then: 'بازگشت نزولی' },
-    ],
-  },
+  rsi: { name: 'RSI', full: 'شاخص قدرت نسبی', category: 'مومنتوم', intro: 'سرعت و تغییر حرکت قیمت را اندازه‌گیری می‌کند.', how: 'بالاتر از ۷۰ = اشباع خرید، کمتر از ۳۰ = اشباع فروش.', tips: ['واگرایی RSI نشانه ضعف روند است.'], conditions: [{ if: 'بالای ۷۰', then: 'احتمال اصلاح' }, { if: 'زیر ۳۰', then: 'احتمال بازگشت' }] },
+  macd: { name: 'MACD', full: 'واگرایی میانگین متحرک', category: 'روند', intro: 'تفاضل دو میانگین متحرک نمایی (۱۲ و ۲۶) است.', how: 'بالای صفر = صعودی، پایین = نزولی.', tips: ['کراس خط سیگنال یعنی تغییر روند.'], conditions: [{ if: 'کراس صعودی', then: 'شروع روند صعودی' }] },
+  stochastic: { name: 'Stochastic', full: 'استوکاستیک', category: 'مومنتوم', intro: 'موقعیت قیمت نسبت به بالاترین/پایین‌ترین قیمت دوره است.', how: 'بالای ۸۰ = اشباع خرید، زیر ۲۰ = اشباع فروش.', tips: ['در بازار رِنج بهتر عمل می‌کند.'], conditions: [{ if: 'کراس در اشباع', then: 'سیگنال قوی' }] },
+  adx: { name: 'ADX', full: 'شاخص جهت‌دار', category: 'روند', intro: 'قدرت روند را بدون توجه به جهت اندازه‌گیری می‌کند.', how: 'بالاتر از ۲۵ = روند قوی، کمتر از ۲۰ = رِنج.', tips: ['ADX بالا = از استراتژی روندی استفاده کن.'], conditions: [{ if: 'بالای ۲۵', then: 'بازار روندی' }] },
+  atr: { name: 'ATR', full: 'میانگین دامنه واقعی', category: 'نوسان', intro: 'میانگین نوسان قیمت در یک دوره است.', how: 'ATR بالا = نوسان زیاد.', tips: ['برای تعیین حد ضرر استفاده می‌شود.'], conditions: [{ if: 'ATR بالا', then: 'ریسک بالا' }] },
+  bollinger: { name: 'Bollinger', full: 'باندهای بولینگر', category: 'نوسان', intro: 'موقعیت قیمت در باندهای انحراف معیار است.', how: '%B = ۰ باند پایین، = ۱ باند بالا.', tips: ['Squeeze یعنی آمادگی حرکت بزرگ.'], conditions: [{ if: '%B > 0.95', then: 'احتمال بازگشت نزولی' }] },
+  cci: { name: 'CCI', full: 'شاخص کانال کالا', category: 'مومنتوم', intro: 'چرخه‌های قیمتی را شناسایی می‌کند.', how: 'بالای +۱۰۰ = صعودی قوی، زیر -۱۰۰ = نزولی قوی.', tips: ['کراس صفر یعنی تغییر روند.'], conditions: [{ if: 'بالای +۱۰۰', then: 'روند صعودی' }] },
+  mfi: { name: 'MFI', full: 'شاخص جریان پول', category: 'حجم', intro: 'ترکیب قیمت و حجم (RSI حجم‌وزنی) است.', how: 'بالای ۸۰ = اشباع خرید، زیر ۲۰ = اشباع فروش.', tips: ['واگرایی MFI قوی‌ترین سیگنال است.'], conditions: [{ if: 'بالای ۸۰', then: 'احتمال اصلاح' }] },
+  willr: { name: 'Williams %R', full: 'درصد ویلیامز', category: 'مومنتوم', intro: 'برعکس استوکاستیک عمل می‌کند.', how: 'بالاتر از -۲۰ = اشباع خرید، کمتر از -۸۰ = اشباع فروش.', tips: ['بهترین عملکرد در بازار رِنج.'], conditions: [{ if: 'بالاتر از -۲۰', then: 'احتمال اصلاح' }] },
+  obv: { name: 'OBV', full: 'حجم متعادل‌شده', category: 'حجم', intro: 'حجم را با جهت قیمت ترکیب می‌کند.', how: 'OBV + قیمت هم‌جهت = تأیید روند.', tips: ['واگرایی یعنی خروج پول هوشمند.'], conditions: [{ if: 'واگرایی نزولی', then: 'احتمال ضعف' }] },
+  rtm: { name: 'RTM', full: 'ساختار بازار', category: 'ساختار', intro: 'شناسایی BOS، CHoCH و FVG.', how: 'BOS = شکست ساختار، CHoCH = تغییر شخصیت.', tips: ['CHoCH یعنی تغییر روند.'], conditions: [{ if: 'BOS صعودی', then: 'ادامه روند' }] },
+  pa: { name: 'Price Action', full: 'کنش قیمت', category: 'ساختار', intro: 'الگوهای کندلی و رفتار مستقیم قیمت.', how: 'Doji = تعادل، Hammer = بازگشت.', tips: ['در سطوح کلیدی معتبرند.'], conditions: [{ if: 'Hammer در حمایت', then: 'بازگشت صعودی' }] },
 };
 
 const LEVEL = {
@@ -224,66 +140,25 @@ const LEVEL = {
   bearish: { text: 'text-danger', bg: 'bg-danger/10', border: 'border-danger/40', label: 'نزولی' },
   neutral: { text: 'text-slate-300', bg: 'bg-slate-500/10', border: 'border-slate-500/40', label: 'خنثی' },
   info: { text: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/40', label: 'اطلاعات' },
+  unknown: { text: 'text-slate-300', bg: 'bg-slate-500/10', border: 'border-slate-500/40', label: 'نامشخص' },
   'extreme-bull': { text: 'text-success', bg: 'bg-success/20', border: 'border-success/50', label: 'صعودی شدید' },
   'extreme-bear': { text: 'text-danger', bg: 'bg-danger/20', border: 'border-danger/50', label: 'نزولی شدید' },
-  unknown: { text: 'text-slate-300', bg: 'bg-slate-500/10', border: 'border-slate-500/40', label: 'نامشخص' },
 };
 
 function analyze(name, val, ind) {
-  if (val == null) return { level: 'info', text: 'داده کافی برای تحلیل موجود نیست.' };
+  if (val == null) return { level: 'unknown', text: 'داده کافی نیست.' };
   switch (name) {
-    case 'rsi':
-      if (val > 70) return { level: 'overbought', text: `RSI برابر ${val.toFixed(1)} — اشباع خرید. احتمال اصلاح.` };
-      if (val < 30) return { level: 'oversold', text: `RSI برابر ${val.toFixed(1)} — اشباع فروش. احتمال بازگشت.` };
-      if (val > 55) return { level: 'bullish', text: `RSI برابر ${val.toFixed(1)} — روند صعودی خفیف.` };
-      if (val < 45) return { level: 'bearish', text: `RSI برابر ${val.toFixed(1)} — روند نزولی خفیف.` };
-      return { level: 'neutral', text: `RSI برابر ${val.toFixed(1)} — خنثی.` };
-    case 'macd':
-      if (ind.macd > 0) return { level: 'bullish', text: `MACD مثبت — روند صعودی.` };
-      return { level: 'bearish', text: `MACD منفی — روند نزولی.` };
-    case 'stochastic':
-      if (val > 80) return { level: 'overbought', text: `Stochastic ${val.toFixed(1)}٪ — اشباع خرید.` };
-      if (val < 20) return { level: 'oversold', text: `Stochastic ${val.toFixed(1)}٪ — اشباع فروش.` };
-      return { level: 'neutral', text: `Stochastic ${val.toFixed(1)}٪ — خنثی.` };
-    case 'adx':
-      if (val > 25) return { level: 'bullish', text: `ADX ${val.toFixed(1)} — روند قوی.` };
-      return { level: 'neutral', text: `ADX ${val.toFixed(1)} — رِنج.` };
-    case 'atr':
-      if (ind.atr_pct > 3) return { level: 'overbought', text: `نوسان ${ind.atr_pct.toFixed(1)}٪ — بالا.` };
-      return { level: 'neutral', text: `نوسان ${ind.atr_pct?.toFixed(1)}٪ — متوسط.` };
-    case 'bollinger':
-      if (val > 0.95) return { level: 'overbought', text: `%B ${val.toFixed(2)} — باند بالا.` };
-      if (val < 0.05) return { level: 'oversold', text: `%B ${val.toFixed(2)} — باند پایین.` };
-      return { level: 'neutral', text: `%B ${val.toFixed(2)} — میانه.` };
-    case 'cci':
-      if (val > 100) return { level: 'bullish', text: `CCI ${val.toFixed(1)} — روند صعودی.` };
-      if (val < -100) return { level: 'bearish', text: `CCI ${val.toFixed(1)} — روند نزولی.` };
-      return { level: 'neutral', text: `CCI ${val.toFixed(1)} — خنثی.` };
-    case 'mfi':
-      if (val > 80) return { level: 'overbought', text: `MFI ${val.toFixed(1)} — اشباع خرید.` };
-      if (val < 20) return { level: 'oversold', text: `MFI ${val.toFixed(1)} — اشباع فروش.` };
-      return { level: 'neutral', text: `MFI ${val.toFixed(1)} — خنثی.` };
-    case 'willr':
-      if (val > -20) return { level: 'overbought', text: `Williams %R ${val.toFixed(1)} — اشباع خرید.` };
-      if (val < -80) return { level: 'oversold', text: `Williams %R ${val.toFixed(1)} — اشباع فروش.` };
-      return { level: 'neutral', text: `Williams %R ${val.toFixed(1)} — خنثی.` };
-    case 'obv':
-      if (val > 0) return { level: 'bullish', text: `OBV مثبت — ورود پول.` };
-      return { level: 'bearish', text: `OBV منفی — خروج پول.` };
-    case 'rtm':
-      if (val === 'BOS صعودی') return { level: 'bullish', text: 'ساختار شاخص کل صعودی: شاخص از سقف اخیر عبور کرده و BOS صعودی تشکیل شده.' };
-      if (val === 'BOS نزولی') return { level: 'bearish', text: 'ساختار شاخص کل نزولی: شاخص زیر کف اخیر رفته و BOS نزولی تشکیل شده.' };
-      if (val === 'خنثی') return { level: 'neutral', text: 'شاخص کل بین سقف و کف اخیر در حال نوسان است.' };
-      return { level: 'info', text: 'داده کافی نیست' };
-    case 'pa':
-      if (val === 'Hammer') return { level: 'bullish', text: 'الگوی Hammer در شاخص کل: احتمال بازگشت صعودی.' };
-      if (val === 'Shooting Star') return { level: 'bearish', text: 'الگوی Shooting Star در شاخص کل: احتمال بازگشت نزولی.' };
-      if (val === 'Doji') return { level: 'neutral', text: 'Doji در شاخص: تعادل بین خریدار و فروشنده.' };
-      if (val === 'Bullish Marubozu') return { level: 'bullish', text: 'Marubozu صعودی: قدرت خریداران در شاخص.' };
-      if (val === 'Bearish Marubozu') return { level: 'bearish', text: 'Marubozu نزولی: قدرت فروشندگان در شاخص.' };
-      return { level: 'info', text: 'کندل آخر الگوی خاصی نشان نمی‌دهد.' };
-    default:
-      return { level: 'info', text: 'برای تحلیل دقیق‌تر به چارت مراجعه کنید.' };
+    case 'rsi': if (val > 70) return { level: 'overbought', text: 'اشباع خرید.' }; if (val < 30) return { level: 'oversold', text: 'اشباع فروش.' }; return { level: 'neutral', text: 'خنثی.' };
+    case 'macd': return ind.macd > 0 ? { level: 'bullish', text: 'روند صعودی.' } : { level: 'bearish', text: 'روند نزولی.' };
+    case 'stochastic': if (val > 80) return { level: 'overbought', text: 'اشباع خرید.' }; if (val < 20) return { level: 'oversold', text: 'اشباع فروش.' }; return { level: 'neutral', text: 'خنثی.' };
+    case 'adx': return val > 25 ? { level: 'bullish', text: 'روند قوی.' } : { level: 'neutral', text: 'رِنج.' };
+    case 'atr': return ind.atr_pct > 3 ? { level: 'overbought', text: 'نوسان بالا.' } : { level: 'neutral', text: 'نوسان متوسط.' };
+    case 'bollinger': if (val > 0.95) return { level: 'overbought', text: 'باند بالا.' }; if (val < 0.05) return { level: 'oversold', text: 'باند پایین.' }; return { level: 'neutral', text: 'میانه.' };
+    case 'cci': if (val > 100) return { level: 'bullish', text: 'روند صعودی.' }; if (val < -100) return { level: 'bearish', text: 'روند نزولی.' }; return { level: 'neutral', text: 'خنثی.' };
+    case 'mfi': if (val > 80) return { level: 'overbought', text: 'اشباع خرید.' }; if (val < 20) return { level: 'oversold', text: 'اشباع فروش.' }; return { level: 'neutral', text: 'خنثی.' };
+    case 'willr': if (val > -20) return { level: 'overbought', text: 'اشباع خرید.' }; if (val < -80) return { level: 'oversold', text: 'اشباع فروش.' }; return { level: 'neutral', text: 'خنثی.' };
+    case 'obv': return val > 0 ? { level: 'bullish', text: 'ورود پول.' } : { level: 'bearish', text: 'خروج پول.' };
+    default: return { level: 'info', text: 'به چارت مراجعه کنید.' };
   }
 }
 
@@ -307,8 +182,6 @@ export default function MarketIndicatorPage() {
     })();
   }, []);
 
-  const config = CONFIG[name];
-
   const computed = useMemo(() => {
     if (!idx?.rows) return null;
     const rows = idx.rows.filter(r => r.c > 0);
@@ -316,35 +189,38 @@ export default function MarketIndicatorPage() {
     const closes = rows.map(r => r.c);
     const highs = rows.map(r => (r.h && r.h > 0) ? r.h : r.c);
     const lows = rows.map(r => (r.l && r.l > 0) ? r.l : r.c);
+    const vols = rows.map(r => r.v || 0);
     const e12 = calcEMA(closes, 12), e26 = calcEMA(closes, 26);
-    const macd = (e12 != null && e26 != null) ? e12 - e26 : null;
-    const ind = {
-      rsi: calcRSI(closes), macd, atr: calcATR(highs, lows, closes),
+    
+    const indicators = {
+      rsi: calcRSI(closes), macd: (e12 && e26) ? e12 - e26 : null, atr: calcATR(highs, lows, closes),
       atr_pct: calcATR(highs, lows, closes) / closes[closes.length - 1] * 100,
       stoch: calcStoch(highs, lows, closes), bbPct: calcBB(closes)?.pctB,
       cci: calcCCI(closes), willr: calcWilliamsR(highs, lows, closes),
+      adx: calcADX(highs, lows, closes), mfi: calcMFI(highs, lows, closes, vols),
+      obvSlope: calcOBVSlope(highs, lows, closes, vols),
     };
-    return { rows, closes, ind };
+    return { rows, closes, indicators };
   }, [idx]);
-
-  if (!config) {
-    return (
-      <div className="max-w-2xl mx-auto px-4 py-20 text-center">
-        <AlertTriangle className="w-16 h-16 text-danger mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-white mb-2">اندیکاتور پیدا نشد</h1>
-        <Link href="/market-index" className="btn-primary mt-4 inline-flex"><ArrowRight className="w-4 h-4" /> بازگشت به شاخص</Link>
-      </div>
-    );
-  }
 
   if (!idx || !computed) {
     return <div className="max-w-7xl mx-auto px-3 py-6"><div className="h-96 glass rounded-xl shimmer" /></div>;
   }
 
-  const ind = computed.ind || computed.indicators || {};
-  const valueMap = { rsi: ind.rsi, macd: ind.macd, stochastic: ind.stoch, adx: null, atr: ind.atr, bollinger: ind.bbPct, cci: ind.cci, mfi: null, willr: ind.willr, obv: null, rtm: rtmData ? (rtmData.bosBull ? 'BOS صعودی' : rtmData.bosBear ? 'BOS نزولی' : 'خنثی') : null, pa: paData ? paData.pattern : null };
-  // RTM computation
+  const config = CONFIG[name];
+  if (!config) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-20 text-center">
+        <AlertTriangle className="w-16 h-16 text-danger mx-auto mb-4" />
+        <h1 className="text-2xl font-bold text-white mb-2">اندیکاتور پیدا نشد</h1>
+        <Link href="/market-index" className="btn-primary mt-4 inline-flex"><ArrowRight className="w-4 h-4" /> بازگشت</Link>
+      </div>
+    );
+  }
+
+  const ind = computed.indicators || {};
   const rows = computed.rows;
+  
   const rtmData = (() => {
     if (rows.length < 20) return null;
     const highs = rows.map(r => (r.h && r.h > 0) ? r.h : r.c);
@@ -352,36 +228,40 @@ export default function MarketIndicatorPage() {
     const cur = rows[rows.length - 1];
     const recentHigh = Math.max(...highs.slice(-15, -5));
     const recentLow = Math.min(...lows.slice(-15, -5));
-    return { bosBull: cur.c > recentHigh, bosBear: cur.c < recentLow, recentHigh, recentLow };
+    return { bosBull: cur.c > recentHigh, bosBear: cur.c < recentLow };
   })();
+
   const paData = (() => {
     if (rows.length < 3) return null;
     const last = rows[rows.length - 1];
     const prev = rows[rows.length - 2];
-    const o = prev.c;
-    const c = last.c;
+    const o = prev.c; const c = last.c;
     const h = (last.h && last.h > 0) ? last.h : c;
     const l = (last.l && last.l > 0) ? last.l : c;
-    const body = Math.abs(c - o);
-    const range = h - l;
-    if (range === 0) return { pattern: 'کندل عادی', signal: 'neutral', desc: 'کندل بدون دامنه' };
-    const upper = h - Math.max(c, o);
-    const lower = Math.min(c, o) - l;
-    const br = body / range, ur = upper / range, lr = lower / range;
-    if (br < 0.1) return { pattern: 'Doji', signal: 'neutral', desc: 'تعادل' };
-    if (lr > 0.6 && ur < 0.15 && c >= o) return { pattern: 'Hammer', signal: 'bullish', desc: 'بازگشت صعودی' };
-    if (ur > 0.6 && lr < 0.15 && c <= o) return { pattern: 'Shooting Star', signal: 'bearish', desc: 'بازگشت نزولی' };
-    if (c > o && br > 0.85) return { pattern: 'Bullish Marubozu', signal: 'bullish', desc: 'قدرت خریداران' };
-    if (c < o && br > 0.85) return { pattern: 'Bearish Marubozu', signal: 'bearish', desc: 'قدرت فروشندگان' };
-    return { pattern: 'کندل عادی', signal: 'neutral', desc: 'الگوی خاص' };
+    const body = Math.abs(c - o); const range = h - l;
+    if (range === 0) return 'کندل عادی';
+    const ur = (h - Math.max(c, o)) / range; const lr = (Math.min(c, o) - l) / range;
+    if (body / range < 0.1) return 'Doji';
+    if (lr > 0.6 && ur < 0.15 && c >= o) return 'Hammer';
+    if (ur > 0.6 && lr < 0.15 && c <= o) return 'Shooting Star';
+    if (body / range > 0.85 && c > o) return 'Bullish Marubozu';
+    if (body / range > 0.85 && c < o) return 'Bearish Marubozu';
+    return 'کندل عادی';
   })();
 
-  const val = valueMap[name];
-  const safeVal = val !== undefined ? val : null;
-  const displayVal = safeVal != null ? (typeof safeVal === 'string' ? safeVal : fmt(safeVal)) : '—';
-  const analysis = analyze(name, val, ind);
-  const style = LEVEL[analysis.level] || LEVEL.info || LEVEL.unknown || { text: 'text-slate-300', bg: 'bg-slate-500/10', border: 'border-slate-500/40', label: 'نامشخص' };
+  const valueMap = {
+    rsi: ind.rsi, macd: ind.macd, stochastic: ind.stoch, adx: ind.adx, atr: ind.atr,
+    bollinger: ind.bbPct, cci: ind.cci, mfi: ind.mfi, willr: ind.willr, obv: ind.obvSlope,
+    rtm: rtmData ? (rtmData.bosBull ? 'BOS صعودی' : rtmData.bosBear ? 'BOS نزولی' : 'خنثی') : null,
+    pa: paData
+  };
 
+  const val = valueMap[name];
+  const analysis = analyze(name, val, ind);
+  const safeLevel = analysis && analysis.level ? analysis.level : 'unknown';
+  const style = LEVEL[safeLevel] || LEVEL.unknown;
+
+  const displayVal = val != null ? (typeof val === 'string' ? val : fmt(val)) : '—';
   const chartData = computed.rows.slice(-250).map(r => ({ d: r.d, c: r.c, h: r.h, l: r.l }));
 
   return (
