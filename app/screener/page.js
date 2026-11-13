@@ -17,6 +17,58 @@ function fmt(n, d = 0) {
   return Number(n).toLocaleString('fa-IR', { maximumFractionDigits: d });
 }
 
+function SectorSelector({ value, onChange, sectors }) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState('');
+  const filtered = q.trim()
+    ? sectors.filter(s => s.includes(q))
+    : sectors;
+
+  return (
+    <div className="relative">
+      <button onClick={() => setOpen(!open)} type="button"
+        className={`w-full glass rounded-lg py-2.5 px-3 text-sm text-right flex items-center justify-between transition-colors ${
+          value !== 'ALL' ? 'border-primary/50 text-primary' : 'text-white'
+        } ${open ? 'border-primary/50' : ''} border border-border/50`}>
+        <span className="truncate">{value === 'ALL' ? 'همه صنایع' : value}</span>
+        <ChevronDown className={`w-4 h-4 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''} ${value !== 'ALL' ? 'text-primary' : 'text-slate-400'}`} />
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute top-full mt-2 inset-x-0 z-50 glass-strong rounded-xl overflow-hidden border border-primary/30 shadow-2xl">
+            <div className="relative p-2 border-b border-border/40">
+              <Search className="w-4 h-4 text-slate-500 absolute right-4 top-1/2 -translate-y-1/2" />
+              <input autoFocus type="text" placeholder="جستجوی صنعت..." value={q} onChange={(e) => setQ(e.target.value)}
+                className="w-full bg-bg/60 rounded-lg py-2 pr-9 pl-3 text-sm text-white placeholder:text-slate-500 focus:outline-none border border-border/30" />
+            </div>
+            <div className="max-h-64 overflow-y-auto">
+              <button onClick={() => { onChange('ALL'); setOpen(false); setQ(''); }}
+                className={`w-full text-right p-2.5 hover:bg-primary/10 transition-colors border-b border-border/20 ${
+                  value === 'ALL' ? 'bg-primary/15 text-primary font-bold' : 'text-white'
+                }`}>
+                همه صنایع
+              </button>
+              {filtered.length > 0 ? filtered.map(s => (
+                <button key={s}
+                  onClick={() => { onChange(s); setOpen(false); setQ(''); }}
+                  className={`w-full text-right p-2.5 hover:bg-primary/10 transition-colors border-b border-border/20 last:border-0 text-sm ${
+                    value === s ? 'bg-primary/15 text-primary font-bold' : 'text-white'
+                  }`}>
+                  {s}
+                </button>
+              )) : (
+                <div className="p-4 text-center text-sm text-slate-500">نتیجه‌ای یافت نشد</div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function RangeSlider({ label, value, onChange, min, max, step = 1, unit = '', defaultValue }) {
   const [v, setV] = useState(value);
   const isActive = v !== defaultValue;
@@ -219,14 +271,7 @@ export default function ScreenerPage() {
 
             <div>
               <div className="text-[11px] font-semibold text-slate-400 mb-2">صنعت</div>
-              <div className="relative">
-                <select value={sectorFilter} onChange={(e) => setSectorFilter(e.target.value)}
-                  className="w-full glass rounded-lg py-2.5 px-3 text-sm text-white appearance-none cursor-pointer focus:outline-none focus:border-primary/50 border border-border/50">
-                  <option value="ALL">همه صنایع</option>
-                  {sectors.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
+              <SectorSelector value={sectorFilter} onChange={setSectorFilter} sectors={sectors} />
             </div>
 
             <div>
@@ -263,6 +308,7 @@ export default function ScreenerPage() {
                     <th>نماد</th>
                     <th className="hidden sm:table-cell">نام</th>
                     <th className="hidden md:table-cell">صنعت</th>
+                    <th>قیمت</th>
                     <th>امتیاز</th>
                     <th className="hidden sm:table-cell">RSI</th>
                     <th className="hidden lg:table-cell">PE</th>
@@ -283,9 +329,15 @@ export default function ScreenerPage() {
                         <td className="num text-xs text-slate-500">{fmt(i + 1)}</td>
                         <td>
                           <Link href={`/predictions/${encodeURIComponent(s.symbol)}`}
-                            className="font-bold text-white hover:text-primary transition-colors">
+                            className="font-bold text-white hover:text-primary transition-colors block">
                             {s.symbol}
                           </Link>
+                          <div className={`num text-[10px] font-bold mt-0.5 ${
+                            (s.change_pct || 0) > 0 ? 'text-success' :
+                            (s.change_pct || 0) < 0 ? 'text-danger' : 'text-slate-400'
+                          }`}>
+                            {fmt(s.close)}
+                          </div>
                         </td>
                         <td className="hidden sm:table-cell text-slate-400 text-xs">{s.name}</td>
                         <td className="hidden md:table-cell">
@@ -313,9 +365,12 @@ export default function ScreenerPage() {
                           <span className="num text-xs text-slate-300">{s.pe != null ? s.pe.toFixed(1) : '—'}</span>
                         </td>
                         <td>
-                          <span className={`num text-xs font-bold flex items-center gap-0.5 ${up ? 'text-success' : 'text-danger'}`}>
-                            {up ? '▲' : '▼'} {Math.abs(cp).toFixed(2)}٪
-                          </span>
+                          <div className={`num text-xs font-black flex items-center gap-0.5 ${up ? 'text-success' : 'text-danger'}`}>
+                            <span className={`text-[8px] ${up ? 'text-success' : 'text-danger'}`}>{up ? '▲' : '▼'}</span>
+                            <span className={`px-1.5 py-0.5 rounded ${up ? 'bg-success/15' : 'bg-danger/15'}`}>
+                              {up ? '+' : ''}{cp.toFixed(2)}٪
+                            </span>
+                          </div>
                         </td>
                         <td className="hidden md:table-cell">
                           <span className={`text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 w-fit ${conf.bg} ${conf.color} border ${conf.border}`}>
