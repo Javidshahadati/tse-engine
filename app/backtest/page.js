@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
+import { checkMonthlyIncrement, getUsage, checkUniqueStockView, checkAndIncrement } from '@/lib/usage';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthContext';
