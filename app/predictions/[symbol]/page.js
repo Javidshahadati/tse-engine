@@ -45,7 +45,9 @@ export default function StockPage() {
   useEffect(() => {
     (async () => {
       const res = await checkUniqueStockView(symbol, 5);
-      if (!res.allowed) setLimitReached(true);
+      if (!res.allowed && res.reason === 'LIMIT_REACHED') {
+        setLimitReached(true);
+      }
     })();
   }, [symbol]);
 
