@@ -184,6 +184,7 @@ export default function BreadthPage() {
   const [preds, setPreds] = useState(null);
   const [charts, setCharts] = useState(null);
   const [indicators, setIndicators] = useState(null);
+  const [selectedSector, setSelectedSector] = useState(null);
 
   useEffect(() => {
     const load = async (f) => {
@@ -292,7 +293,7 @@ export default function BreadthPage() {
     return {
       total, above20, above50, advancing, declining, flat,
       breadth20, breadth50, adRatio, phase, history, sectorList,
-      topGainers, topLosers,
+      topGainers, topLosers, today,
     };
   }, [preds, charts, indicators]);
 
@@ -300,7 +301,9 @@ export default function BreadthPage() {
     return <div className="max-w-7xl mx-auto px-3 md:px-6 py-6"><div className="h-96 glass rounded-xl shimmer" /></div>;
   }
 
-  const { total, above20, above50, advancing, declining, flat, breadth20, breadth50, adRatio, phase, history, sectorList, topGainers, topLosers } = computed;
+  const { total, above20, above50, advancing, declining, flat, breadth20, breadth50, adRatio, phase, history, sectorList, topGainers, topLosers, today } = computed;
+
+  const sectorStocks = selectedSector ? today.filter(s => s.sector === selectedSector).sort((a, b) => b.change - a.change) : [];
 
   const phaseInfo = {
     BULL: { label: 'صعودی', color: 'success', icon: TrendingUp, grad: 'from-success/20 via-success/5' },
@@ -443,8 +446,10 @@ export default function BreadthPage() {
             else if (strength <= 30) { bg = 'bg-danger/30'; border = 'border-danger/60'; }
             else if (strength <= 50) { bg = 'bg-danger/20'; border = 'border-danger/40'; }
             return (
-              <Link key={sec.name} href={`/dashboard?sector=${encodeURIComponent(sec.name)}`}
-                className={`${bg} ${border} border rounded-xl p-3 hover:scale-105 transition-transform`}>
+              <button key={sec.name} onClick={() => setSelectedSector(selectedSector === sec.name ? null : sec.name)}
+                className={`${bg} ${border} border rounded-xl p-3 hover:scale-105 transition-transform text-right ${
+                  selectedSector === sec.name ? 'ring-2 ring-primary shadow-lg shadow-primary/30' : ''
+                }`}>
                 <div className="flex items-center gap-1.5 mb-2">
                   <span className="text-lg">{icon}</span>
                   <span className="text-[10px] font-semibold text-white leading-tight line-clamp-2">{sec.name}</span>
@@ -457,7 +462,7 @@ export default function BreadthPage() {
                     <div className="text-[8px] text-white/60">{sec.above}/{sec.count} سهم</div>
                   </div>
                 </div>
-              </Link>
+              </button>
             );
           })}
         </div>
@@ -513,6 +518,64 @@ export default function BreadthPage() {
           </div>
         </div>
       </div>
+
+      {/* Sector Stocks */}
+      {selectedSector && (
+        <div className="glass-strong p-4 md:p-6 rounded-2xl">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">{SECTOR_ICONS[selectedSector] || '📊'}</span>
+              <div>
+                <h2 className="text-sm md:text-base font-bold text-white">{selectedSector}</h2>
+                <p className="text-[10px] text-slate-400">{fmt(sectorStocks.length)} سهم</p>
+              </div>
+            </div>
+            <button onClick={() => setSelectedSector(null)}
+              className="glass px-3 py-1.5 rounded-lg text-xs text-slate-300 hover:bg-white/10 transition-colors flex items-center gap-1.5">
+              <Minus className="w-3 h-3" />
+              بستن
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-3">
+            {sectorStocks.map(s => {
+              const up = s.change > 0;
+              const down = s.change < 0;
+              const color = up ? 'success' : down ? 'danger' : 'neutral';
+              return (
+                <Link key={s.symbol} href={`/predictions/${encodeURIComponent(s.symbol)}`}
+                  className={`glass p-3 rounded-xl hover:scale-105 transition-transform border ${
+                    up ? 'border-success/30' : down ? 'border-danger/30' : 'border-border/40'
+                  }`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className={`font-black text-sm ${up ? 'text-success' : down ? 'text-danger' : 'text-slate-300'}`}>
+                      {s.symbol}
+                    </div>
+                    <span className={`num text-[10px] font-black px-1.5 py-0.5 rounded ${
+                      up ? 'text-success bg-success/15' : down ? 'text-danger bg-danger/15' : 'text-slate-400 bg-slate-500/15'
+                    }`}>
+                      {up ? '▲ +' : down ? '▼ ' : ''}{s.change.toFixed(2)}٪
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-slate-400 truncate mb-1.5">{s.name}</div>
+                  <div className="flex items-center justify-between">
+                    <span className={`num text-sm font-bold ${up ? 'text-success' : down ? 'text-danger' : 'text-white'}`}>
+                      {fmt(s.close)}
+                    </span>
+                    <span className={`text-[9px] ${s.aboveMA20 ? 'text-success' : 'text-slate-500'}`}>
+                      {s.aboveMA20 ? '↑ MA20' : '↓ MA20'}
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+
+          {sectorStocks.length === 0 && (
+            <div className="text-center py-8 text-sm text-slate-500">سهمی در این صنعت یافت نشد</div>
+          )}
+        </div>
+      )}
 
     </div>
   );
