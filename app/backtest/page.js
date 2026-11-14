@@ -112,72 +112,118 @@ function calcATR(highs, lows, closes, p = 14) {
 
 // ═══ Backtest Engine ═══
 function runBacktest(charts, cfg) {
+  const COMMISSION = 0.017;
+  const SLIPPAGE = 0.006;
+  const TOTAL_COST = COMMISSION + SLIPPAGE;
+  const MIN_TRADES = 20;
+
   const { strategy, nStocks, holdDays, initialCapital, useRiskMgmt } = cfg;
   const symbols = Object.keys(charts).filter(s => charts[s] && charts[s].length >= 100);
   const ind = {};
-  
+
   symbols.forEach(sym => {
     const c = [...charts[sym]].reverse();
     const closes = c.map(r => r.c);
-    const highs = c.map(r => r.h);
-    const lows = c.map(r => r.l);
-    const vols = c.map(r => r.v);
-    ind[sym] = {
-      c, closes, highs, lows, vols,
-      rsi: calcRSI(closes),
-      hist: calcMACD(closes).hist,
-      ma20: calcSMA(closes, 20),
-      ma50: calcSMA(closes, 50),
-      avgVol20: calcSMA(vols, 20),
-      atr14: calcATR(highs, lows, closes, 14),
-    };
+    const highs = c.map(r => r.h || r.c);
+    const lows = c.map(r => r.l || r.c);
+    const vols = c.map(r => r.v || 0);
+    const rsi = calcRSI(closes);
+    const macd = calcMACD(closes);
+    const ma20 = calcSMA(closes, 20);
+    const ma50 = calcSMA(closes, 50);
+    const ma10 = calcSMA(closes, 10);
+    const avgVol20 = calcSMA(vols, 20);
+    const atr14 = calcATR(highs, lows, closes, 14);
+    const mom20 = closes.map((_, i) => i >= 20 ? (closes[i] - closes[i-20]) / closes[i-20] : null);
+
+    ind[sym] = { c, closes, highs, lows, vols, rsi, hist: macd.hist, ma10, ma20, ma50, avgVol20, atr14, mom20 };
   });
 
   const minLen = Math.min(...Object.values(ind).map(x => x.closes.length));
   const startDay = 60;
+  const endDay = minLen - holdDays - 1;
+
+  // Market breadth per day
+  const breadth = {};
+  for (let d = startDay; d <= endDay; d++) {
+    let above = 0, total = 0;
+    Object.values(ind).forEach(x => {
+      if (d < x.closes.length && x.ma20[d] != null) {
+        if (x.closes[d] > x.ma20[d]) above++;
+        total++;
+      }
+    });
+    if (total > 0) breadth[d] = above / total;
+  }
+
+  // Benchmark: equal-weight buy & hold
+  let benchSum = 0, benchCount = 0;
+  Object.values(ind).forEach(x => {
+    const s = x.closes[startDay], e = x.closes[endDay];
+    if (s > 0 && e > 0) {
+      benchSum += (e - s) / s;
+      benchCount++;
+    }
+  });
+  const benchmarkReturn = benchCount > 0 ? (benchSum / benchCount) * 100 : 0;
+
   const trades = [];
   let capital = initialCapital;
   const equity = [{ day: startDay, value: capital }];
   let day = startDay;
 
-  while (day < minLen - 1) {
+  while (day < endDay) {
     const candidates = [];
+    const dayBreadth = breadth[day] || 0.5;
+    const skipBuys = dayBreadth < 0.3;
 
-    Object.keys(ind).forEach(sym => {
-      const x = ind[sym];
-      if (day >= x.closes.length) return;
-      const rsi = x.rsi[day], hist = x.hist[day];
-      const price = x.closes[day], ma20 = x.ma20[day], ma50 = x.ma50[day];
-      const vol = x.vols[day], avgVol = x.avgVol20[day], atr = x.atr14[day];
-      const high20 = day >= 20 ? Math.max(...x.highs.slice(day-19, day+1)) : null;
-      const low20 = day >= 20 ? Math.min(...x.lows.slice(day-19, day+1)) : null;
+    if (!skipBuys) {
+      Object.keys(ind).forEach(sym => {
+        const x = ind[sym];
+        if (day >= x.closes.length) return;
+        const rsiV = x.rsi[day], hist = x.hist[day];
+        const price = x.closes[day], ma20 = x.ma20[day], ma50 = x.ma50[day];
+        const vol = x.vols[day], avgVol = x.avgVol20[day], atr = x.atr14[day];
+        const mom20V = x.mom20[day];
+        const high20 = day >= 20 ? Math.max(...x.highs.slice(day-19, day+1)) : null;
+        const low20 = day >= 20 ? Math.min(...x.lows.slice(day-19, day+1)) : null;
 
-      let pass = false, score = 0.5;
+        let pass = false, score = 0;
 
-      if (strategy === 'breakout') {
-        pass = high20 != null && price >= high20 * 0.99 && vol > avgVol * 1.5 && rsi > 55 && hist > 0;
-      } else if (strategy === 'pullback') {
-        pass = ma20 != null && ma50 != null && ma20 > ma50 &&
-               price > ma50 && price < ma20 * 1.02 && rsi > 40 && rsi < 55 && hist > 0;
-      } else if (strategy === 'meanrev') {
-        pass = rsi != null && rsi < 30 && low20 != null && price <= low20 * 1.03;
-      } else if (strategy === 'momentum') {
-        pass = rsi > 55 && rsi < 70 && hist > 0 && vol > avgVol * 1.2 && ma20 != null && price > ma20;
-      } else if (strategy === 'trend') {
-        pass = ma20 != null && ma50 != null && ma20 > ma50 && price > ma20 && hist > 0;
-      } else if (strategy === 'multifactor') {
-        let s = 0.5;
-        if (rsi != null) { if (rsi < 40) s += 0.1; else if (rsi > 70) s -= 0.15; }
-        if (hist > 0) s += 0.15; else s -= 0.1;
-        if (ma20 != null && price > ma20) s += 0.1;
-        if (ma50 != null && price > ma50) s += 0.1;
-        if (vol > avgVol * 1.2) s += 0.1;
-        score = s;
-        pass = s >= 0.7;
-      }
+        if (strategy === 'breakout') {
+          const volRatio = avgVol > 0 ? vol / avgVol : 0;
+          pass = high20 != null && price >= high20 * 0.99 && volRatio > 1.5 && rsiV > 55 && hist > 0;
+          score = (high20 ? Math.min((price / high20 - 0.99) * 10, 0.3) : 0) + Math.min(volRatio / 3, 0.3) + (hist > 0 ? 0.3 : 0) + (rsiV > 60 ? 0.2 : 0.1);
+        } else if (strategy === 'pullback') {
+          const nearMA20 = ma20 ? Math.abs(price - ma20) / ma20 : 1;
+          pass = ma20 != null && ma50 != null && ma20 > ma50 && price > ma50 && nearMA20 < 0.03 && rsiV > 40 && rsiV < 55 && hist > 0;
+          score = (1 - Math.min(nearMA20 * 30, 0.5)) + (rsiV > 45 ? 0.2 : 0) + (hist > 0 ? 0.3 : 0);
+        } else if (strategy === 'meanrev') {
+          const nearLow = low20 ? (price - low20) / low20 : 1;
+          pass = rsiV != null && rsiV < 35 && nearLow < 0.05;
+          score = (1 - Math.min(nearLow * 10, 0.5)) + ((35 - rsiV) / 35) * 0.3;
+        } else if (strategy === 'momentum') {
+          const volRatio = avgVol > 0 ? vol / avgVol : 0;
+          pass = rsiV > 55 && rsiV < 75 && hist > 0 && volRatio > 1.2 && ma20 != null && price > ma20;
+          score = (rsiV > 65 ? 0.3 : 0.15) + Math.min(volRatio / 3, 0.3) + (mom20V > 0.05 ? 0.3 : 0.1) + (hist > 0 ? 0.2 : 0);
+        } else if (strategy === 'trend') {
+          pass = ma20 != null && ma50 != null && ma20 > ma50 && price > ma20 && hist > 0;
+          score = Math.min(((ma20 - ma50) / ma50) * 10, 0.4) + Math.min((price / ma20 - 1) * 5, 0.3) + (hist > 0 ? 0.3 : 0);
+        } else if (strategy === 'multifactor') {
+          let s = 0;
+          if (rsiV != null) s += (rsiV > 50 && rsiV < 70) ? 0.25 : rsiV < 40 ? 0.15 : 0.05;
+          if (hist > 0) s += 0.2;
+          if (ma20 != null && price > ma20) s += 0.15;
+          if (ma50 != null && price > ma50) s += 0.15;
+          if (avgVol > 0 && vol > avgVol * 1.2) s += 0.1;
+          if (mom20V > 0) s += 0.15;
+          score = s;
+          pass = s >= 0.5;
+        }
 
-      if (pass && atr > 0) candidates.push({ symbol: sym, score, price, atr });
-    });
+        if (pass && atr > 0) candidates.push({ symbol: sym, score: Math.max(0, Math.min(1, score)), price, atr });
+      });
+    }
 
     candidates.sort((a, b) => b.score - a.score);
     const picks = candidates.slice(0, nStocks);
@@ -195,18 +241,22 @@ function runBacktest(charts, cfg) {
         let exitDay = -1, exitPrice = null, exitReason = null;
 
         for (let d = day + 1; d <= Math.min(day + holdDays, x.closes.length - 1); d++) {
-          const low = x.lows[d], high = x.highs[d];
+          const low = x.lows[d], high = x.highs[d], close = x.closes[d];
 
           if (useRiskMgmt) {
-            if (low <= stopLoss && !trailActive) {
-              exitDay = d; exitPrice = stopLoss; exitReason = 'SL'; break;
+            const hitSL = !trailActive && low <= stopLoss;
+            const hitTP = high >= takeProfit;
+            const hitTrail = trailActive && low <= trailStop;
+
+            if (hitSL && hitTP) {
+              if (close >= entryPrice) { exitDay = d; exitPrice = takeProfit; exitReason = 'TP'; }
+              else { exitDay = d; exitPrice = stopLoss; exitReason = 'SL'; }
+              break;
             }
-            if (high >= takeProfit) {
-              exitDay = d; exitPrice = takeProfit; exitReason = 'TP'; break;
-            }
-            if (trailActive && low <= trailStop) {
-              exitDay = d; exitPrice = trailStop; exitReason = 'TRAIL'; break;
-            }
+            if (hitSL) { exitDay = d; exitPrice = stopLoss; exitReason = 'SL'; break; }
+            if (hitTP) { exitDay = d; exitPrice = takeProfit; exitReason = 'TP'; break; }
+            if (hitTrail) { exitDay = d; exitPrice = trailStop; exitReason = 'TRAIL'; break; }
+
             if (!trailActive && high >= entryPrice + atr) {
               trailActive = true;
               trailStop = high - 1.5 * atr;
@@ -225,14 +275,17 @@ function runBacktest(charts, cfg) {
 
         if (exitPrice == null || exitPrice <= 0) return;
 
-        const ret = (exitPrice - entryPrice) / entryPrice;
-        capital += perTrade * ret;
+        const grossRet = (exitPrice - entryPrice) / entryPrice;
+        const netRet = grossRet - TOTAL_COST;
+        capital += perTrade * (1 + netRet);
 
         trades.push({
           symbol: p.symbol,
           entryDate: x.c[day]?.t, exitDate: x.c[exitDay]?.t,
           entryPrice, exitPrice, stopLoss, takeProfit,
-          returnPct: ret * 100, exitReason,
+          returnPct: netRet * 100,
+          grossReturnPct: grossRet * 100,
+          exitReason,
         });
       });
 
@@ -243,20 +296,42 @@ function runBacktest(charts, cfg) {
 
   const wins = trades.filter(t => t.returnPct > 0).length;
   const returns = trades.map(t => t.returnPct);
+  const totalReturn = (capital - initialCapital) / initialCapital * 100;
+
+  const dailyReturns = [];
+  for (let i = 1; i < equity.length; i++) {
+    dailyReturns.push((equity[i].value - equity[i-1].value) / equity[i-1].value);
+  }
+  const avgDaily = dailyReturns.length > 0 ? dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length : 0;
+  const stdDaily = dailyReturns.length > 1 ? Math.sqrt(dailyReturns.reduce((a, b) => a + (b - avgDaily) ** 2, 0) / dailyReturns.length) : 0;
+  const periodsPerYear = 252 / holdDays;
+  const sharpe = stdDaily > 0 ? (avgDaily / stdDaily) * Math.sqrt(periodsPerYear) : 0;
+
+  let peak = initialCapital, maxDD = 0;
+  equity.forEach(e => {
+    if (e.value > peak) peak = e.value;
+    const dd = (e.value - peak) / peak;
+    if (dd < maxDD) maxDD = dd;
+  });
 
   return {
     trades, equity,
     metrics: {
-      totalReturn: (capital - initialCapital) / initialCapital * 100,
-      winrate: trades.length > 0 ? (wins / trades.length * 100) : 0,
-      avgTrade: returns.length > 0 ? returns.reduce((a, b) => a + b, 0) / returns.length : 0,
-      finalCapital: capital,
+      totalReturn: parseFloat(totalReturn.toFixed(2)),
+      winrate: trades.length > 0 ? parseFloat((wins / trades.length * 100).toFixed(1)) : 0,
+      avgTrade: returns.length > 0 ? parseFloat((returns.reduce((a, b) => a + b, 0) / returns.length).toFixed(2)) : 0,
+      finalCapital: parseFloat(capital.toFixed(0)),
       nTrades: trades.length,
-      bestTrade: returns.length > 0 ? Math.max(...returns) : 0,
-      worstTrade: returns.length > 0 ? Math.min(...returns) : 0,
+      bestTrade: returns.length > 0 ? parseFloat(Math.max(...returns).toFixed(2)) : 0,
+      worstTrade: returns.length > 0 ? parseFloat(Math.min(...returns).toFixed(2)) : 0,
       slCount: trades.filter(t => t.exitReason === 'SL').length,
       tpCount: trades.filter(t => t.exitReason === 'TP').length,
       trailCount: trades.filter(t => t.exitReason === 'TRAIL').length,
+      sharpe: parseFloat(sharpe.toFixed(2)),
+      maxDrawdown: parseFloat((maxDD * 100).toFixed(2)),
+      benchmarkReturn: parseFloat(benchmarkReturn.toFixed(2)),
+      alpha: parseFloat((totalReturn - benchmarkReturn).toFixed(2)),
+      isReliable: trades.length >= MIN_TRADES,
     }
   };
 }
@@ -381,6 +456,9 @@ export default function BacktestPage() {
         const result = runBacktest(charts, { strategy, nStocks, holdDays, initialCapital: capital, useRiskMgmt });
         if (result) {
           setResults(result);
+          if (!result.metrics.isReliable) {
+            setError(`⚠️ فقط ${result.metrics.nTrades} ترید — حداقل ۲۰ ترید برای آماری معتبر لازمه. نتایج رو با احتیاط بخون`);
+          }
           recordRun();
           setRunsUsed(getRecentRuns().length);
         }
@@ -405,6 +483,9 @@ export default function BacktestPage() {
         const result = runBacktest(charts, { strategy, nStocks, holdDays, initialCapital: capital, useRiskMgmt });
         if (result) {
           setResults(result);
+          if (!result.metrics.isReliable) {
+            setError(`⚠️ فقط ${result.metrics.nTrades} ترید — حداقل ۲۰ ترید برای آماری معتبر لازمه. نتایج رو با احتیاط بخون`);
+          }
           setRunsUsed(check.count || 1);
         }
       }
