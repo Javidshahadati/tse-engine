@@ -95,6 +95,10 @@ export default function ComparePage() {
   const [limitReached, setLimitReached] = useState(false);
   const [hasCompared, setHasCompared] = useState(false);
 
+  useEffect(() => {
+    setHasCompared(false);
+  }, [sym1, sym2]);
+
   const handleCompare = () => {
     const today = new Date().toISOString().split('T')[0];
     const key = `tse_compare_uses_${today}`;
