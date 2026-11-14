@@ -325,6 +325,7 @@ export default function BacktestPage() {
   const [capital, setCapital] = useState(10000000);
   const [useRiskMgmt, setUseRiskMgmt] = useState(true);
   const [running, setRunning] = useState(false);
+  const [limitReached, setLimitReached] = useState(false);
   const [results, setResults] = useState(null);
   const [runsUsed, setRunsUsed] = useState(0);
   const [mounted, setMounted] = useState(false);
