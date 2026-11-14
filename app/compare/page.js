@@ -93,16 +93,23 @@ function Row({ label, v1, v2, winner = null, format = (v) => v, color = null }) 
 
 export default function ComparePage() {
   const [limitReached, setLimitReached] = useState(false);
+  const [hasCompared, setHasCompared] = useState(false);
 
-  useEffect(() => {
+  const handleCompare = () => {
     const today = new Date().toISOString().split('T')[0];
     const key = `tse_compare_uses_${today}`;
     try {
       const uses = parseInt(localStorage.getItem(key) || '0', 10);
-      if (uses >= 1) { setLimitReached(true); }
-      else { localStorage.setItem(key, '1'); }
-    } catch {}
-  }, []);
+      if (uses >= 1) {
+        setLimitReached(true);
+      } else {
+        localStorage.setItem(key, '1');
+        setHasCompared(true);
+      }
+    } catch {
+      setHasCompared(true);
+    }
+  };
   const [signals, setSignals] = useState(null);
   const [indicators, setIndicators] = useState(null);
   const [charts, setCharts] = useState(null);
@@ -208,7 +215,21 @@ export default function ComparePage() {
         </div>
       )}
 
-      {bothSelected && (
+            {bothSelected && !hasCompared && (
+        <div className="glass-strong p-6 rounded-2xl text-center">
+          <p className="text-sm text-slate-300 mb-4">
+            آماده مقایسه <strong className="text-primary">{sym1.symbol}</strong> و <strong className="text-primary">{sym2.symbol}</strong>؟
+          </p>
+          <button onClick={handleCompare}
+            className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-l from-primary to-primary2 text-bg font-bold text-sm shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:-translate-y-0.5 transition-all">
+            <BarChart3 className="w-4 h-4" /> شروع مقایسه
+          </button>
+          <p className="text-[10px] text-slate-500 mt-3">هر مقایسه یک بار از سهمیه روزانه مصرف می‌کند</p>
+        </div>
+      )}
+
+      {bothSelected && hasCompared && (
+
         <>
           {/* Winner banner */}
           {winner && (
