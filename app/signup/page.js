@@ -3,7 +3,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { Activity, Mail, Lock, Loader2, AlertTriangle, CheckCircle2, ArrowLeft, User } from 'lucide-react';
+import AuthBackground from '@/components/AuthBackground';
+import TermsModal from '@/components/TermsModal';
+import { Activity, Mail, Lock, Loader2, AlertTriangle, CheckCircle2, ArrowLeft, User, Check } from 'lucide-react';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -13,35 +15,27 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [accepted, setAccepted] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!accepted) {
+      setError('ابتدا شرایط استفاده را بپذیرید');
+      return;
+    }
     setError(null);
-
-    if (password !== confirmPw) {
-      setError('رمز عبور و تکرار آن یکسان نیست');
-      return;
-    }
-    if (password.length < 6) {
-      setError('رمز عبور حداقل ۶ کاراکتر باشد');
-      return;
-    }
+    if (password !== confirmPw) { setError('رمز عبور و تکرار آن یکسان نیست'); return; }
+    if (password.length < 6) { setError('رمز عبور حداقل ۶ کاراکتر باشد'); return; }
 
     setLoading(true);
     try {
       const { data, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/profile`,
-        },
+        email, password,
+        options: { emailRedirectTo: `${window.location.origin}/profile` },
       });
       if (authError) throw authError;
-
-      if (data.session) {
-        router.push('/profile');
-        return;
-      }
+      if (data.session) { router.push('/profile'); return; }
       setSuccess(true);
     } catch (err) {
       setError(err.message || 'خطا در ثبت‌نام. دوباره تلاش کنید.');
@@ -52,8 +46,9 @@ export default function SignupPage() {
 
   if (success) {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center px-4">
-        <div className="glass-strong max-w-md w-full p-8 rounded-2xl text-center">
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-8 relative">
+        <AuthBackground />
+        <div className="relative glass-strong max-w-md w-full p-8 rounded-2xl text-center">
           <div className="w-16 h-16 rounded-2xl bg-success/20 border border-success/40 mx-auto mb-4 flex items-center justify-center">
             <CheckCircle2 className="w-8 h-8 text-success" />
           </div>
@@ -61,21 +56,19 @@ export default function SignupPage() {
           <p className="text-sm text-slate-300 mb-6">
             ایمیل تأیید برای <strong>{email}</strong> ارسال شد. لطفاً ایمیل خود را چک کنید.
           </p>
-          <Link href="/signin" className="btn-primary inline-flex">
-            رفتن به صفحه ورود
-          </Link>
+          <Link href="/signin" className="btn-primary inline-flex">رفتن به صفحه ورود</Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4 py-8 relative">
-      <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-6 relative">
+      <AuthBackground />
+      <TermsModal open={showTerms} onClose={() => setShowTerms(false)} />
 
-      <div className="relative w-full max-w-md">
-        <Link href="/" className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-primary mb-4">
+      <div className="relative w-full max-w-md my-auto">
+        <Link href="/" className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-primary mb-4 transition-colors">
           <ArrowLeft className="w-3 h-3 rotate-180" /> بازگشت
         </Link>
 
@@ -106,7 +99,6 @@ export default function SignupPage() {
                   disabled={loading} />
               </div>
             </div>
-
             <div>
               <label className="text-[11px] font-semibold text-slate-300 mb-1.5 block">رمز عبور</label>
               <div className="relative">
@@ -117,7 +109,6 @@ export default function SignupPage() {
                   disabled={loading} minLength={6} />
               </div>
             </div>
-
             <div>
               <label className="text-[11px] font-semibold text-slate-300 mb-1.5 block">تکرار رمز عبور</label>
               <div className="relative">
@@ -129,9 +120,23 @@ export default function SignupPage() {
               </div>
             </div>
 
-            <button type="submit" disabled={loading}
+            <label className="flex items-start gap-2.5 p-3 rounded-lg bg-bg/40 border border-border/40 cursor-pointer hover:border-primary/30 transition-colors">
+              <div className={`w-4 h-4 mt-0.5 rounded flex items-center justify-center flex-shrink-0 border ${accepted ? 'bg-primary border-primary' : 'border-slate-500'}`}>
+                {accepted && <Check className="w-3 h-3 text-bg" strokeWidth={3} />}
+              </div>
+              <input type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} className="sr-only" />
+              <span className="text-[11px] text-slate-300 leading-relaxed">
+                <button type="button" onClick={(e) => { e.preventDefault(); setShowTerms(true); }}
+                  className="text-primary font-bold hover:underline">
+                  شرایط استفاده
+                </button>
+                {' '}را خوانده‌ام و می‌پذیرم که این اپ صرفاً ابزار تحلیل آموزشی است.
+              </span>
+            </label>
+
+            <button type="submit" disabled={loading || !accepted}
               className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
-                loading ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-l from-primary to-primary2 text-bg shadow-lg shadow-primary/30 hover:shadow-primary/50'
+                loading || !accepted ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-l from-primary to-primary2 text-bg shadow-lg shadow-primary/30 hover:shadow-primary/50'
               }`}>
               {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> در حال ثبت...</> : <><User className="w-4 h-4" /> ایجاد حساب</>}
             </button>
@@ -141,12 +146,6 @@ export default function SignupPage() {
             <p className="text-xs text-slate-400">
               قبلاً ثبت‌نام کردی؟{' '}
               <Link href="/signin" className="text-primary font-bold hover:underline">ورود</Link>
-            </p>
-          </div>
-
-          <div className="mt-4 pt-4 border-t border-border/40">
-            <p className="text-[10px] text-slate-500 leading-relaxed text-center">
-              با ایجاد حساب، <Link href="/contact" className="text-primary hover:underline">شرایط استفاده</Link> را می‌پذیرید.
             </p>
           </div>
         </div>

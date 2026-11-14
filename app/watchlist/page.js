@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Star, Trash2, Search, ArrowLeft, ArrowUpRight, TrendingUp, TrendingDown, AlertTriangle, Activity } from 'lucide-react';
 import { useWatchlist } from '@/components/WatchlistContext';
+import { useAuth } from '@/components/AuthContext';
+import { useRouter } from 'next/navigation';
 
 const SIGNAL = {
   BUY: { label: 'توجه بالا', icon: TrendingUp },
@@ -13,6 +15,12 @@ function fmt(n, d = 0) { if (n == null) return '—'; return Number(n).toLocaleS
 
 export default function WatchlistPage() {
   const { items, remove, mounted } = useWatchlist();
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!authLoading && !user) router.push('/signin');
+  }, [user, authLoading, router]);
   const [signals, setSignals] = useState(null);
   const [search, setSearch] = useState('');
 

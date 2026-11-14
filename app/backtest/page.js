@@ -1,6 +1,8 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/components/AuthContext';
 import {
   Play, TrendingUp, TrendingDown, Activity, ArrowLeft,
   Zap, Trophy, Lock, Sparkles, Target, RotateCcw,
@@ -313,6 +315,13 @@ function EquityCurve({ data }) {
 }
 
 export default function BacktestPage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!authLoading && !user) router.push('/signin');
+  }, [user, authLoading, router]);
+
   const [charts, setCharts] = useState(null);
   const [strategy, setStrategy] = useState('breakout');
   const [nStocks, setNStocks] = useState(5);

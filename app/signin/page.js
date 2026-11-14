@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import AuthBackground from '@/components/AuthBackground';
 import { Activity, Mail, Lock, Loader2, AlertTriangle, ArrowLeft, LogIn } from 'lucide-react';
 
 export default function SigninPage() {
@@ -31,12 +32,11 @@ export default function SigninPage() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4 py-8 relative">
-      <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-6 relative">
+      <AuthBackground />
 
-      <div className="relative w-full max-w-md">
-        <Link href="/" className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-primary mb-4">
+      <div className="relative w-full max-w-md my-auto">
+        <Link href="/" className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-primary mb-4 transition-colors">
           <ArrowLeft className="w-3 h-3 rotate-180" /> بازگشت
         </Link>
 
@@ -67,7 +67,6 @@ export default function SigninPage() {
                   disabled={loading} />
               </div>
             </div>
-
             <div>
               <label className="text-[11px] font-semibold text-slate-300 mb-1.5 block">رمز عبور</label>
               <div className="relative">
@@ -78,7 +77,6 @@ export default function SigninPage() {
                   disabled={loading} />
               </div>
             </div>
-
             <button type="submit" disabled={loading}
               className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
                 loading ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-l from-primary to-primary2 text-bg shadow-lg shadow-primary/30 hover:shadow-primary/50'
