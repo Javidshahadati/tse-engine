@@ -315,7 +315,6 @@ function EquityCurve({ data }) {
 }
 
 export default function BacktestPage() {
-  const { user } = useAuth();
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
