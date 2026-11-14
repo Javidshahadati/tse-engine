@@ -14,7 +14,7 @@ const SIGNAL = {
 function fmt(n, d = 0) { if (n == null) return '—'; return Number(n).toLocaleString('fa-IR', { maximumFractionDigits: d }); }
 
 export default function WatchlistPage() {
-  const { items, remove, mounted } = useWatchlist();
+  const { items, remove, mounted, limit } = useWatchlist();
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
@@ -57,7 +57,14 @@ export default function WatchlistPage() {
           </div>
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-white">واچ‌لیست</h1>
-            <p className="text-[11px] text-slate-300">{fmt(items.length)} سهم ذخیره‌شده</p>
+            <div className="flex items-center gap-2">
+              <p className="text-[11px] text-slate-300">{fmt(items.length)} از {fmt(limit)} سهم</p>
+              {items.length >= limit && (
+                <Link href="/pricing" className="text-[10px] px-2 py-0.5 rounded-full bg-warning/20 text-warning border border-warning/30 font-bold hover:bg-warning/30 transition-colors">
+                  ارتقا
+                </Link>
+              )}
+            </div>
           </div>
         </div>
         <Link href="/dashboard" className="btn-secondary text-xs md:text-sm">داشبورد <ArrowLeft className="w-4 h-4" /></Link>
@@ -69,6 +76,21 @@ export default function WatchlistPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="w-full glass rounded-xl py-2.5 pr-10 pl-4 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50 border border-border/50" />
       </div>
+
+      {items.length >= limit && (
+        <div className="glass-strong p-4 rounded-2xl border-2 border-warning/40 flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-warning/15 border border-warning/40 flex items-center justify-center flex-shrink-0">
+            <Star className="w-5 h-5 text-warning" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-bold text-white mb-0.5">به سقف پلن رایگان رسیدید</p>
+            <p className="text-xs text-slate-300 mb-2">برای ذخیره نامحدود سهم‌ها، به پلن حرفه‌ای ارتقا دهید.</p>
+            <Link href="/pricing" className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-gradient-to-l from-primary to-accent text-bg font-bold">
+              مشاهده پلن‌ها
+            </Link>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
         {filtered.map((s) => {
