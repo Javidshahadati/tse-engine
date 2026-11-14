@@ -345,32 +345,36 @@ export default function BacktestPage() {
   const limitReached = remaining === 0;
 
   const handleRun = async () => {
-    if (!charts || limitReached) return;
+    if (!charts || limitReached || running) return;
     setRunning(true);
     setResults(null);
     try {
       if (!user) {
-        // Guest: localStorage
         const runs = getRecentRuns();
-        if (runs.length >= FREE_LIMIT) { setRunning(false); return; }
-        const result = runBacktest(charts, { strategy, nStocks, holdDays, initialCapital: capital, useRiskMgmt });
-        setResults(result);
-        recordRun();
-        setRunsUsed(getRecentRuns().length);
-      } else {
-        // Logged-in: server-side
-        const check = await checkMonthlyIncrement('backtest', FREE_LIMIT);
-        if (!check.allowed) {
-          setRunsUsed(FREE_LIMIT);
-          setRunning(false);
+        if (runs.length >= FREE_LIMIT) {
+          setLimitReached(true);
           return;
         }
         const result = runBacktest(charts, { strategy, nStocks, holdDays, initialCapital: capital, useRiskMgmt });
-        setResults(result);
-        setRunsUsed(check.count);
+        if (result) setResults(result);
+        recordRun();
+        setRunsUsed(getRecentRuns().length);
+      } else {
+        const check = await checkMonthlyIncrement('backtest', FREE_LIMIT);
+        if (!check || !check.allowed) {
+          setLimitReached(true);
+          setRunsUsed(FREE_LIMIT);
+          return;
+        }
+        const result = runBacktest(charts, { strategy, nStocks, holdDays, initialCapital: capital, useRiskMgmt });
+        if (result) setResults(result);
+        setRunsUsed(check.count || 1);
       }
-    } catch (e) { console.error(e); }
-    finally { setRunning(false); }
+    } catch (err) {
+      console.error('Backtest error:', err);
+    } finally {
+      setRunning(false);
+    }
   };
 
   if (!mounted || !charts) return <div className="max-w-7xl mx-auto px-3 md:px-6 py-8"><div className="h-96 glass rounded-xl shimmer" /></div>;
