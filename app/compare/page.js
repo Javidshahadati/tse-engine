@@ -3,6 +3,7 @@ import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import LimitReached from '@/components/LimitReached';
+import { checkAndIncrement } from '@/lib/usage';
 import {
   ArrowLeft, Search, TrendingUp, TrendingDown, Activity, Trophy,
   ChevronDown, X, BarChart3, AlertTriangle
@@ -95,20 +96,16 @@ export default function ComparePage() {
   const [limitReached, setLimitReached] = useState(false);
   const [hasCompared, setHasCompared] = useState(false);
 
-  const handleCompare = () => {
-    const today = new Date().toISOString().split('T')[0];
-    const key = `tse_compare_uses_${today}`;
-    try {
-      const uses = parseInt(localStorage.getItem(key) || '0', 10);
-      if (uses >= 1) {
-        setLimitReached(true);
-      } else {
-        localStorage.setItem(key, '1');
-        setHasCompared(true);
-      }
-    } catch {
-      setHasCompared(true);
+  const [checking, setChecking] = useState(false);
+  const handleCompare = async () => {
+    setChecking(true);
+    const res = await checkAndIncrement('compare', 1);
+    setChecking(false);
+    if (!res.allowed) {
+      setLimitReached(true);
+      return;
     }
+    setHasCompared(true);
   };
   const [signals, setSignals] = useState(null);
   const [indicators, setIndicators] = useState(null);
@@ -224,7 +221,7 @@ export default function ComparePage() {
           <p className="text-sm text-slate-300 mb-4">
             آماده مقایسه <strong className="text-primary">{sym1.symbol}</strong> و <strong className="text-primary">{sym2.symbol}</strong>؟
           </p>
-          <button onClick={handleCompare}
+          <button onClick={handleCompare} disabled={checking}
             className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-l from-primary to-primary2 text-bg font-bold text-sm shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:-translate-y-0.5 transition-all">
             <BarChart3 className="w-4 h-4" /> شروع مقایسه
           </button>

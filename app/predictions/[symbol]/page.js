@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import LimitReached from '@/components/LimitReached';
+import { checkAndIncrement } from '@/lib/usage';
 import {
   ArrowRight, TrendingUp, TrendingDown, AlertTriangle, BarChart3,
   Target, Activity, Users, Building2, Zap, LineChart, Layers,
@@ -42,21 +43,10 @@ export default function StockPage() {
   const [limitReached, setLimitReached] = useState(false);
   
   useEffect(() => {
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      const key = `tse_stock_views_${today}`;
-      const list = JSON.parse(localStorage.getItem(key) || '[]');
-      if (!list.includes(symbol)) {
-        if (list.length >= 5) {
-          setLimitReached(true);
-        } else {
-          list.push(symbol);
-          localStorage.setItem(key, JSON.stringify(list));
-        }
-      }
-    } catch (err) {
-      console.error('Limit check failed:', err);
-    }
+    (async () => {
+      const res = await checkAndIncrement('stock_view', 5);
+      if (!res.allowed) setLimitReached(true);
+    })();
   }, [symbol]);
 
   const [charts, setCharts] = useState(null);
