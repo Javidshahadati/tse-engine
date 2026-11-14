@@ -182,11 +182,6 @@ p, span, label { letter-spacing: 0.005em; }
   .data-table td { padding: 0.5rem; }
 }
 
-/* Desktop zoom-in (subtle) */
-@media (min-width: 1024px) {
-  html { font-size: 17px; }
-}
-
 
 /* ═══ Contrast improvement ═══ */
 .text-slate-400 { color: #b8c4d4 !important; }
