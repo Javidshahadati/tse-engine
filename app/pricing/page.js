@@ -94,7 +94,7 @@ export default function PricingPage() {
   const [billing, setBilling] = useState('monthly');
 
   return (
-    <div className="max-w-7xl mx-auto px-3 md:px-6 lg:px-8 py-6 md:py-10 space-y-6 md:space-y-10">
+    <div className="max-w-7xl mx-auto px-3 md:px-6 lg:px-8 py-6 md:py-10 space-y-6 md:space-y-10 lg:text-[15px]">
 
       {/* Hero */}
       <div className="text-center relative">
@@ -128,13 +128,13 @@ export default function PricingPage() {
       </div>
 
       {/* Plans */}
-      <div className="grid md:grid-cols-3 gap-4 md:gap-5 max-w-5xl mx-auto pt-4">
+      <div className="grid md:grid-cols-3 gap-4 md:gap-6 max-w-5xl mx-auto">
         {PLANS.map(plan => {
           const Icon = plan.icon;
           const price = plan.price[billing];
           const isPro = plan.id === 'pro';
           return (
-            <div key={plan.id} className={`relative rounded-2xl border-2 ${plan.borderColor} bg-gradient-to-br ${plan.color} to-transparent overflow-hidden transition-all ${isPro ? 'shadow-2xl shadow-primary/20 md:-translate-y-2' : ''}`}>
+            <div key={plan.id} className={`relative rounded-2xl border-2 ${plan.borderColor} bg-gradient-to-br ${plan.color} to-transparent overflow-hidden transition-all ${isPro ? 'shadow-2xl shadow-primary/20' : ''}`}>
               {plan.badge && (
                 <div className="absolute top-3 left-3 z-10">
                   <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
