@@ -121,7 +121,7 @@ export default function GuestLimit() {
               برای مشاهده بیشتر، ثبت‌نام کنید
             </h1>
             <p className="text-xs md:text-sm text-slate-400 mb-6 leading-relaxed max-w-sm mx-auto">
-              با ساخت حساب رایگان، بلافاصله به همه امکانات دسترسی پیدا می‌کنید — بدون نیاز به کارت بانکی.
+              با ساخت حساب رایگان، بلافاصله به همه امکانات دسترسی پیدا می‌کنید.
             </p>
 
             {/* Benefits */}
