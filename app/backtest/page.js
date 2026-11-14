@@ -326,6 +326,7 @@ export default function BacktestPage() {
   const [useRiskMgmt, setUseRiskMgmt] = useState(true);
   const [running, setRunning] = useState(false);
   const [limitReached, setLimitReached] = useState(false);
+  const [error, setError] = useState(null);
   const [results, setResults] = useState(null);
   const [runsUsed, setRunsUsed] = useState(0);
   const [mounted, setMounted] = useState(false);
@@ -344,9 +345,15 @@ export default function BacktestPage() {
   const remaining = Math.max(0, FREE_LIMIT - runsUsed);
 
   const handleRun = async () => {
-    if (!charts || limitReached || running) return;
+    if (!charts) {
+      setError('داده‌های بازار هنوز بارگذاری نشده');
+      return;
+    }
+    if (running || limitReached) return;
+    
     setRunning(true);
-    setResults(null);
+    setError(null);
+    
     try {
       if (!user) {
         const runs = getRecentRuns();
@@ -355,22 +362,38 @@ export default function BacktestPage() {
           return;
         }
         const result = runBacktest(charts, { strategy, nStocks, holdDays, initialCapital: capital, useRiskMgmt });
-        if (result) setResults(result);
-        recordRun();
-        setRunsUsed(getRecentRuns().length);
+        if (result) {
+          setResults(result);
+          recordRun();
+          setRunsUsed(getRecentRuns().length);
+        }
       } else {
-        const check = await checkMonthlyIncrement('backtest', FREE_LIMIT);
-        if (!check || !check.allowed) {
+        let check;
+        try {
+          check = await checkMonthlyIncrement('backtest', FREE_LIMIT);
+        } catch (err) {
+          console.error('Usage check failed:', err);
+          setError('خطا در بررسی محدودیت: ' + (err.message || 'نامشخص'));
+          return;
+        }
+        if (check.reason === 'NOT_AUTHENTICATED') {
+          setError('نشست شما منقضی شده - لطفاً دوباره وارد شوید');
+          return;
+        }
+        if (!check.allowed) {
           setLimitReached(true);
           setRunsUsed(FREE_LIMIT);
           return;
         }
         const result = runBacktest(charts, { strategy, nStocks, holdDays, initialCapital: capital, useRiskMgmt });
-        if (result) setResults(result);
-        setRunsUsed(check.count || 1);
+        if (result) {
+          setResults(result);
+          setRunsUsed(check.count || 1);
+        }
       }
     } catch (err) {
       console.error('Backtest error:', err);
+      setError('خطا در اجرا: ' + (err.message || 'نامشخص'));
     } finally {
       setRunning(false);
     }
@@ -398,6 +421,14 @@ export default function BacktestPage() {
           <span className="text-slate-500">از {FREE_LIMIT} در ماه</span>
         </div>
       </div>
+
+      {error && (
+        <div className="glass-strong p-3 rounded-xl border-2 border-danger/40 bg-danger/10 flex items-center gap-2">
+          <div className="w-6 h-6 rounded-full bg-danger/20 flex items-center justify-center flex-shrink-0 text-danger font-black text-xs">!</div>
+          <p className="text-xs text-danger flex-1">{error}</p>
+          <button onClick={() => setError(null)} className="text-danger text-xs hover:underline">بستن</button>
+        </div>
+      )}
 
       {limitReached && (
         <LimitReached feature="بک‌تست" />
@@ -473,7 +504,7 @@ export default function BacktestPage() {
       </div>
       )}
 
-      {results && (
+      {results && !limitReached && (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className={`glass-strong p-4 rounded-xl ${results.metrics.totalReturn >= 0 ? 'border-success/40' : 'border-danger/40'}`}>
@@ -638,7 +669,7 @@ export default function BacktestPage() {
         </>
       )}
 
-      {!results && !running && (
+      {!results && !running && !limitReached && (
         <div className="glass-strong p-12 rounded-2xl text-center">
           <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
             <Target className="w-10 h-10 text-primary/60" />
