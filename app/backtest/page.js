@@ -318,10 +318,6 @@ export default function BacktestPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!authLoading && !user) router.push('/signin');
-  }, [user, authLoading, router]);
-
   const [charts, setCharts] = useState(null);
   const [strategy, setStrategy] = useState('breakout');
   const [nStocks, setNStocks] = useState(5);
@@ -400,23 +396,10 @@ export default function BacktestPage() {
       </div>
 
       {limitReached && (
-        <div className="glass-strong p-5 rounded-2xl border-2 border-danger/40 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-danger/10 rounded-full blur-3xl" />
-          <div className="relative flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-danger/15 border border-danger/40 flex items-center justify-center flex-shrink-0">
-              <Lock className="w-6 h-6 text-danger" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-bold text-white mb-1">سهمیه ماهانه تمام شد</h3>
-              <p className="text-sm text-slate-300 mb-3">برای بک‌تست نامحدود + استراتژی‌های پیشرفته، به پلن حرفه‌ای ارتقا دهید.</p>
-              <button disabled className="btn-primary text-sm opacity-60 cursor-not-allowed">
-                <Crown className="w-4 h-4" /> ارتقا (به‌زودی)
-              </button>
-            </div>
-          </div>
-        </div>
+        <LimitReached feature="بک‌تست" />
       )}
 
+      {!limitReached && (
       <div className="glass-strong p-4 md:p-6 rounded-2xl">
         <div className="flex items-center gap-2 mb-5">
           <Sparkles className="w-5 h-5 text-accent" />
@@ -484,6 +467,7 @@ export default function BacktestPage() {
           {running ? <><Loader2 className="w-5 h-5 animate-spin" /> در حال اجرا...</> : <><Play className="w-5 h-5" /> اجرای بک‌تست</>}
         </button>
       </div>
+      )}
 
       {results && (
         <>
