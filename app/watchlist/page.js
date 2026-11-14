@@ -60,7 +60,7 @@ export default function WatchlistPage() {
             <div className="flex items-center gap-2">
               <p className="text-[11px] text-slate-300">{fmt(items.length)} از {fmt(limit)} سهم</p>
               {items.length >= limit && (
-                <Link href="/pricing" className="text-[10px] px-2 py-0.5 rounded-full bg-warning/20 text-warning border border-warning/30 font-bold hover:bg-warning/30 transition-colors">
+                <Link href="/upgrade?feature=واچ‌لیست" className="text-[10px] px-2 py-0.5 rounded-full bg-warning/20 text-warning border border-warning/30 font-bold hover:bg-warning/30 transition-colors">
                   ارتقا
                 </Link>
               )}
@@ -85,7 +85,7 @@ export default function WatchlistPage() {
           <div className="flex-1">
             <p className="text-sm font-bold text-white mb-0.5">به سقف پلن رایگان رسیدید</p>
             <p className="text-xs text-slate-300 mb-2">برای ذخیره نامحدود سهم‌ها، به پلن حرفه‌ای ارتقا دهید.</p>
-            <Link href="/pricing" className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-gradient-to-l from-primary to-accent text-bg font-bold">
+            <Link href="/upgrade?feature=واچ‌لیست" className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-gradient-to-l from-primary to-accent text-bg font-bold">
               مشاهده پلن‌ها
             </Link>
           </div>

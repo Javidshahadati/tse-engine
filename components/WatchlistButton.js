@@ -1,16 +1,16 @@
 'use client';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Star } from 'lucide-react';
 import { useWatchlist } from './WatchlistContext';
 import { useAuth } from './AuthContext';
 import AuthRequiredModal from './AuthRequiredModal';
-import UpgradeModal from './UpgradeModal';
 
 export default function WatchlistButton({ symbol }) {
   const { has, toggle, mounted, limit } = useWatchlist();
   const { user } = useAuth();
+  const router = useRouter();
   const [showAuth, setShowAuth] = useState(false);
-  const [showUpgrade, setShowUpgrade] = useState(false);
   
   if (!mounted) return null;
   const active = has(symbol);
@@ -19,7 +19,7 @@ export default function WatchlistButton({ symbol }) {
     if (!user) { setShowAuth(true); return; }
     const res = toggle(symbol);
     if (res && !res.success && res.reason === 'LIMIT_REACHED') {
-      setShowUpgrade(true);
+      router.push('/upgrade?feature=واچ‌لیست');
     }
   };
   
@@ -34,7 +34,6 @@ export default function WatchlistButton({ symbol }) {
         <Star className="w-4 h-4" fill={active ? 'currentColor' : 'none'} />
       </button>
       <AuthRequiredModal open={showAuth} onClose={() => setShowAuth(false)} feature="واچ‌لیست" />
-      <UpgradeModal open={showUpgrade} onClose={() => setShowUpgrade(false)} feature="واچ‌لیست" limit={limit} />
     </>
   );
 }
