@@ -315,6 +315,7 @@ function EquityCurve({ data }) {
 }
 
 export default function BacktestPage() {
+  const { user } = useAuth();
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
@@ -351,12 +352,27 @@ export default function BacktestPage() {
     if (!charts || limitReached) return;
     setRunning(true);
     setResults(null);
-    await new Promise(r => setTimeout(r, 100));
     try {
-      const result = runBacktest(charts, { strategy, nStocks, holdDays, initialCapital: capital, useRiskMgmt });
-      setResults(result);
-      recordRun();
-      setRunsUsed(getRecentRuns().length);
+      if (!user) {
+        // Guest: localStorage
+        const runs = getRecentRuns();
+        if (runs.length >= FREE_LIMIT) { setRunning(false); return; }
+        const result = runBacktest(charts, { strategy, nStocks, holdDays, initialCapital: capital, useRiskMgmt });
+        setResults(result);
+        recordRun();
+        setRunsUsed(getRecentRuns().length);
+      } else {
+        // Logged-in: server-side
+        const check = await checkMonthlyIncrement('backtest', FREE_LIMIT);
+        if (!check.allowed) {
+          setRunsUsed(FREE_LIMIT);
+          setRunning(false);
+          return;
+        }
+        const result = runBacktest(charts, { strategy, nStocks, holdDays, initialCapital: capital, useRiskMgmt });
+        setResults(result);
+        setRunsUsed(check.count);
+      }
     } catch (e) { console.error(e); }
     finally { setRunning(false); }
   };
