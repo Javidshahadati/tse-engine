@@ -5,6 +5,8 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import LimitReached from '@/components/LimitReached';
 import { checkUniqueStockView } from '@/lib/usage';
+import { useAuth } from '@/components/AuthContext';
+import GuestLimit from '@/components/GuestLimit';
 import {
   ArrowRight, TrendingUp, TrendingDown, AlertTriangle, BarChart3,
   Target, Activity, Users, Building2, Zap, LineChart, Layers,
@@ -39,17 +41,37 @@ function fmt(n, d = 0) {
 export default function StockPage() {
     const params = useParams();
   const symbol = decodeURIComponent(params.symbol);
+  const { user, loading: authLoading } = useAuth();
+  const [isGuest, setIsGuest] = useState(false);
   
   const [limitReached, setLimitReached] = useState(false);
   
   useEffect(() => {
-    (async () => {
-      const res = await checkUniqueStockView(symbol, 5);
-      if (!res.allowed && res.reason === 'LIMIT_REACHED') {
-        setLimitReached(true);
-      }
-    })();
-  }, [symbol]);
+    if (authLoading) return;
+    if (!user) {
+      setIsGuest(true);
+      try {
+        const today = new Date().toISOString().split('T')[0];
+        const key = `tse_guest_views_${today}`;
+        const list = JSON.parse(localStorage.getItem(key) || '[]');
+        if (!list.includes(symbol)) {
+          if (list.length >= 5) {
+            setLimitReached(true);
+          } else {
+            list.push(symbol);
+            localStorage.setItem(key, JSON.stringify(list));
+          }
+        }
+      } catch {}
+    } else {
+      (async () => {
+        const res = await checkUniqueStockView(symbol, 5);
+        if (!res.allowed && res.reason === 'LIMIT_REACHED') {
+          setLimitReached(true);
+        }
+      })();
+    }
+  }, [symbol, user, authLoading]);
 
   const [charts, setCharts] = useState(null);
   const [indicators, setIndicators] = useState(null);
@@ -104,7 +126,10 @@ export default function StockPage() {
     ).slice(0, 5);
   }, [news, symbol, sig]);
 
-  if (limitReached) return <LimitReached feature="مشاهده سهم" />;
+  if (limitReached) {
+    if (isGuest) return <GuestLimit />;
+    return <LimitReached feature="مشاهده سهم" />;
+  }
 
   if (!charts || !indicators || !signals) {
     return <div className="max-w-7xl mx-auto px-3 md:px-6 py-6"><div className="h-96 glass rounded-xl shimmer" /></div>;
