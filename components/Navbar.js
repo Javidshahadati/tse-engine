@@ -2,18 +2,18 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import { Activity, Menu, X, BarChart3, Info, Home, Star, Scale, Filter, Target, Gauge, Mail, User } from 'lucide-react';
+import { Activity, Menu, X, BarChart3, Info, Home, Star, Scale, Filter, Target, Gauge, Mail } from 'lucide-react';
 import UserMenu from './UserMenu';
 
 const NAV_LINKS = [
   { href: '/', label: 'صفحه اصلی', icon: Home },
   { href: '/dashboard', label: 'داشبورد', icon: BarChart3 },
-  { href: '/about', label: 'درباره ما', icon: Info },
-  { href: '/watchlist', label: 'واچ‌لیست', icon: Star },
-  { href: '/compare', label: 'مقایسه', icon: Scale },
-  { href: '/screener', label: 'اسکرینر', icon: Filter },
-  { href: '/backtest', label: 'بک‌تست', icon: Target },
   { href: '/breadth', label: 'سلامت بازار', icon: Gauge },
+  { href: '/screener', label: 'اسکرینر', icon: Filter },
+  { href: '/compare', label: 'مقایسه', icon: Scale },
+  { href: '/backtest', label: 'بک‌تست', icon: Target },
+  { href: '/watchlist', label: 'واچ‌لیست', icon: Star },
+  { href: '/about', label: 'درباره ما', icon: Info },
   { href: '/contact', label: 'تماس', icon: Mail },
 ];
 
@@ -29,18 +29,18 @@ export default function Navbar() {
             <Activity className="w-5 h-5 text-bg" strokeWidth={2.5} />
             <div className="absolute inset-0 rounded-xl bg-primary/40 blur-lg -z-10 group-hover:bg-primary/60 transition-colors" />
           </div>
-          <div className="flex flex-col leading-none">
+          <div className="flex flex-col leading-none hidden sm:flex">
             <span className="font-black text-white text-base tracking-tight">TSE.Engine</span>
             <span className="text-[9px] text-primary/90 font-semibold tracking-[0.15em] mt-0.5">JAVID LM</span>
           </div>
         </Link>
 
-        <div className="hidden md:flex items-center gap-1">
+        <div className="hidden lg:flex items-center gap-1">
           {NAV_LINKS.map(({ href, label, icon: Icon }) => {
             const active = pathname === href;
             return (
               <Link key={href} href={href}
-                className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                   active ? 'text-primary bg-primary/10' : 'text-slate-300 hover:text-white hover:bg-white/5'
                 }`}>
                 {active && <div className="absolute inset-0 rounded-lg border border-primary/40" />}
@@ -51,28 +51,40 @@ export default function Navbar() {
           })}
         </div>
 
-        <div className="hidden md:flex">
-          <Link href="/dashboard" className="relative group btn-primary text-sm py-2 px-5 overflow-hidden">
-            <span className="relative z-10">مشاهده داشبورد</span>
-            <div className="absolute inset-0 bg-gradient-to-r from-primary2 to-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="hidden lg:flex items-center gap-3">
+          <UserMenu />
+          <Link href="/dashboard" className="btn-primary text-sm py-2 px-5">
+            داشبورد
           </Link>
         </div>
 
-        <button onClick={() => setOpen(!open)} className="md:hidden p-2 rounded-lg text-slate-300 hover:bg-white/5">
-          {open ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+        {/* Mobile controls */}
+        <div className="lg:hidden flex items-center gap-1">
+          <UserMenu />
+          <button onClick={() => setOpen(!open)}
+            className="p-2 rounded-lg text-slate-300 hover:bg-white/5 transition-colors">
+            {open ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
       </div>
 
       {open && (
-        <div className="md:hidden border-t border-border bg-bg/95 backdrop-blur-xl">
-          <div className="px-4 py-3 space-y-1">
+        <div className="lg:hidden border-t border-border bg-bg/95 backdrop-blur-xl absolute top-16 left-0 right-0 h-[calc(100vh-4rem)] overflow-y-auto">
+          <div className="px-4 py-4 space-y-1 pb-20">
             {NAV_LINKS.map(({ href, label, icon: Icon }) => (
               <Link key={href} href={href} onClick={() => setOpen(false)}
-                className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-slate-200 hover:bg-white/5">
-                <Icon className="w-4 h-4 text-primary" />{label}
+                className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-colors ${
+                  pathname === href ? 'bg-primary/15 text-primary' : 'text-slate-200 hover:bg-white/5'
+                }`}>
+                <Icon className="w-5 h-5" />
+                {label}
               </Link>
             ))}
-            <Link href="/dashboard" onClick={() => setOpen(false)} className="btn-primary w-full justify-center mt-2 text-sm">مشاهده داشبورد</Link>
+            <div className="pt-4 mt-4 border-t border-border/50">
+              <Link href="/dashboard" onClick={() => setOpen(false)} className="btn-primary w-full justify-center py-3 text-sm">
+                مشاهده داشبورد
+              </Link>
+            </div>
           </div>
         </div>
       )}
