@@ -118,7 +118,7 @@ function runBacktest(charts, cfg) {
   const MIN_TRADES = 20;
 
   const { strategy, nStocks, holdDays, initialCapital, useRiskMgmt } = cfg;
-  const symbols = Object.keys(charts).filter(s => charts[s] && charts[s].length >= 100);
+  const symbols = Object.keys(charts).filter(s => charts[s] && charts[s].length >= 200);
   const ind = {};
 
   symbols.forEach(sym => {
@@ -139,9 +139,10 @@ function runBacktest(charts, cfg) {
     ind[sym] = { c, closes, highs, lows, vols, rsi, hist: macd.hist, ma10, ma20, ma50, avgVol20, atr14, mom20 };
   });
 
-  const minLen = Math.min(...Object.values(ind).map(x => x.closes.length));
+  const lengths = Object.values(ind).map(x => x.closes.length);
+  const maxLen = Math.max(...lengths);
   const startDay = 60;
-  const endDay = minLen - holdDays - 1;
+  const endDay = maxLen - holdDays - 1;
 
   // Market breadth per day
   const breadth = {};
@@ -175,7 +176,7 @@ function runBacktest(charts, cfg) {
   while (day < endDay) {
     const candidates = [];
     const dayBreadth = breadth[day] || 0.5;
-    const skipBuys = dayBreadth < 0.3;
+    const skipBuys = dayBreadth < 0.15;
 
     if (!skipBuys) {
       Object.keys(ind).forEach(sym => {
@@ -221,7 +222,10 @@ function runBacktest(charts, cfg) {
           pass = s >= 0.5;
         }
 
-        if (pass && atr > 0) candidates.push({ symbol: sym, score: Math.max(0, Math.min(1, score)), price, atr });
+        if (pass) {
+          const atrFallback = atr > 0 ? atr : price * 0.01;
+          candidates.push({ symbol: sym, score: Math.max(0, Math.min(1, score)), price, atr: atrFallback });
+        }
       });
     }
 
