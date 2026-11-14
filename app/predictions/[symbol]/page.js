@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import LimitReached from '@/components/LimitReached';
-import { checkAndIncrement } from '@/lib/usage';
+import { checkUniqueStockView } from '@/lib/usage';
 import {
   ArrowRight, TrendingUp, TrendingDown, AlertTriangle, BarChart3,
   Target, Activity, Users, Building2, Zap, LineChart, Layers,
@@ -44,7 +44,7 @@ export default function StockPage() {
   
   useEffect(() => {
     (async () => {
-      const res = await checkAndIncrement('stock_view', 5);
+      const res = await checkUniqueStockView(symbol, 5);
       if (!res.allowed) setLimitReached(true);
     })();
   }, [symbol]);
