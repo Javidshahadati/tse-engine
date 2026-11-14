@@ -30,6 +30,7 @@ export default function Footer() {
               <li><Link href="/dashboard" className="text-slate-400 hover:text-primary transition-colors">داشبورد تحلیل</Link></li>
               <li><Link href="/market-index" className="text-slate-400 hover:text-primary transition-colors">شاخص کل</Link></li>
               <li><Link href="/about" className="text-slate-400 hover:text-primary transition-colors">درباره ما</Link></li>
+              <li><Link href="/pricing" className="text-slate-400 hover:text-primary transition-colors">پلن‌ها و قیمت</Link></li>
               <li><Link href="/contact" className="text-slate-400 hover:text-primary transition-colors">تماس و همکاری</Link></li>
             </ul>
           </div>
