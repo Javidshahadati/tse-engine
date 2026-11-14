@@ -128,13 +128,13 @@ export default function PricingPage() {
       </div>
 
       {/* Plans */}
-      <div className="grid md:grid-cols-3 gap-4 md:gap-5">
+      <div className="grid md:grid-cols-3 gap-4 md:gap-5 max-w-5xl mx-auto pt-4">
         {PLANS.map(plan => {
           const Icon = plan.icon;
           const price = plan.price[billing];
           const isPro = plan.id === 'pro';
           return (
-            <div key={plan.id} className={`relative rounded-2xl border-2 ${plan.borderColor} bg-gradient-to-br ${plan.color} to-transparent overflow-hidden transition-all ${isPro ? 'md:scale-105 shadow-2xl shadow-primary/20' : ''}`}>
+            <div key={plan.id} className={`relative rounded-2xl border-2 ${plan.borderColor} bg-gradient-to-br ${plan.color} to-transparent overflow-hidden transition-all ${isPro ? 'shadow-2xl shadow-primary/20 md:-translate-y-2' : ''}`}>
               {plan.badge && (
                 <div className="absolute top-3 left-3 z-10">
                   <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
@@ -156,20 +156,15 @@ export default function PricingPage() {
                   </div>
                 </div>
 
-                <div className="mb-4">
+                <div className="mb-4 h-16 flex flex-col justify-center">
                   {price === 0 ? (
                     <div className="text-3xl font-black text-white">رایگان</div>
                   ) : (
                     <div>
-                      <div className="flex items-baseline gap-1">
-                        <span className="num text-3xl font-black text-white">{fmt(price)}</span>
-                        <span className="text-xs text-slate-400">تومان / {billing === 'monthly' ? 'ماه' : 'سال'}</span>
+                      <div className="flex items-baseline gap-2">
+                        <span className="num text-4xl font-black text-slate-500 tracking-widest">—</span>
+                        <span className="text-xs text-slate-400 font-medium">به‌زودی</span>
                       </div>
-                      {billing === 'yearly' && (
-                        <div className="text-[10px] text-success mt-1">
-                          معادل {fmt(Math.round(price / 12))} تومان ماهانه
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
