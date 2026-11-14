@@ -36,21 +36,28 @@ function fmt(n, d = 0) {
 }
 
 export default function StockPage() {
+    const params = useParams();
+  const symbol = decodeURIComponent(params.symbol);
+  
   const [limitReached, setLimitReached] = useState(false);
-
+  
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
-    const key = `tse_stock_views_${today}`;
     try {
+      const today = new Date().toISOString().split('T')[0];
+      const key = `tse_stock_views_${today}`;
       const list = JSON.parse(localStorage.getItem(key) || '[]');
       if (!list.includes(symbol)) {
-        if (list.length >= 5) { setLimitReached(true); }
-        else { list.push(symbol); localStorage.setItem(key, JSON.stringify(list)); }
+        if (list.length >= 5) {
+          setLimitReached(true);
+        } else {
+          list.push(symbol);
+          localStorage.setItem(key, JSON.stringify(list));
+        }
       }
-    } catch {}
+    } catch (err) {
+      console.error('Limit check failed:', err);
+    }
   }, [symbol]);
-  const params = useParams();
-  const symbol = decodeURIComponent(params.symbol);
 
   const [charts, setCharts] = useState(null);
   const [indicators, setIndicators] = useState(null);
