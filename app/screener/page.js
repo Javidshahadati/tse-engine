@@ -203,7 +203,9 @@ export default function ScreenerPage() {
     );
   }
 
-  const displayList = showAll ? results : results.slice(0, 50);
+  const FREE_LIMIT = 5;
+  const displayList = results.slice(0, FREE_LIMIT);
+  const hasMore = results.length > FREE_LIMIT;
 
   return (
     <div className="max-w-7xl mx-auto px-3 md:px-6 lg:px-8 py-4 md:py-8 space-y-4 md:space-y-6">
@@ -417,11 +419,15 @@ export default function ScreenerPage() {
               </tbody>
             </table>
           </div>
-          {results.length > 50 && !showAll && (
-            <div className="p-4 text-center border-t border-border/50">
-              <button onClick={() => setShowAll(true)} className="btn-secondary text-sm">
-                نمایش همه ({fmt(results.length)})
-              </button>
+          {hasMore && (
+            <div className="p-6 text-center border-t border-border/50 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-t from-bg to-transparent pointer-events-none" />
+              <div className="relative">
+                <p className="text-sm text-slate-300 mb-3 font-medium">برای مشاهده {fmt(results.length - FREE_LIMIT)} سهم دیگر، به پلن حرفه‌ای ارتقا دهید</p>
+                <Link href="/upgrade?feature=اسکرینر" className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-l from-amber-400 to-yellow-500 text-[#1a1208] font-bold text-sm shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 transition-all">
+                  <Crown className="w-4 h-4" /> ارتقا به حرفه‌ای
+                </Link>
+              </div>
             </div>
           )}
         </div>

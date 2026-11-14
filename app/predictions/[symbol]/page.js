@@ -3,6 +3,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import LimitReached from '@/components/LimitReached';
 import {
   ArrowRight, TrendingUp, TrendingDown, AlertTriangle, BarChart3,
   Target, Activity, Users, Building2, Zap, LineChart, Layers,
@@ -35,6 +36,19 @@ function fmt(n, d = 0) {
 }
 
 export default function StockPage() {
+  const [limitReached, setLimitReached] = useState(false);
+
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const key = `tse_stock_views_${today}`;
+    try {
+      const list = JSON.parse(localStorage.getItem(key) || '[]');
+      if (!list.includes(symbol)) {
+        if (list.length >= 5) { setLimitReached(true); }
+        else { list.push(symbol); localStorage.setItem(key, JSON.stringify(list)); }
+      }
+    } catch {}
+  }, [symbol]);
   const params = useParams();
   const symbol = decodeURIComponent(params.symbol);
 
@@ -90,6 +104,8 @@ export default function StockPage() {
       keywords.some(k => k && k.length > 2 && n.title.includes(k))
     ).slice(0, 5);
   }, [news, symbol, sig]);
+
+  if (limitReached) return <LimitReached feature="مشاهده سهم" />;
 
   if (!charts || !indicators || !signals) {
     return <div className="max-w-7xl mx-auto px-3 md:px-6 py-6"><div className="h-96 glass rounded-xl shimmer" /></div>;

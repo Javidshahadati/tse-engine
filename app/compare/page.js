@@ -2,6 +2,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import LimitReached from '@/components/LimitReached';
 import {
   ArrowLeft, Search, TrendingUp, TrendingDown, Activity, Trophy,
   ChevronDown, X, BarChart3, AlertTriangle
@@ -91,6 +92,17 @@ function Row({ label, v1, v2, winner = null, format = (v) => v, color = null }) 
 }
 
 export default function ComparePage() {
+  const [limitReached, setLimitReached] = useState(false);
+
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const key = `tse_compare_uses_${today}`;
+    try {
+      const uses = parseInt(localStorage.getItem(key) || '0', 10);
+      if (uses >= 1) { setLimitReached(true); }
+      else { localStorage.setItem(key, '1'); }
+    } catch {}
+  }, []);
   const [signals, setSignals] = useState(null);
   const [indicators, setIndicators] = useState(null);
   const [charts, setCharts] = useState(null);
@@ -124,6 +136,8 @@ export default function ComparePage() {
     if (!signals) return [];
     return signals.signals.map(s => ({ symbol: s.symbol, name: s.name }));
   }, [signals]);
+
+  if (limitReached) return <LimitReached feature="مقایسه سهم" />;
 
   if (!signals || !indicators) {
     return <div className="max-w-7xl mx-auto px-3 md:px-6 py-6"><div className="h-96 glass rounded-xl shimmer" /></div>;
