@@ -332,7 +332,6 @@ export default function BacktestPage() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setRunsUsed(getRecentRuns().length);
     setMounted(true);
     (async () => {
       try {
@@ -341,6 +340,23 @@ export default function BacktestPage() {
       } catch {}
     })();
   }, []);
+
+  // Refresh state on user change
+  useEffect(() => {
+    (async () => {
+      try {
+        if (!user) {
+          const guestRuns = getRecentRuns().length;
+          setRunsUsed(guestRuns);
+          setLimitReached(guestRuns >= FREE_LIMIT);
+        } else {
+          const c = await getUsage('backtest');
+          setRunsUsed(c);
+          setLimitReached(c >= FREE_LIMIT);
+        }
+      } catch (e) { console.error('refresh failed:', e); }
+    })();
+  }, [user]);
 
   const remaining = Math.max(0, FREE_LIMIT - runsUsed);
 
@@ -431,7 +447,17 @@ export default function BacktestPage() {
       )}
 
       {limitReached && (
-        <LimitReached feature="بک‌تست" />
+        <div className="glass-strong p-6 rounded-2xl border-2 border-amber-500/40 bg-gradient-to-br from-amber-500/10 to-transparent text-center relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="relative">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-300 to-yellow-600 mx-auto mb-4 flex items-center justify-center shadow-lg shadow-amber-500/30">
+              <span className="text-3xl">👑</span>
+            </div>
+            <h2 className="text-xl font-black text-white mb-2">سهمیه بک‌تست تمام شد</h2>
+            <p className="text-sm text-slate-300 mb-5">شما به محدودیت {FREE_LIMIT} بار در ماه رسیده‌اید</p>
+            <Link href="/upgrade" className="inline-block px-6 py-3 rounded-xl bg-gradient-to-l from-amber-400 to-yellow-500 text-[#1a1208] font-bold text-sm shadow-lg shadow-amber-500/30">ارتقا به حرفه‌ای</Link>
+          </div>
+        </div>
       )}
 
       {!limitReached && (
