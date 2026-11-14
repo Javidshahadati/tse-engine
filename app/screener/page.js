@@ -3,8 +3,7 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import {
   Search, Filter, X, TrendingUp, TrendingDown, Activity, ArrowLeft,
-  ChevronDown, RotateCcw, Sparkles
-} from 'lucide-react';
+  ChevronDown, RotateCcw, Sparkles, Crown } from 'lucide-react';
 
 const SIGNAL = {
   BUY: { label: 'توجه بالا', color: 'text-success', bg: 'bg-success/15', border: 'border-success/30', icon: TrendingUp },
