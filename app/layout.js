@@ -2,6 +2,7 @@ import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { WatchlistProvider } from '@/components/WatchlistContext';
+import { AuthProvider } from '@/components/AuthContext';
 import TermsGate from '@/components/TermsGate';
 
 export const metadata = {
@@ -21,6 +22,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="fa" dir="rtl">
       <body className="min-h-screen antialiased">
+        <AuthProvider>
         <WatchlistProvider>
           <TermsGate />
           <div className="mesh-bg" />
@@ -28,6 +30,7 @@ export default function RootLayout({ children }) {
         <main className="pt-16">{children}</main>
         <Footer />
         </WatchlistProvider>
+        </AuthProvider>
       </body>
     </html>
   );
