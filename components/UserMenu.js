@@ -49,7 +49,7 @@ export default function UserMenu() {
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 mt-2 z-[100] glass-strong rounded-xl min-w-[220px] border border-primary/30 shadow-2xl overflow-hidden">
+        <div className="absolute top-full right-0 mt-2 z-[100] glass-strong rounded-xl min-w-[220px] border border-primary/30 shadow-2xl overflow-hidden">
           <div className="p-3 border-b border-border/40">
             <div className="text-xs text-slate-400 mb-0.5">کاربر</div>
             <div className="text-sm font-bold text-white truncate">{name}</div>
