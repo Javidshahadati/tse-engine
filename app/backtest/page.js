@@ -342,7 +342,6 @@ export default function BacktestPage() {
   }, []);
 
   const remaining = Math.max(0, FREE_LIMIT - runsUsed);
-  const limitReached = remaining === 0;
 
   const handleRun = async () => {
     if (!charts || limitReached || running) return;
