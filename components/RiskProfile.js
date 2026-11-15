@@ -61,26 +61,26 @@ export default function RiskProfile({ chart, close, sig, ind, fund }) {
   const negatives = contribs.filter(c => c.impact < 0).reduce((a, b) => a + b.impact, 0);
   const netScore = Math.max(0, Math.min(100, 50 + positives + negatives));
 
-  const verdict = netScore >= 70 ? { label: 'سیگنال قوی', color: 'text-success', icon: TrendingUp } :
-                  netScore >= 40 ? { label: 'سیگنال خنثی', color: 'text-slate-300', icon: Minus } :
-                  { label: 'سیگنال ضعیف', color: 'text-danger', icon: TrendingDown };
+  const verdict = netScore >= 70 ? { label: 'امتیاز قوی', color: 'text-success', icon: TrendingUp } :
+                  netScore >= 40 ? { label: 'امتیاز متوسط', color: 'text-slate-300', icon: Minus } :
+                  { label: 'امتیاز ضعیف', color: 'text-danger', icon: TrendingDown };
   const VerdictIcon = verdict.icon;
 
   // "If" scenarios
   const scenarios = [];
   if (ind?.rsi != null) {
-    if (ind.rsi > 55) scenarios.push({ if: 'RSI به زیر ۵۰ برگردد', then: 'قدرت سیگنال صعودی کاهش می‌یابد' });
-    else if (ind.rsi < 45) scenarios.push({ if: 'RSI به بالای ۵۰ برسد', then: 'سیگنال صعودی تقویت می‌شود' });
+    if (ind.rsi > 55) scenarios.push({ if: 'RSI به زیر ۵۰ برگردد', then: 'قدرت روند صعودی کاهش می‌یابد' });
+    else if (ind.rsi < 45) scenarios.push({ if: 'RSI به بالای ۵۰ برسد', then: 'روند صعودی تقویت می‌شود' });
   }
   if (ind?.macd_hist != null) {
     if (ind.macd_hist > 0) scenarios.push({ if: 'MACD هیستوگرام منفی شود', then: 'روند به خنثی/نزولی تغییر می‌کند' });
-    else scenarios.push({ if: 'MACD هیستوگرام مثبت شود', then: 'سیگنال صعودی ایجاد می‌شود' });
+    else scenarios.push({ if: 'MACD هیستوگرام مثبت شود', then: 'روند صعودی ایجاد می‌شود' });
   }
   if (ind?.supports?.[0]) {
     scenarios.push({ if: `قیمت زیر ${fmt(ind.supports[0])} برود`, then: 'سناریوی نزولی فعال می‌شود' });
   }
   if (ind?.resistances?.[0]) {
-    scenarios.push({ if: `قیمت مقاومت ${fmt(ind.resistances[0])} را بشکند`, then: 'سیگنال صعودی تقویت می‌شود' });
+    scenarios.push({ if: `قیمت مقاومت ${fmt(ind.resistances[0])} را بشکند`, then: 'روند صعودی تقویت می‌شود' });
   }
 
   return (
