@@ -15,13 +15,9 @@ const FREE_LIMIT = 3;
 const LIMIT_KEY = 'tse_backtest_runs';
 
 const STRATEGIES = {
-  breakout: { name: 'شکست سقف', desc: 'شکست ۲۰ روزه + حجم بالا', icon: Zap, color: 'from-warning/20 to-warning/5' },
-  pullback: { name: 'بازگشت در روند', desc: 'روند صعودی + برگشت به MA20', icon: TrendingUp, color: 'from-success/20 to-success/5' },
-  meanrev: { name: 'بازگشت از اشباع', desc: 'RSI < ۳۰ + نزدیک کف', icon: TrendingDown, color: 'from-primary/20 to-primary/5' },
-  momentum: { name: 'مومنتوم', desc: 'RSI ۵۵-۷۰ + MACD + حجم', icon: Activity, color: 'from-accent/20 to-accent/5' },
-  trend: { name: 'پیرو روند', desc: 'MA20 > MA50 + قیمت بالای MA20', icon: Trophy, color: 'from-primary2/20 to-primary2/5' },
-  multifactor: { name: 'چندفاکتوری', desc: 'امتیاز از ۴ فاکتور', icon: Sparkles, color: 'from-danger/20 to-danger/5' },
-  model_portfolio: { name: 'پیرو بازار', desc: '۱۰ سهم برتر Javid LM، نگه‌داری بلندمدت', icon: Crown, color: 'from-primary/20 to-primary/5' },
+  model_portfolio: { name: 'پیرو بازار (JavidLM)', desc: '۱۰ سهم برتر JavidLM', icon: Crown, color: 'from-primary/20 to-primary/5' },
+  multifactor: { name: 'چندفاکتوری (گسترده)', desc: '۲۰ سهم برتر JavidLM', icon: Sparkles, color: 'from-danger/20 to-danger/5' },
+  buy_hold: { name: 'بای‌وهولد', desc: 'مقایسه با بازار', icon: TrendingUp, color: 'from-slate-600/20 to-slate-700/5' },
 };
 
 const EXIT_LABELS = {
@@ -473,10 +469,6 @@ export default function BacktestPage() {
   const remaining = Math.max(0, FREE_LIMIT - runsUsed);
 
   const handleRun = async () => {
-    if (!charts) {
-      setError('داده‌های بازار هنوز بارگذاری نشده');
-      return;
-    }
     if (running || limitReached) return;
     
     setRunning(true);
@@ -489,7 +481,9 @@ export default function BacktestPage() {
           setLimitReached(true);
           return;
         }
-        const result = runBacktest(charts, { strategy, nStocks, holdDays, initialCapital: capital, useRiskMgmt });
+        const _json = await fetch('/data/backtest_results.json').then(r => r.json());
+        const result = _json.strategies[strategy] || null;
+        if (!result) { setError('نتیجه‌ای برای این استراتژی موجود نیست'); setRunning(false); return; }
         if (result) {
           setResults(result);
           if (!result.metrics.isReliable) {
@@ -516,7 +510,9 @@ export default function BacktestPage() {
           setRunsUsed(FREE_LIMIT);
           return;
         }
-        const result = runBacktest(charts, { strategy, nStocks, holdDays, initialCapital: capital, useRiskMgmt });
+        const _json = await fetch('/data/backtest_results.json').then(r => r.json());
+        const result = _json.strategies[strategy] || null;
+        if (!result) { setError('نتیجه‌ای برای این استراتژی موجود نیست'); setRunning(false); return; }
         if (result) {
           setResults(result);
           if (!result.metrics.isReliable) {
@@ -533,7 +529,7 @@ export default function BacktestPage() {
     }
   };
 
-  if (!mounted || !charts) return <div className="max-w-7xl mx-auto px-3 md:px-6 py-8"><div className="h-96 glass rounded-xl shimmer" /></div>;
+  if (!mounted) return <div className="max-w-7xl mx-auto px-3 md:px-6 py-8"><div className="h-96 glass rounded-xl shimmer" /></div>;
 
   return (
     <div className="max-w-7xl mx-auto px-3 md:px-6 lg:px-8 py-4 md:py-8 space-y-4 md:space-y-6">
