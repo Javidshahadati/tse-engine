@@ -814,13 +814,61 @@ export default function BacktestPage() {
       )}
 
       {!results && !running && !limitReached && (
-        <div className="glass-strong p-12 rounded-2xl text-center">
-          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-            <Target className="w-10 h-10 text-primary/60" />
+        <div className="glass-strong p-8 md:p-12 rounded-2xl text-center relative overflow-hidden">
+          <style jsx>{`
+            @keyframes barPulse {
+              0%, 100% { transform: scaleY(0.3); opacity: 0.5; }
+              50% { transform: scaleY(1); opacity: 1; }
+            }
+            @keyframes glowPulse {
+              0%, 100% { opacity: 0.3; }
+              50% { opacity: 0.6; }
+            }
+          `}</style>
+          
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/8 via-transparent to-transparent pointer-events-none" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-primary/20 rounded-full blur-3xl" style={{animation: 'glowPulse 3s ease-in-out infinite'}} />
+          
+          <div className="relative">
+            {/* Animated bars chart */}
+            <div className="flex items-end justify-center gap-1.5 h-28 mb-6">
+              {[0,1,2,3,4,5,6,7,8].map((i) => (
+                <div
+                  key={i}
+                  className="w-2 md:w-2.5 rounded-t-sm bg-gradient-to-t from-primary/60 via-primary to-primary2 origin-bottom"
+                  style={{
+                    height: `${35 + ((i * 13) % 55)}%`,
+                    animation: `barPulse ${1.4 + (i % 3) * 0.35}s ease-in-out ${i * 0.12}s infinite`,
+                    boxShadow: '0 0 12px rgba(56, 189, 248, 0.3)'
+                  }}
+                />
+              ))}
+            </div>
+            
+            <h2 className="text-lg md:text-2xl font-black text-white mb-2">آماده بک‌تست؟</h2>
+            <p className="text-sm md:text-base text-slate-300 mb-4">
+              استراتژی <span className="text-primary font-bold">JavidLM</span> رو انتخاب کن و اجرا بزن
+            </p>
+            
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[10px] md:text-[11px] text-slate-400">
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                ۵۰۰ روز داده واقعی
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                ۶۸ فیچر تکنیکال
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-warning" />
+                کارمزد ۱.۲۵٪
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                alpha +۱۰.۵٪
+              </span>
+            </div>
           </div>
-          <h2 className="text-lg font-bold text-white mb-2">آماده بک‌تست؟</h2>
-          <p className="text-sm text-slate-400 mb-4">استراتژی، تعداد سهم، و مدیریت ریسک را تنظیم کنید</p>
-          <p className="text-[10px] text-slate-500">بک‌تست روی ۲۵۰ روز اخیر اجرا می‌شود</p>
         </div>
       )}
     </div>
