@@ -281,7 +281,7 @@ function runBacktest(charts, cfg) {
 
         const grossRet = (exitPrice - entryPrice) / entryPrice;
         const netRet = grossRet - TOTAL_COST;
-        capital += perTrade * (1 + netRet);
+        capital += perTrade * netRet;
 
         trades.push({
           symbol: p.symbol,
