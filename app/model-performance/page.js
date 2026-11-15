@@ -59,11 +59,9 @@ function CalcSignalMetrics() {
           const trimmed = sortedLook.slice(trimStart, trimEnd);
           const avgRet = trimmed.reduce((a, b) => a + b, 0) / trimmed.length;
           
-          // Hit Rate: درصد روزهایی که بازده مثبت بود (نه فقط > 1.7٪)
+          // Hit Rate: درصد روزهایی که بازده > 1.7٪ بود (کل ۲۵۰ روز)
           const wins = lookback.filter(r => r > 1.7).length;
-          const partialWins = lookback.filter(r => r > 0 && r <= 1.7).length;
-          const totalWins = wins + partialWins * 0.5;  // نیمه‌برد
-          const hitRate = (totalWins / lookback.length) * 100;
+          const hitRate = (wins / lookback.length) * 100;
           
           signals.push({
             symbol: sig.symbol,
@@ -167,7 +165,7 @@ function CalcSignalMetrics() {
             <div>
               <div className="text-sm font-bold text-white">کیفیت سیگنال‌های Javid LM</div>
               <div className="text-[10px] text-slate-400">
-                بر اساس {fmt(data.totalSignals)} سهم در ۲۰ روز اخیر
+                بر اساس {fmt(data.totalSignals)} سهم — کل تاریخچه (۲۵۰ روز)
               </div>
             </div>
           </div>
@@ -224,11 +222,13 @@ function CalcSignalMetrics() {
           <div className="flex-1">
             <h3 className="text-sm font-bold text-white mb-1">تفسیر نتایج</h3>
             <p className="text-xs text-slate-300 leading-relaxed">
-              {data.hitRate >= 60 && data.rr >= 2
-                ? '✅ مدل Javid LM عملکرد بسیار خوبی دارد. Hit Rate بالای ۶۰٪ و نسبت R:R بالای ۲ نشان‌دهنده دقت و کیفیت بالای سیگنال‌هاست.'
-                : data.hitRate >= 55 && data.rr >= 1.5
-                ? '🟡 مدل Javid LM عملکرد قابل قبولی دارد. برای بهبود، تمرکز روی بهبود features و افزایش R:R توصیه می‌شود.'
-                : '⚠️ مدل Javid LM نیاز به بهبود دارد. Hit Rate پایین یا R:R ضعیف نشان‌دهنده ضعف در پیش‌بینی است.'}
+              {data.hitRate >= 55 && data.rr >= 2
+                ? '✅ مدل Javid LM عملکرد خوبی دارد. Hit Rate بالای ۵۵٪ و R:R بالای ۲ نشان‌دهنده کیفیت قابل قبول است.'
+                : data.hitRate >= 45 && data.rr >= 1.5
+                ? '🟡 مدل Javid LM عملکرد متوسطی دارد. برای بهبود، تمرکز روی فیچرهای بنیادی توصیه می‌شود.'
+                : data.hitRate >= 35
+                ? '⚠️ مدل Javid LM نیاز به بهبود دارد. با فیچرهای بنیادی (ROE، EPS) می‌توان بهبود داد.'
+                : '🚨 مدل Javid LM ضعیف است. نیاز به بازسازی با فیچرهای جدید دارد.'}
             </p>
           </div>
         </div>
