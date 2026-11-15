@@ -208,6 +208,9 @@ function runBacktest(charts, cfg) {
 
         let pass = false, score = 0;
 
+        if (actualStrategy === 'model_portfolio') {
+          pass = ma20 != null && ma50 != null && price > ma20 && ma20 > ma50 && hist > 0 && mom20V != null && mom20V > 0;
+          score = 0.5 + Math.min(mom20V * 3, 0.4) + (hist > 0 ? 0.1 : 0);
         } else if (actualStrategy === 'breakout') {
           const volRatio = avgVol > 0 ? vol / avgVol : 0;
           pass = high20 != null && price >= high20 * 0.99 && volRatio > 1.5 && rsiV > 55 && hist > 0;
