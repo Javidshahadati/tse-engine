@@ -1,0 +1,1403 @@
+{
+  "generated_at": "2026-11-16 00:44:25",
+  "model": {
+    "name": "JavidLM",
+    "version": "20d-ensemble",
+    "features": 68,
+    "hold_days": 20,
+    "cost_pct": 1.25
+  },
+  "strategies": {
+    "model_portfolio": {
+      "name": "پیرو بازار (JavidLM)",
+      "metrics": {
+        "totalReturn": 17.76,
+        "sharpe": 0.67,
+        "maxDrawdown": -28.64,
+        "winrate": 60.0,
+        "nTrades": 50,
+        "avgTrade": 16.95,
+        "bestTrade": 50.0,
+        "worstTrade": -19.15,
+        "benchmarkReturn": 10.53,
+        "alpha": 7.23,
+        "slCount": 0,
+        "tpCount": 0,
+        "trailCount": 50,
+        "finalCapital": 11776000,
+        "isReliable": true
+      },
+      "equity": [
+        {
+          "date": "20251029",
+          "value": 100.0
+        },
+        {
+          "date": "20251224",
+          "value": 120.43
+        },
+        {
+          "date": "20251227",
+          "value": 100.0
+        },
+        {
+          "date": "20260224",
+          "value": 107.67
+        },
+        {
+          "date": "20260225",
+          "value": 100.0
+        },
+        {
+          "date": "20260503",
+          "value": 98.75
+        },
+        {
+          "date": "20260504",
+          "value": 100.0
+        },
+        {
+          "date": "20260630",
+          "value": 140.14
+        },
+        {
+          "date": "20260701",
+          "value": 100.0
+        },
+        {
+          "date": "20260902",
+          "value": 117.76
+        }
+      ],
+      "trades": [
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "سمتاز",
+          "return": 6.09,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "سباقر",
+          "return": 25.82,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "ثپهران",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "كتوسعه",
+          "return": -0.41,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "شاراك",
+          "return": 34.73,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "داترا",
+          "return": 50.0,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "دروز",
+          "return": 14.6,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "غپونه",
+          "return": 21.98,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "زفارس",
+          "return": 50.0,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "دپارس",
+          "return": 2.75,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "درپاد",
+          "return": 50.0,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "سباقر",
+          "return": -1.59,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "والماس",
+          "return": -5.94,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "شبريز",
+          "return": 11.95,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "اخشان",
+          "return": -3.67,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "مايكت",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "كپرسپوليس",
+          "return": 50.0,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "نيروترانسفو",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "توسن",
+          "return": -2.42,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "پارسيان",
+          "return": -19.15,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "تكنو",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "تاديكو",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "احيا",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "حخزر",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "زهلال",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "دارو",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "حآفرين",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "فجهانح",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "فاراك",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "دتماد",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "سباقر",
+          "return": 32.88,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "فسبزوار",
+          "return": 38.34,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "غفارس",
+          "return": 42.76,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "نيروترانسفو",
+          "return": 29.16,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "فن افزار",
+          "return": 50.0,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "شتران",
+          "return": 42.58,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "سپيد",
+          "return": 32.71,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "خراسان",
+          "return": 32.98,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "غگلستا",
+          "return": 50.0,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "فسازان",
+          "return": 50.0,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "وامين",
+          "return": 20.31,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "سپيد",
+          "return": 13.37,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "شپنا",
+          "return": -0.05,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "پاسا",
+          "return": 27.92,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "درازي",
+          "return": 50.0,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "نوين",
+          "return": 30.51,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "تماوند",
+          "return": 0.19,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "شبصير",
+          "return": 4.8,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "غشصفا",
+          "return": 29.51,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "وسپه",
+          "return": 1.01,
+          "exitReason": "TIME",
+          "fold": "F5"
+        }
+      ]
+    },
+    "multifactor": {
+      "name": "چندفاکتوری (JavidLM گسترده)",
+      "metrics": {
+        "totalReturn": 11.26,
+        "sharpe": 0.54,
+        "maxDrawdown": -27.78,
+        "winrate": 52.0,
+        "nTrades": 100,
+        "avgTrade": 12.01,
+        "bestTrade": 50.0,
+        "worstTrade": -19.62,
+        "benchmarkReturn": 5.59,
+        "alpha": 5.67,
+        "slCount": 0,
+        "tpCount": 0,
+        "trailCount": 100,
+        "finalCapital": 11126000,
+        "isReliable": true
+      },
+      "equity": [
+        {
+          "date": "20251029",
+          "value": 100.0
+        },
+        {
+          "date": "20251224",
+          "value": 112.19
+        },
+        {
+          "date": "20251227",
+          "value": 100.0
+        },
+        {
+          "date": "20260224",
+          "value": 99.38
+        },
+        {
+          "date": "20260225",
+          "value": 100.0
+        },
+        {
+          "date": "20260503",
+          "value": 98.75
+        },
+        {
+          "date": "20260504",
+          "value": 100.0
+        },
+        {
+          "date": "20260630",
+          "value": 138.46
+        },
+        {
+          "date": "20260701",
+          "value": 100.0
+        },
+        {
+          "date": "20260902",
+          "value": 111.26
+        }
+      ],
+      "trades": [
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "سمتاز",
+          "return": 6.09,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "سباقر",
+          "return": 25.82,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "ثپهران",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "كتوسعه",
+          "return": -0.41,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "شاراك",
+          "return": 34.73,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "داترا",
+          "return": 50.0,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "دروز",
+          "return": 14.6,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "غپونه",
+          "return": 21.98,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "زفارس",
+          "return": 50.0,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "دپارس",
+          "return": 2.75,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "دفارا",
+          "return": 9.84,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "ومهان",
+          "return": -1.06,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "سپيدار",
+          "return": 2.37,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "كپرسپوليس",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "شرانل",
+          "return": 12.91,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "نيروترانسفو",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "شغدير",
+          "return": 5.26,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "فپرديس",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "غزنجان",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251029",
+          "exitDate": "20251129",
+          "symbol": "درازك",
+          "return": 15.17,
+          "exitReason": "TIME",
+          "fold": "F1"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "درپاد",
+          "return": 50.0,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "سباقر",
+          "return": -1.59,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "والماس",
+          "return": -5.94,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "شبريز",
+          "return": 11.95,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "اخشان",
+          "return": -3.67,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "مايكت",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "كپرسپوليس",
+          "return": 50.0,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "نيروترانسفو",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "توسن",
+          "return": -2.42,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "پارسيان",
+          "return": -19.15,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "دقاضي",
+          "return": -6.33,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "سكرد",
+          "return": -10.72,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "كتوسعه",
+          "return": 3.9,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "شكام",
+          "return": -12.82,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "سمتاز",
+          "return": 3.38,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "فن افزار",
+          "return": -18.32,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "تماوند",
+          "return": -19.62,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "رانفور",
+          "return": -5.72,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "وسپه",
+          "return": -9.25,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20251227",
+          "exitDate": "20260126",
+          "symbol": "فاما",
+          "return": -13.62,
+          "exitReason": "TIME",
+          "fold": "F2"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "تكنو",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "تاديكو",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "احيا",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "حخزر",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "زهلال",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "دارو",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "حآفرين",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "فجهانح",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "فاراك",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "دتماد",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "شارپيلن",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "پتاير",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "وثنو",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "كساوه",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "پارسيان",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "وهامون",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "سباقر",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "پكويرح",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "شپاكساح",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260225",
+          "exitDate": "20260405",
+          "symbol": "ولساپا",
+          "return": -1.25,
+          "exitReason": "TIME",
+          "fold": "F3"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "سباقر",
+          "return": 32.88,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "فسبزوار",
+          "return": 38.34,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "غفارس",
+          "return": 42.76,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "نيروترانسفو",
+          "return": 29.16,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "فن افزار",
+          "return": 50.0,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "شتران",
+          "return": 42.58,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "سپيد",
+          "return": 32.71,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "خراسان",
+          "return": 32.98,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "غگلستا",
+          "return": 50.0,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "فسازان",
+          "return": 50.0,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "فتوسا",
+          "return": 27.56,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "وپست",
+          "return": 49.06,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "سكرما",
+          "return": 50.0,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "غپونه",
+          "return": 50.0,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "بيوتيك",
+          "return": 37.94,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "ارفع",
+          "return": 35.29,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "غپآذر",
+          "return": 36.74,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "داوه",
+          "return": 25.36,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "شفارس",
+          "return": 28.41,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260504",
+          "exitDate": "20260602",
+          "symbol": "شراز",
+          "return": 27.5,
+          "exitReason": "TIME",
+          "fold": "F4"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "وامين",
+          "return": 20.31,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "سپيد",
+          "return": 13.37,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "شپنا",
+          "return": -0.05,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "پاسا",
+          "return": 27.92,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "درازي",
+          "return": 50.0,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "نوين",
+          "return": 30.51,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "تماوند",
+          "return": 0.19,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "شبصير",
+          "return": 4.8,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "غشصفا",
+          "return": 29.51,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "وسپه",
+          "return": 1.01,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "پيزد",
+          "return": 12.31,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "اميد",
+          "return": 5.68,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "زبينا",
+          "return": -9.09,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "سباقر",
+          "return": 14.91,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "محتشم",
+          "return": -0.86,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "غپونه",
+          "return": -4.48,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "وسپهر",
+          "return": -1.81,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "دقاضي",
+          "return": 15.48,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "پخش",
+          "return": -7.27,
+          "exitReason": "TIME",
+          "fold": "F5"
+        },
+        {
+          "entryDate": "20260701",
+          "exitDate": "20260803",
+          "symbol": "شاراك",
+          "return": 22.77,
+          "exitReason": "TIME",
+          "fold": "F5"
+        }
+      ]
+    },
+    "buy_hold": {
+      "name": "بای‌وهولد (بنچمارک)",
+      "metrics": {
+        "totalReturn": 15.86,
+        "sharpe": 0.67,
+        "maxDrawdown": -25.65,
+        "winrate": 46.5,
+        "nTrades": 1702,
+        "avgTrade": 5.36,
+        "bestTrade": 49.82,
+        "worstTrade": -29.96,
+        "benchmarkReturn": 15.86,
+        "alpha": 0,
+        "slCount": 0,
+        "tpCount": 0,
+        "trailCount": 0,
+        "finalCapital": 11586000,
+        "isReliable": true
+      },
+      "equity": [
+        {
+          "date": "20251029",
+          "value": 100.0
+        },
+        {
+          "date": "20251224",
+          "value": 114.68
+        },
+        {
+          "date": "20251227",
+          "value": 100.0
+        },
+        {
+          "date": "20260224",
+          "value": 85.26
+        },
+        {
+          "date": "20260225",
+          "value": 100.0
+        },
+        {
+          "date": "20260503",
+          "value": 96.74
+        },
+        {
+          "date": "20260504",
+          "value": 100.0
+        },
+        {
+          "date": "20260630",
+          "value": 119.58
+        },
+        {
+          "date": "20260701",
+          "value": 100.0
+        },
+        {
+          "date": "20260902",
+          "value": 115.86
+        }
+      ],
+      "trades": []
+    }
+  }
+}
