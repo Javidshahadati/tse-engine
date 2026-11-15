@@ -208,16 +208,6 @@ function runBacktest(charts, cfg) {
 
         let pass = false, score = 0;
 
-        if (actualStrategy === 'buy_all') {
-          // BULL: همه سهم‌های با روند سالم
-          pass = ma20 != null && price > ma20 && (hist > 0 || rsiV > 50);
-          score = 0.5 + Math.min(((price / ma20) - 1) * 5, 0.3) + (hist > 0 ? 0.2 : 0);
-                if (actualStrategy === 'model_portfolio') {
-          // انتخاب بر اساس امتیاز Javid LM (prob از predictions)
-          // اما prob در charts نیست، پس از momentum + trend استفاده می‌کنیم
-          const prob = 0.5; // placeholder - در نسخه واقعی از predictions
-          pass = ma20 != null && price > ma20 && hist > 0 && rsiV > 45 && rsiV < 75;
-          score = 0.5 + Math.min(mom20V > 0 ? mom20V * 2 : 0, 0.3) + (hist > 0 ? 0.2 : 0);
         } else if (actualStrategy === 'breakout') {
           const volRatio = avgVol > 0 ? vol / avgVol : 0;
           pass = high20 != null && price >= high20 * 0.99 && volRatio > 1.5 && rsiV > 55 && hist > 0;
