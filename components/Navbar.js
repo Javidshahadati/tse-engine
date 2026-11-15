@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import { Activity, Menu, X, BarChart3, Info, Home, Star, Scale, Filter, Target, Gauge, Mail } from 'lucide-react';
+import { Activity, Menu, X, BarChart3, Info, Home, Star, Scale, Filter, Target, Gauge, Mail, Award } from 'lucide-react';
 import UserMenu from './UserMenu';
 
 const NAV_LINKS = [
