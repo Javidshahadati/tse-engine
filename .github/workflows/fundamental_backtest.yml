@@ -1,0 +1,26 @@
+name: Fundamental Backtest
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/fundamental_backtest.py'
+
+jobs:
+  fb:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: pip install pandas numpy
+      - name: Run
+        run: python scripts/fundamental_backtest.py
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: fundamental-results
+          path: fundamental_results/
+          retention-days: 30
