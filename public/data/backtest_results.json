@@ -74,401 +74,501 @@
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "سمتاز",
-          "return": 6.09,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": 6.09,
+          "entryPrice": 2590.0,
+          "exitPrice": 2780.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "سباقر",
-          "return": 25.82,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": 25.82,
+          "entryPrice": 7740.0,
+          "exitPrice": 9835.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "ثپهران",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": -1.25,
+          "entryPrice": 100.0,
+          "exitPrice": 100.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "كتوسعه",
-          "return": -0.41,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": -0.41,
+          "entryPrice": 1309.0,
+          "exitPrice": 1320.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "شاراك",
-          "return": 34.73,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": 34.73,
+          "entryPrice": 767.0,
+          "exitPrice": 1043.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "داترا",
-          "return": 50.0,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": 50.0,
+          "entryPrice": 51.0,
+          "exitPrice": 440.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "دروز",
-          "return": 14.6,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": 14.6,
+          "entryPrice": 959.0,
+          "exitPrice": 1111.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "غپونه",
-          "return": 21.98,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": 21.98,
+          "entryPrice": 310.0,
+          "exitPrice": 382.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "زفارس",
-          "return": 50.0,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": 50.0,
+          "entryPrice": 100.0,
+          "exitPrice": 1255.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "دپارس",
-          "return": 2.75,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": 2.75,
+          "entryPrice": 2402.0,
+          "exitPrice": 2498.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "درپاد",
-          "return": 50.0,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": 50.0,
+          "entryPrice": 100.0,
+          "exitPrice": 1218.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "سباقر",
-          "return": -1.59,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": -1.59,
+          "entryPrice": 10365.0,
+          "exitPrice": 10330.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "والماس",
-          "return": -5.94,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": -5.94,
+          "entryPrice": 192.0,
+          "exitPrice": 183.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "شبريز",
-          "return": 11.95,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": 11.95,
+          "entryPrice": 2978.0,
+          "exitPrice": 3371.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "اخشان",
-          "return": -3.67,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": -3.67,
+          "entryPrice": 1033.0,
+          "exitPrice": 1008.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "مايكت",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": -1.25,
+          "entryPrice": 100.0,
+          "exitPrice": 100.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "كپرسپوليس",
-          "return": 50.0,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": 50.0,
+          "entryPrice": 100.0,
+          "exitPrice": 751.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "نيروترانسفو",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": -1.25,
+          "entryPrice": 100.0,
+          "exitPrice": 100.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "توسن",
-          "return": -2.42,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": -2.42,
+          "entryPrice": 426.0,
+          "exitPrice": 421.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "پارسيان",
-          "return": -19.15,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": -19.15,
+          "entryPrice": 162.0,
+          "exitPrice": 133.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "تكنو",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 517.0,
+          "exitPrice": 517.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "تاديكو",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 100.0,
+          "exitPrice": 100.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "احيا",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 100.0,
+          "exitPrice": 100.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "حخزر",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 305.0,
+          "exitPrice": 305.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "زهلال",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 100.0,
+          "exitPrice": 100.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "دارو",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 241.0,
+          "exitPrice": 241.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "حآفرين",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 132.0,
+          "exitPrice": 132.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "فجهانح",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 199.0,
+          "exitPrice": 199.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "فاراك",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 103.0,
+          "exitPrice": 103.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "دتماد",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 1893.0,
+          "exitPrice": 1893.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "سباقر",
-          "return": 32.88,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 32.88,
+          "entryPrice": 11970.0,
+          "exitPrice": 16055.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "فسبزوار",
-          "return": 38.34,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 38.34,
+          "entryPrice": 3251.0,
+          "exitPrice": 4538.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "غفارس",
-          "return": 42.76,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 42.76,
+          "entryPrice": 634.0,
+          "exitPrice": 913.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "نيروترانسفو",
-          "return": 29.16,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 29.16,
+          "entryPrice": 878.0,
+          "exitPrice": 1145.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "فن افزار",
-          "return": 50.0,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 50.0,
+          "entryPrice": 215.0,
+          "exitPrice": 350.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "شتران",
-          "return": 42.58,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 42.58,
+          "entryPrice": 308.0,
+          "exitPrice": 443.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "سپيد",
-          "return": 32.71,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 32.71,
+          "entryPrice": 1393.0,
+          "exitPrice": 1866.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "خراسان",
-          "return": 32.98,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 32.98,
+          "entryPrice": 3576.0,
+          "exitPrice": 4800.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "غگلستا",
-          "return": 50.0,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 50.0,
+          "entryPrice": 719.0,
+          "exitPrice": 1120.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "فسازان",
-          "return": 50.0,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 50.0,
+          "entryPrice": 388.0,
+          "exitPrice": 624.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "وامين",
-          "return": 20.31,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": 20.31,
+          "entryPrice": 320.0,
+          "exitPrice": 389.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "سپيد",
-          "return": 13.37,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": 13.37,
+          "entryPrice": 2887.0,
+          "exitPrice": 3309.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "شپنا",
-          "return": -0.05,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": -0.05,
+          "entryPrice": 1079.0,
+          "exitPrice": 1092.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "پاسا",
-          "return": 27.92,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": 27.92,
+          "entryPrice": 617.0,
+          "exitPrice": 797.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "درازي",
-          "return": 50.0,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": 50.0,
+          "entryPrice": 1331.0,
+          "exitPrice": 2253.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "نوين",
-          "return": 30.51,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": 30.51,
+          "entryPrice": 595.0,
+          "exitPrice": 784.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "تماوند",
-          "return": 0.19,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": 0.19,
+          "entryPrice": 208.0,
+          "exitPrice": 211.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "شبصير",
-          "return": 4.8,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": 4.8,
+          "entryPrice": 1008.0,
+          "exitPrice": 1069.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "غشصفا",
-          "return": 29.51,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": 29.51,
+          "entryPrice": 1518.0,
+          "exitPrice": 1985.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "وسپه",
-          "return": 1.01,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": 1.01,
+          "entryPrice": 486.0,
+          "exitPrice": 497.0
         }
       ]
     },
@@ -538,801 +638,1001 @@
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "سمتاز",
-          "return": 6.09,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": 6.09,
+          "entryPrice": 2590.0,
+          "exitPrice": 2780.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "سباقر",
-          "return": 25.82,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": 25.82,
+          "entryPrice": 7740.0,
+          "exitPrice": 9835.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "ثپهران",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": -1.25,
+          "entryPrice": 100.0,
+          "exitPrice": 100.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "كتوسعه",
-          "return": -0.41,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": -0.41,
+          "entryPrice": 1309.0,
+          "exitPrice": 1320.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "شاراك",
-          "return": 34.73,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": 34.73,
+          "entryPrice": 767.0,
+          "exitPrice": 1043.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "داترا",
-          "return": 50.0,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": 50.0,
+          "entryPrice": 51.0,
+          "exitPrice": 440.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "دروز",
-          "return": 14.6,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": 14.6,
+          "entryPrice": 959.0,
+          "exitPrice": 1111.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "غپونه",
-          "return": 21.98,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": 21.98,
+          "entryPrice": 310.0,
+          "exitPrice": 382.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "زفارس",
-          "return": 50.0,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": 50.0,
+          "entryPrice": 100.0,
+          "exitPrice": 1255.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "دپارس",
-          "return": 2.75,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": 2.75,
+          "entryPrice": 2402.0,
+          "exitPrice": 2498.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "دفارا",
-          "return": 9.84,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": 9.84,
+          "entryPrice": 550.0,
+          "exitPrice": 611.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "ومهان",
-          "return": -1.06,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": -1.06,
+          "entryPrice": 538.0,
+          "exitPrice": 539.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "سپيدار",
-          "return": 2.37,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": 2.37,
+          "entryPrice": 938.0,
+          "exitPrice": 972.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "كپرسپوليس",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": -1.25,
+          "entryPrice": 100.0,
+          "exitPrice": 100.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "شرانل",
-          "return": 12.91,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": 12.91,
+          "entryPrice": 3460.0,
+          "exitPrice": 3950.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "نيروترانسفو",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": -1.25,
+          "entryPrice": 100.0,
+          "exitPrice": 100.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "شغدير",
-          "return": 5.26,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": 5.26,
+          "entryPrice": 3350.0,
+          "exitPrice": 3568.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "فپرديس",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": -1.25,
+          "entryPrice": 100.0,
+          "exitPrice": 100.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "غزنجان",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": -1.25,
+          "entryPrice": 100.0,
+          "exitPrice": 100.0
         },
         {
           "entryDate": "20251029",
           "exitDate": "20251129",
           "symbol": "درازك",
-          "return": 15.17,
           "exitReason": "TIME",
-          "fold": "F1"
+          "fold": "F1",
+          "returnPct": 15.17,
+          "entryPrice": 134.0,
+          "exitPrice": 156.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "درپاد",
-          "return": 50.0,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": 50.0,
+          "entryPrice": 100.0,
+          "exitPrice": 1218.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "سباقر",
-          "return": -1.59,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": -1.59,
+          "entryPrice": 10365.0,
+          "exitPrice": 10330.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "والماس",
-          "return": -5.94,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": -5.94,
+          "entryPrice": 192.0,
+          "exitPrice": 183.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "شبريز",
-          "return": 11.95,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": 11.95,
+          "entryPrice": 2978.0,
+          "exitPrice": 3371.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "اخشان",
-          "return": -3.67,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": -3.67,
+          "entryPrice": 1033.0,
+          "exitPrice": 1008.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "مايكت",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": -1.25,
+          "entryPrice": 100.0,
+          "exitPrice": 100.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "كپرسپوليس",
-          "return": 50.0,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": 50.0,
+          "entryPrice": 100.0,
+          "exitPrice": 751.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "نيروترانسفو",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": -1.25,
+          "entryPrice": 100.0,
+          "exitPrice": 100.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "توسن",
-          "return": -2.42,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": -2.42,
+          "entryPrice": 426.0,
+          "exitPrice": 421.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "پارسيان",
-          "return": -19.15,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": -19.15,
+          "entryPrice": 162.0,
+          "exitPrice": 133.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "دقاضي",
-          "return": -6.33,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": -6.33,
+          "entryPrice": 866.0,
+          "exitPrice": 822.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "سكرد",
-          "return": -10.72,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": -10.72,
+          "entryPrice": 972.0,
+          "exitPrice": 880.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "كتوسعه",
-          "return": 3.9,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": 3.9,
+          "entryPrice": 1320.0,
+          "exitPrice": 1388.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "شكام",
-          "return": -12.82,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": -12.82,
+          "entryPrice": 389.0,
+          "exitPrice": 344.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "سمتاز",
-          "return": 3.38,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": 3.38,
+          "entryPrice": 3240.0,
+          "exitPrice": 3390.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "فن افزار",
-          "return": -18.32,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": -18.32,
+          "entryPrice": 369.0,
+          "exitPrice": 306.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "تماوند",
-          "return": -19.62,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": -19.62,
+          "entryPrice": 245.0,
+          "exitPrice": 200.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "رانفور",
-          "return": -5.72,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": -5.72,
+          "entryPrice": 358.0,
+          "exitPrice": 342.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "وسپه",
-          "return": -9.25,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": -9.25,
+          "entryPrice": 575.0,
+          "exitPrice": 529.0
         },
         {
           "entryDate": "20251227",
           "exitDate": "20260126",
           "symbol": "فاما",
-          "return": -13.62,
           "exitReason": "TIME",
-          "fold": "F2"
+          "fold": "F2",
+          "returnPct": -13.62,
+          "entryPrice": 291.0,
+          "exitPrice": 255.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "تكنو",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 517.0,
+          "exitPrice": 517.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "تاديكو",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 100.0,
+          "exitPrice": 100.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "احيا",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 100.0,
+          "exitPrice": 100.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "حخزر",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 305.0,
+          "exitPrice": 305.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "زهلال",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 100.0,
+          "exitPrice": 100.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "دارو",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 241.0,
+          "exitPrice": 241.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "حآفرين",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 132.0,
+          "exitPrice": 132.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "فجهانح",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 199.0,
+          "exitPrice": 199.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "فاراك",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 103.0,
+          "exitPrice": 103.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "دتماد",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 1893.0,
+          "exitPrice": 1893.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "شارپيلن",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 274.0,
+          "exitPrice": 274.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "پتاير",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 148.0,
+          "exitPrice": 148.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "وثنو",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 205.0,
+          "exitPrice": 205.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "كساوه",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 1305.0,
+          "exitPrice": 1305.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "پارسيان",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 124.0,
+          "exitPrice": 124.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "وهامون",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 123.0,
+          "exitPrice": 123.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "سباقر",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 11970.0,
+          "exitPrice": 11970.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "پكويرح",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 485.0,
+          "exitPrice": 485.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "شپاكساح",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 361.0,
+          "exitPrice": 361.0
         },
         {
           "entryDate": "20260225",
           "exitDate": "20260405",
           "symbol": "ولساپا",
-          "return": -1.25,
           "exitReason": "TIME",
-          "fold": "F3"
+          "fold": "F3",
+          "returnPct": -1.25,
+          "entryPrice": 60.0,
+          "exitPrice": 60.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "سباقر",
-          "return": 32.88,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 32.88,
+          "entryPrice": 11970.0,
+          "exitPrice": 16055.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "فسبزوار",
-          "return": 38.34,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 38.34,
+          "entryPrice": 3251.0,
+          "exitPrice": 4538.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "غفارس",
-          "return": 42.76,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 42.76,
+          "entryPrice": 634.0,
+          "exitPrice": 913.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "نيروترانسفو",
-          "return": 29.16,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 29.16,
+          "entryPrice": 878.0,
+          "exitPrice": 1145.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "فن افزار",
-          "return": 50.0,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 50.0,
+          "entryPrice": 215.0,
+          "exitPrice": 350.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "شتران",
-          "return": 42.58,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 42.58,
+          "entryPrice": 308.0,
+          "exitPrice": 443.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "سپيد",
-          "return": 32.71,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 32.71,
+          "entryPrice": 1393.0,
+          "exitPrice": 1866.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "خراسان",
-          "return": 32.98,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 32.98,
+          "entryPrice": 3576.0,
+          "exitPrice": 4800.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "غگلستا",
-          "return": 50.0,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 50.0,
+          "entryPrice": 719.0,
+          "exitPrice": 1120.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "فسازان",
-          "return": 50.0,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 50.0,
+          "entryPrice": 388.0,
+          "exitPrice": 624.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "فتوسا",
-          "return": 27.56,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 27.56,
+          "entryPrice": 236.0,
+          "exitPrice": 304.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "وپست",
-          "return": 49.06,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 49.06,
+          "entryPrice": 477.0,
+          "exitPrice": 717.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "سكرما",
-          "return": 50.0,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 50.0,
+          "entryPrice": 5037.0,
+          "exitPrice": 7763.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "غپونه",
-          "return": 50.0,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 50.0,
+          "entryPrice": 356.0,
+          "exitPrice": 559.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "بيوتيك",
-          "return": 37.94,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 37.94,
+          "entryPrice": 1110.0,
+          "exitPrice": 1545.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "ارفع",
-          "return": 35.29,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 35.29,
+          "entryPrice": 654.0,
+          "exitPrice": 893.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "غپآذر",
-          "return": 36.74,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 36.74,
+          "entryPrice": 937.0,
+          "exitPrice": 1293.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "داوه",
-          "return": 25.36,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 25.36,
+          "entryPrice": 357.0,
+          "exitPrice": 452.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "شفارس",
-          "return": 28.41,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 28.41,
+          "entryPrice": 118.0,
+          "exitPrice": 153.0
         },
         {
           "entryDate": "20260504",
           "exitDate": "20260602",
           "symbol": "شراز",
-          "return": 27.5,
           "exitReason": "TIME",
-          "fold": "F4"
+          "fold": "F4",
+          "returnPct": 27.5,
+          "entryPrice": 3113.0,
+          "exitPrice": 4008.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "وامين",
-          "return": 20.31,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": 20.31,
+          "entryPrice": 320.0,
+          "exitPrice": 389.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "سپيد",
-          "return": 13.37,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": 13.37,
+          "entryPrice": 2887.0,
+          "exitPrice": 3309.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "شپنا",
-          "return": -0.05,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": -0.05,
+          "entryPrice": 1079.0,
+          "exitPrice": 1092.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "پاسا",
-          "return": 27.92,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": 27.92,
+          "entryPrice": 617.0,
+          "exitPrice": 797.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "درازي",
-          "return": 50.0,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": 50.0,
+          "entryPrice": 1331.0,
+          "exitPrice": 2253.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "نوين",
-          "return": 30.51,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": 30.51,
+          "entryPrice": 595.0,
+          "exitPrice": 784.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "تماوند",
-          "return": 0.19,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": 0.19,
+          "entryPrice": 208.0,
+          "exitPrice": 211.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "شبصير",
-          "return": 4.8,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": 4.8,
+          "entryPrice": 1008.0,
+          "exitPrice": 1069.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "غشصفا",
-          "return": 29.51,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": 29.51,
+          "entryPrice": 1518.0,
+          "exitPrice": 1985.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "وسپه",
-          "return": 1.01,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": 1.01,
+          "entryPrice": 486.0,
+          "exitPrice": 497.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "پيزد",
-          "return": 12.31,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": 12.31,
+          "entryPrice": 531.0,
+          "exitPrice": 603.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "اميد",
-          "return": 5.68,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": 5.68,
+          "entryPrice": 303.0,
+          "exitPrice": 324.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "زبينا",
-          "return": -9.09,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": -9.09,
+          "entryPrice": 1289.0,
+          "exitPrice": 1188.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "سباقر",
-          "return": 14.91,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": 14.91,
+          "entryPrice": 20300.0,
+          "exitPrice": 23580.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "محتشم",
-          "return": -0.86,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": -0.86,
+          "entryPrice": 1024.0,
+          "exitPrice": 1028.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "غپونه",
-          "return": -4.48,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": -4.48,
+          "entryPrice": 835.0,
+          "exitPrice": 808.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "وسپهر",
-          "return": -1.81,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": -1.81,
+          "entryPrice": 360.0,
+          "exitPrice": 358.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "دقاضي",
-          "return": 15.48,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": 15.48,
+          "entryPrice": 1674.0,
+          "exitPrice": 1954.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "پخش",
-          "return": -7.27,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": -7.27,
+          "entryPrice": 1179.0,
+          "exitPrice": 1108.0
         },
         {
           "entryDate": "20260701",
           "exitDate": "20260803",
           "symbol": "شاراك",
-          "return": 22.77,
           "exitReason": "TIME",
-          "fold": "F5"
+          "fold": "F5",
+          "returnPct": 22.77,
+          "entryPrice": 1536.0,
+          "exitPrice": 1905.0
         }
       ]
     },
