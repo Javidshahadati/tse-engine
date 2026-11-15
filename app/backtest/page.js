@@ -601,42 +601,14 @@ export default function BacktestPage() {
           })}
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+        <div className="mb-4">
           <div>
-            <div className="text-[11px] font-semibold text-slate-400 mb-2">تعداد سهم</div>
-            <div className="grid grid-cols-4 gap-1">
-              {[3, 5, 10, 15].map(n => (
-                <button key={n} onClick={() => setNStocks(n)}
-                  className={`py-2 rounded-lg text-xs font-bold ${nStocks === n ? 'bg-primary text-bg' : 'glass text-slate-300'}`}>{n}</button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <div className="text-[11px] font-semibold text-slate-400 mb-2">حداکثر نگه‌داری</div>
-            <div className="grid grid-cols-4 gap-1">
-              {[5, 10, 20, 30].map(d => (
-                <button key={d} onClick={() => setHoldDays(d)}
-                  className={`py-2 rounded-lg text-xs font-bold ${holdDays === d ? 'bg-primary text-bg' : 'glass text-slate-300'}`}>{d}ر</button>
-              ))}
-            </div>
-          </div>
-          <div className="col-span-2 md:col-span-1">
             <div className="text-[11px] font-semibold text-slate-400 mb-2">سرمایه (تومان)</div>
             <input type="number" value={capital} onChange={(e) => setCapital(parseInt(e.target.value) || 0)} step={1000000}
               className="w-full glass rounded-lg py-2 px-3 text-sm text-white num focus:outline-none border border-border/50 focus:border-primary/50" />
           </div>
         </div>
 
-        <label className="flex items-center gap-3 p-3 rounded-xl bg-bg/40 border border-border/40 cursor-pointer mb-4 hover:border-primary/30 transition-colors">
-          <input type="checkbox" checked={useRiskMgmt} onChange={(e) => setUseRiskMgmt(e.target.checked)}
-            className="w-4 h-4 accent-primary cursor-pointer" />
-          <div className="flex-1">
-            <div className="text-xs font-bold text-white flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5 text-warning" /> مدیریت ریسک حرفه‌ای
-            </div>
-            <div className="text-[10px] text-slate-400 mt-0.5">حد ضرر ۲×ATR | حد سود ۳×ATR | تریلینگ ۱.۵×ATR</div>
-          </div>
-        </label>
 
         <button onClick={handleRun} disabled={running || limitReached}
           className={`w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
