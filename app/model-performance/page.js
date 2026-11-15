@@ -26,27 +26,39 @@ function CalcSignalMetrics() {
         const preds = await predsRes.json();
         const charts = await chartsRes.json();
 
-        // برای هر سهم، بازده ۵ روزه تاریخی رو حساب کن
+        // محاسبه درست: برای هر سهم، تمام بازده‌های ۵ روزه تاریخی (نه فقط ۲۰ روز آخر)
         const signals = [];
         for (const sig of preds.signals) {
           const chart = charts[sig.symbol];
-          if (!chart || chart.length < 25) continue;
+          if (!chart || chart.length < 60) continue;
           
-          // چارت از جدید به قدیمه — برعکسش کن
           const sorted = [...chart].sort((a, b) => String(a.t).localeCompare(String(b.t)));
           const closes = sorted.map(r => r.c);
           
-          // آخرین ۲۰ روز → بازده ۵ روزه تاریخی
+          // تمام بازده‌های ۵ روزه از ابتدا تا انتها (بیشتر = دقیق‌تر)
           const lookback = [];
-          for (let i = closes.length - 20; i < closes.length - 5; i++) {
-            if (i >= 0 && closes[i] > 0 && closes[i + 5] > 0) {
-              lookback.push((closes[i + 5] - closes[i]) / closes[i] * 100);
+          for (let i = 0; i < closes.length - 5; i++) {
+            if (closes[i] > 0 && closes[i + 5] > 0) {
+              const ret = (closes[i + 5] - closes[i]) / closes[i] * 100;
+              // فیلتر outlier: بازده‌های غیرعادی (بیشتر از ۵۰٪ یا کمتر از -۳۰٪) رو حذف کن
+              if (ret > -30 && ret < 50) {
+                lookback.push(ret);
+              }
             }
           }
           
-          if (lookback.length === 0) continue;
+          if (lookback.length < 30) continue;
           
-          const avgRet = lookback.reduce((a, b) => a + b, 0) / lookback.length;
+          // میانه (median) به جای میانگین — مقاوم به outlier
+          const sortedLook = [...lookback].sort((a, b) => a - b);
+          const medianRet = sortedLook[Math.floor(sortedLook.length / 2)];
+          
+          // میانگین trimmed (۱۰٪ بالا و پایین حذف)
+          const trimStart = Math.floor(sortedLook.length * 0.1);
+          const trimEnd = Math.floor(sortedLook.length * 0.9);
+          const trimmed = sortedLook.slice(trimStart, trimEnd);
+          const avgRet = trimmed.reduce((a, b) => a + b, 0) / trimmed.length;
+          
           const wins = lookback.filter(r => r > 1.7).length;
           const hitRate = (wins / lookback.length) * 100;
           
@@ -56,26 +68,29 @@ function CalcSignalMetrics() {
             prob: sig.prob,
             signal: sig.signal,
             avgReturn: avgRet,
+            medianReturn: medianRet,
             hitRate,
             sampleSize: lookback.length,
           });
         }
 
-        // محاسبه متریک کلی
-        const allReturns = signals.map(s => s.avgReturn);
-        const wins = signals.filter(s => s.avgReturn > 1.7);
-        const losses = signals.filter(s => s.avgReturn <= 1.7);
+        // محاسبه متریک کلی (با median برای مقاومت به outlier)
+        const medians = signals.map(s => s.medianReturn);
+        const wins = signals.filter(s => s.medianReturn > 1.7);
+        const losses = signals.filter(s => s.medianReturn <= 1.7);
         
         const hitRate = (wins.length / signals.length) * 100;
-        const avgWin = wins.length > 0 ? wins.reduce((a, b) => a + b.avgReturn, 0) / wins.length : 0;
-        const avgLoss = losses.length > 0 ? losses.reduce((a, b) => a + b.avgReturn, 0) / losses.length : 0;
+        
+        // R:R بر اساس median (نه میانگین)
+        const avgWin = wins.length > 0 ? wins.reduce((a, b) => a + b.medianReturn, 0) / wins.length : 0;
+        const avgLoss = losses.length > 0 ? losses.reduce((a, b) => a + b.medianReturn, 0) / losses.length : 0;
         const rr = avgLoss !== 0 ? Math.abs(avgWin / avgLoss) : 0;
         
         // Max consecutive losses (بر اساس سیگنال‌های مرتب‌شده بر اساس prob)
         const sorted = [...signals].sort((a, b) => b.prob - a.prob);
         let maxStreak = 0, currentStreak = 0;
         for (const s of sorted) {
-          if (s.avgReturn <= 0) {
+          if (s.medianReturn <= 0) {
             currentStreak++;
             maxStreak = Math.max(maxStreak, currentStreak);
           } else {
@@ -83,10 +98,10 @@ function CalcSignalMetrics() {
           }
         }
 
-        // Avg time to profit (تقریبی)
-        const topSignals = sorted.filter(s => s.signal === 'BUY').slice(0, 50);
-        const avgReturn = topSignals.length > 0 
-          ? topSignals.reduce((a, b) => a + b.avgReturn, 0) / topSignals.length 
+        // Avg return فقط برای سیگنال‌های BUY (چون بقیه مهم نیستن)
+        const buySignals = sorted.filter(s => s.signal === 'BUY');
+        const avgReturn = buySignals.length > 0 
+          ? buySignals.reduce((a, b) => a + b.medianReturn, 0) / buySignals.length 
           : 0;
         
         setData({
@@ -241,8 +256,8 @@ function CalcSignalMetrics() {
             </thead>
             <tbody>
               {data.signals.map((s, i) => {
-                const isWin = s.avgReturn > 1.7;
-                const isPositive = s.avgReturn > 0;
+                const isWin = s.medianReturn > 1.7;
+                const isPositive = s.medianReturn > 0;
                 return (
                   <tr key={s.symbol}>
                     <td className="num text-[10px] text-slate-500">{fmt(i + 1)}</td>
@@ -278,7 +293,7 @@ function CalcSignalMetrics() {
                       <span className={`num text-xs font-black ${
                         isWin ? 'text-success' : isPositive ? 'text-warning' : 'text-danger'
                       }`}>
-                        {isPositive ? '+' : ''}{s.avgReturn.toFixed(2)}٪
+                        {isPositive ? '+' : ''}{s.medianReturn.toFixed(2)}٪
                       </span>
                       {isWin && <CheckCircle2 className="w-3 h-3 text-success inline mr-1" />}
                     </td>
