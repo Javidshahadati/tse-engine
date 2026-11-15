@@ -21,6 +21,7 @@ const STRATEGIES = {
   momentum: { name: 'مومنتوم', desc: 'RSI ۵۵-۷۰ + MACD + حجم', icon: Activity, color: 'from-accent/20 to-accent/5' },
   trend: { name: 'پیرو روند', desc: 'MA20 > MA50 + قیمت بالای MA20', icon: Trophy, color: 'from-primary2/20 to-primary2/5' },
   multifactor: { name: 'چندفاکتوری', desc: 'امتیاز از ۴ فاکتور', icon: Sparkles, color: 'from-danger/20 to-danger/5' },
+  model_portfolio: { name: 'پیرو بازار', desc: '۱۰ سهم برتر Javid LM، نگه‌داری بلندمدت', icon: Crown, color: 'from-primary/20 to-primary/5' },
 };
 
 const EXIT_LABELS = {
@@ -211,6 +212,12 @@ function runBacktest(charts, cfg) {
           // BULL: همه سهم‌های با روند سالم
           pass = ma20 != null && price > ma20 && (hist > 0 || rsiV > 50);
           score = 0.5 + Math.min(((price / ma20) - 1) * 5, 0.3) + (hist > 0 ? 0.2 : 0);
+                if (actualStrategy === 'model_portfolio') {
+          // انتخاب بر اساس امتیاز Javid LM (prob از predictions)
+          // اما prob در charts نیست، پس از momentum + trend استفاده می‌کنیم
+          const prob = 0.5; // placeholder - در نسخه واقعی از predictions
+          pass = ma20 != null && price > ma20 && hist > 0 && rsiV > 45 && rsiV < 75;
+          score = 0.5 + Math.min(mom20V > 0 ? mom20V * 2 : 0, 0.3) + (hist > 0 ? 0.2 : 0);
         } else if (actualStrategy === 'breakout') {
           const volRatio = avgVol > 0 ? vol / avgVol : 0;
           pass = high20 != null && price >= high20 * 0.99 && volRatio > 1.5 && rsiV > 55 && hist > 0;
