@@ -189,22 +189,10 @@ function runBacktest(charts, cfg) {
     const dayBreadth = breadth[day] || 0.5;
     const currentRegime = regime[day] || 'MIXED';
 
-    // در رژیم BULL: همه سهم‌های سالم رو بخر (تنوع بالا، بازده بازار)
-    // در رژیم BEAR: فقط breakout سخت‌گیرانه
-    // در رژیم MIXED: بینابین
-    let actualNStocks, actualStrategy;
-    if (currentRegime === 'BULL') {
-      actualNStocks = Math.min(20, Math.max(nStocks * 2, 15));
-      actualStrategy = 'buy_all';
-    } else if (currentRegime === 'BEAR') {
-      actualNStocks = nStocks;
-      actualStrategy = strategy;
-    } else {
-      actualNStocks = nStocks;
-      actualStrategy = strategy;
-    }
-
-    const skipBuys = currentRegime === 'BEAR' && dayBreadth < 0.2;
+    // ساده‌تر: در BEAR شدید، خرید نکن. بقیه روزها، استراتژی انتخابی
+    const actualNStocks = nStocks;
+    const actualStrategy = strategy;
+    const skipBuys = dayBreadth < 0.20;
 
     if (!skipBuys) {
       Object.keys(ind).forEach(sym => {
