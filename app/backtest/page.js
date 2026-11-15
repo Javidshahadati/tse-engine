@@ -254,10 +254,10 @@ function runBacktest(charts, cfg) {
 
             if (hitSL && hitTP) {
               if (close >= entryPrice) { exitDay = d; exitPrice = takeProfit; exitReason = 'TP'; }
-              else { exitDay = d; exitPrice = stopLoss; exitReason = 'SL'; }
+              else { exitDay = d; exitPrice = Math.min(stopLoss, close); exitReason = 'SL'; }
               break;
             }
-            if (hitSL) { exitDay = d; exitPrice = stopLoss; exitReason = 'SL'; break; }
+            if (hitSL) { exitDay = d; exitPrice = Math.min(stopLoss, x.closes[d] || stopLoss); exitReason = 'SL'; break; }
             if (hitTP) { exitDay = d; exitPrice = takeProfit; exitReason = 'TP'; break; }
             if (hitTrail) { exitDay = d; exitPrice = trailStop; exitReason = 'TRAIL'; break; }
 
@@ -400,7 +400,7 @@ export default function BacktestPage() {
 
   const [charts, setCharts] = useState(null);
   const [strategy, setStrategy] = useState('breakout');
-  const [nStocks, setNStocks] = useState(5);
+  const [nStocks, setNStocks] = useState(10);
   const [holdDays, setHoldDays] = useState(10);
   const [capital, setCapital] = useState(10000000);
   const [useRiskMgmt, setUseRiskMgmt] = useState(true);
@@ -630,6 +630,20 @@ export default function BacktestPage() {
             </div>
             <div className="glass-strong p-4 rounded-xl">
               <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] text-slate-400">Sharpe Ratio</span>
+                <span className="text-[10px] font-bold text-primary">σ</span>
+              </div>
+              <div className="num text-xl md:text-2xl font-black text-white">{results.metrics.sharpe?.toFixed(2) || '—'}</div>
+            </div>
+            <div className="glass-strong p-4 rounded-xl">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] text-slate-400">حداکثر افت</span>
+                <span className="text-[10px] font-bold text-danger">▼</span>
+              </div>
+              <div className="num text-xl md:text-2xl font-black text-danger">{results.metrics.maxDrawdown?.toFixed(1) || '—'}٪</div>
+            </div>
+            <div className="glass-strong p-4 rounded-xl">
+              <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] text-slate-400">Winrate</span>
                 <Award className="w-4 h-4 text-primary" />
               </div>
@@ -648,6 +662,21 @@ export default function BacktestPage() {
                 <DollarSign className="w-4 h-4 text-warning" />
               </div>
               <div className="num text-base md:text-lg font-black text-white truncate"><CountUp target={results.metrics.finalCapital} /></div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="glass p-3 rounded-xl text-center border border-primary/20">
+              <div className="text-[9px] text-slate-400 mb-1">بازده بازار (Buy & Hold)</div>
+              <div className={`num text-base font-bold ${(results.metrics.benchmarkReturn || 0) >= 0 ? 'text-success' : 'text-danger'}`}>
+                {(results.metrics.benchmarkReturn || 0) >= 0 ? '+' : ''}{results.metrics.benchmarkReturn?.toFixed(1) || '—'}٪
+              </div>
+            </div>
+            <div className="glass p-3 rounded-xl text-center border-2 border-primary/40 bg-primary/5">
+              <div className="text-[9px] text-primary mb-1 font-bold">آلفا (بهتر از بازار)</div>
+              <div className={`num text-base font-black ${(results.metrics.alpha || 0) >= 0 ? 'text-success' : 'text-danger'}`}>
+                {(results.metrics.alpha || 0) >= 0 ? '+' : ''}{results.metrics.alpha?.toFixed(1) || '—'}٪
+              </div>
             </div>
           </div>
 
