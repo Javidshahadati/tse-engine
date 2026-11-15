@@ -81,9 +81,9 @@ function CalcSignalMetrics() {
         
         const hitRate = (wins.length / signals.length) * 100;
         
-        // R:R بر اساس median (نه میانگین)
-        const avgWin = wins.length > 0 ? wins.reduce((a, b) => a + b.medianReturn, 0) / wins.length : 0;
-        const avgLoss = losses.length > 0 ? losses.reduce((a, b) => a + b.medianReturn, 0) / losses.length : 0;
+        // R:R بر اساس میانگین (نه median) — چون R:R از میانگین میاد
+        const avgWin = wins.length > 0 ? wins.reduce((a, b) => a + b.avgReturn, 0) / wins.length : 0;
+        const avgLoss = losses.length > 0 ? losses.reduce((a, b) => a + b.avgReturn, 0) / losses.length : 0;
         const rr = avgLoss !== 0 ? Math.abs(avgWin / avgLoss) : 0;
         
         // Max consecutive losses (بر اساس سیگنال‌های مرتب‌شده بر اساس prob)
