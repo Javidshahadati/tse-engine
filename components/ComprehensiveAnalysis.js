@@ -189,7 +189,7 @@ export default function ComprehensiveAnalysis({ symbol, sig, ind, fund, chart })
         <div className="glass p-5 rounded-2xl">
           <div className="flex items-center gap-2 mb-4">
             <BarChart3 className="w-4 h-4 text-primary" />
-            <h3 className="text-sm font-bold text-white">سیگنال‌های تکنیکال</h3>
+            <h3 className="text-sm font-bold text-white">شاخص‌های تکنیکال</h3>
           </div>
           <div className="space-y-2">
             {techSignals.map((s, i) => <SignalRow key={i} item={s} />)}
