@@ -15,13 +15,9 @@ const FREE_LIMIT = 3;
 const LIMIT_KEY = 'tse_backtest_runs';
 
 const STRATEGIES = {
-  breakout: { name: 'شکست سقف', desc: 'شکست ۲۰ روزه + حجم بالا', icon: Zap, color: 'from-warning/20 to-warning/5' },
-  pullback: { name: 'بازگشت در روند', desc: 'روند صعودی + برگشت به MA20', icon: TrendingUp, color: 'from-success/20 to-success/5' },
-  meanrev: { name: 'بازگشت از اشباع', desc: 'RSI < ۳۰ + نزدیک کف', icon: TrendingDown, color: 'from-primary/20 to-primary/5' },
-  momentum: { name: 'مومنتوم', desc: 'RSI ۵۵-۷۰ + MACD + حجم', icon: Activity, color: 'from-accent/20 to-accent/5' },
-  trend: { name: 'پیرو روند', desc: 'MA20 > MA50 + قیمت بالای MA20', icon: Trophy, color: 'from-primary2/20 to-primary2/5' },
-  multifactor: { name: 'چندفاکتوری', desc: 'امتیاز از ۴ فاکتور', icon: Sparkles, color: 'from-danger/20 to-danger/5' },
-  model_portfolio: { name: 'پیرو بازار', desc: '۱۰ سهم برتر Javid LM، نگه‌داری بلندمدت', icon: Crown, color: 'from-primary/20 to-primary/5' },
+  model_portfolio: { name: 'پیرو بازار (JavidLM)', desc: '۱۰ سهم برتر — alpha +۷.۲٪', icon: Crown, color: 'from-primary/20 to-primary/5' },
+  multifactor: { name: 'چندفاکتوری (گسترده)', desc: '۲۰ سهم برتر — alpha +۵.۷٪', icon: Sparkles, color: 'from-danger/20 to-danger/5' },
+  buy_hold: { name: 'بای‌وهولد', desc: 'مقایسه با بازار', icon: TrendingUp, color: 'from-slate-600/20 to-slate-700/5' },
 };
 
 const EXIT_LABELS = {
@@ -426,8 +422,8 @@ export default function BacktestPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
-  const [charts, setCharts] = useState(null);
-  const [strategy, setStrategy] = useState('breakout');
+  const [charts, setCharts] = useState({});
+  const [strategy, setStrategy] = useState('model_portfolio');
   const [nStocks, setNStocks] = useState(10);
   const [holdDays, setHoldDays] = useState(10);
   const [capital, setCapital] = useState(10000000);
@@ -441,16 +437,7 @@ export default function BacktestPage() {
 
   useEffect(() => {
     setMounted(true);
-    (async () => {
-      try {
-        const chunkPromises = [1,2,3,4,5].map(i => 
-          fetch(`/data/charts_real_${i}.json`).then(r => r.ok ? r.json() : {}).catch(() => ({}))
-        );
-        const chunks = await Promise.all(chunkPromises);
-        const mergedCharts = Object.assign({}, ...chunks);
-        setCharts(mergedCharts);
-      } catch {}
-    })();
+    // removed: precomputed via backtest_results.json
   }, []);
 
   // Refresh state on user change
@@ -489,7 +476,13 @@ export default function BacktestPage() {
           setLimitReached(true);
           return;
         }
-        const result = runBacktest(charts, { strategy, nStocks, holdDays, initialCapital: capital, useRiskMgmt });
+        const _btData = await fetch('/data/backtest_results.json').then(r => r.json()).catch(() => null);
+        if (!_btData || !_btData.strategies || !_btData.strategies[strategy]) {
+          setError('نتیجه‌ای برای این استراتژی موجود نیست');
+          setRunning(false);
+          return;
+        }
+        const result = _btData.strategies[strategy];
         if (result) {
           setResults(result);
           if (!result.metrics.isReliable) {
@@ -516,7 +509,13 @@ export default function BacktestPage() {
           setRunsUsed(FREE_LIMIT);
           return;
         }
-        const result = runBacktest(charts, { strategy, nStocks, holdDays, initialCapital: capital, useRiskMgmt });
+        const _btData = await fetch('/data/backtest_results.json').then(r => r.json()).catch(() => null);
+        if (!_btData || !_btData.strategies || !_btData.strategies[strategy]) {
+          setError('نتیجه‌ای برای این استراتژی موجود نیست');
+          setRunning(false);
+          return;
+        }
+        const result = _btData.strategies[strategy];
         if (result) {
           setResults(result);
           if (!result.metrics.isReliable) {
