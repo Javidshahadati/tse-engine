@@ -59,8 +59,11 @@ function CalcSignalMetrics() {
           const trimmed = sortedLook.slice(trimStart, trimEnd);
           const avgRet = trimmed.reduce((a, b) => a + b, 0) / trimmed.length;
           
+          // Hit Rate: درصد روزهایی که بازده مثبت بود (نه فقط > 1.7٪)
           const wins = lookback.filter(r => r > 1.7).length;
-          const hitRate = (wins / lookback.length) * 100;
+          const partialWins = lookback.filter(r => r > 0 && r <= 1.7).length;
+          const totalWins = wins + partialWins * 0.5;  // نیمه‌برد
+          const hitRate = (totalWins / lookback.length) * 100;
           
           signals.push({
             symbol: sig.symbol,
@@ -76,8 +79,8 @@ function CalcSignalMetrics() {
 
         // محاسبه متریک کلی (با median برای مقاومت به outlier)
         const medians = signals.map(s => s.medianReturn);
-        const wins = signals.filter(s => s.medianReturn > 1.7);
-        const losses = signals.filter(s => s.medianReturn <= 1.7);
+        const wins = signals.filter(s => s.medianReturn > 0);
+        const losses = signals.filter(s => s.medianReturn <= 0);
         
         const hitRate = (wins.length / signals.length) * 100;
         
