@@ -167,16 +167,8 @@ function runBacktest(charts, cfg) {
     else regime[d] = 'MIXED';
   });
 
-  // Benchmark: equal-weight buy & hold
-  let benchSum = 0, benchCount = 0;
-  Object.values(ind).forEach(x => {
-    const s = x.closes[startDay], e = x.closes[endDay];
-    if (s > 0 && e > 0) {
-      benchSum += (e - s) / s;
-      benchCount++;
-    }
-  });
-  const benchmarkReturn = benchCount > 0 ? (benchSum / benchCount) * 100 : 0;
+  // ثبت سهم‌های انتخاب‌شده برای benchmark
+  const pickedSymbols = new Set();
 
   const trades = [];
   let capital = initialCapital;
@@ -251,6 +243,7 @@ function runBacktest(charts, cfg) {
 
     candidates.sort((a, b) => b.score - a.score);
     const picks = candidates.slice(0, actualNStocks);
+    picks.forEach(p => pickedSymbols.add(p.symbol));
 
     if (picks.length > 0) {
       const perTrade = capital / picks.length;
@@ -320,6 +313,17 @@ function runBacktest(charts, cfg) {
     }
     day += holdDays;
   }
+
+  // Benchmark: Buy & Hold همون سهم‌های انتخاب‌شده
+  let benchSum = 0, benchCount = 0;
+  pickedSymbols.forEach(sym => {
+    const x = ind[sym];
+    if (x && x.closes[startDay] > 0 && x.closes[endDay] > 0) {
+      benchSum += (x.closes[endDay] - x.closes[startDay]) / x.closes[startDay];
+      benchCount++;
+    }
+  });
+  const benchmarkReturn = benchCount > 0 ? (benchSum / benchCount) * 100 : 0;
 
   const wins = trades.filter(t => t.returnPct > 0).length;
   const returns = trades.map(t => t.returnPct);
