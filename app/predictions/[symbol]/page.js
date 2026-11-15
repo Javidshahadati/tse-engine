@@ -19,9 +19,9 @@ import WatchlistButton from '@/components/WatchlistButton';
 import ComprehensiveAnalysis from '@/components/ComprehensiveAnalysis';
 
 const SIGNAL = {
-  BUY: { label: 'توجه بالا', bg: 'bg-success/10', border: 'border-success/30', icon: TrendingUp, text: 'text-success' },
-  HOLD: { label: 'خنثی', bg: 'bg-slate-500/10', border: 'border-slate-500/30', icon: Activity, text: 'text-slate-300' },
-  SELL: { label: 'ریسک بالا', bg: 'bg-danger/10', border: 'border-danger/30', icon: TrendingDown, text: 'text-danger' },
+  BUY: { label: 'امتیاز قوی', bg: 'bg-success/10', border: 'border-success/30', icon: TrendingUp, text: 'text-success' },
+  HOLD: { label: 'امتیاز متوسط', bg: 'bg-slate-500/10', border: 'border-slate-500/30', icon: Activity, text: 'text-slate-300' },
+  SELL: { label: 'امتیاز ضعیف', bg: 'bg-danger/10', border: 'border-danger/30', icon: TrendingDown, text: 'text-danger' },
 };
 
 function fmtShort(n) {
