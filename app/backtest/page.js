@@ -443,8 +443,12 @@ export default function BacktestPage() {
     setMounted(true);
     (async () => {
       try {
-        const r = await fetch('/data/charts.json');
-        if (r.ok) setCharts(await r.json());
+        const chunkPromises = [1,2,3,4,5].map(i => 
+          fetch(`/data/charts_real_${i}.json`).then(r => r.ok ? r.json() : {}).catch(() => ({}))
+        );
+        const chunks = await Promise.all(chunkPromises);
+        const mergedCharts = Object.assign({}, ...chunks);
+        setCharts(mergedCharts);
       } catch {}
     })();
   }, []);
