@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-DATA = Path('data')
+DATA = Path('public/data')
 OUT = Path('grid_results')
 OUT.mkdir(exist_ok=True)
 
