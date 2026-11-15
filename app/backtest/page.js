@@ -157,6 +157,15 @@ function runBacktest(charts, cfg) {
     if (total > 0) breadth[d] = above / total;
   }
 
+  // Regime detection (bull/bear/mixed)
+  const regime = {};
+  Object.keys(breadth).forEach(d => {
+    const b = breadth[d];
+    if (b >= 0.6) regime[d] = 'BULL';
+    else if (b <= 0.3) regime[d] = 'BEAR';
+    else regime[d] = 'MIXED';
+  });
+
   // Benchmark: equal-weight buy & hold
   let benchSum = 0, benchCount = 0;
   Object.values(ind).forEach(x => {
@@ -173,10 +182,29 @@ function runBacktest(charts, cfg) {
   const equity = [{ day: startDay, value: capital }];
   let day = startDay;
 
+  const regimeTrades = { BULL: 0, BEAR: 0, MIXED: 0 };
+
   while (day < endDay) {
     const candidates = [];
     const dayBreadth = breadth[day] || 0.5;
-    const skipBuys = dayBreadth < 0.15;
+    const currentRegime = regime[day] || 'MIXED';
+
+    // در رژیم BULL: همه سهم‌های سالم رو بخر (تنوع بالا، بازده بازار)
+    // در رژیم BEAR: فقط breakout سخت‌گیرانه
+    // در رژیم MIXED: بینابین
+    let actualNStocks, actualStrategy;
+    if (currentRegime === 'BULL') {
+      actualNStocks = Math.min(20, Math.max(nStocks * 2, 15));
+      actualStrategy = 'buy_all';
+    } else if (currentRegime === 'BEAR') {
+      actualNStocks = nStocks;
+      actualStrategy = strategy;
+    } else {
+      actualNStocks = nStocks;
+      actualStrategy = strategy;
+    }
+
+    const skipBuys = currentRegime === 'BEAR' && dayBreadth < 0.2;
 
     if (!skipBuys) {
       Object.keys(ind).forEach(sym => {
@@ -191,7 +219,11 @@ function runBacktest(charts, cfg) {
 
         let pass = false, score = 0;
 
-        if (strategy === 'breakout') {
+        if (actualStrategy === 'buy_all') {
+          // BULL: همه سهم‌های با روند سالم
+          pass = ma20 != null && price > ma20 && (hist > 0 || rsiV > 50);
+          score = 0.5 + Math.min(((price / ma20) - 1) * 5, 0.3) + (hist > 0 ? 0.2 : 0);
+        } else if (actualStrategy === 'breakout') {
           const volRatio = avgVol > 0 ? vol / avgVol : 0;
           pass = high20 != null && price >= high20 * 0.99 && volRatio > 1.5 && rsiV > 55 && hist > 0;
           score = (high20 ? Math.min((price / high20 - 0.99) * 10, 0.3) : 0) + Math.min(volRatio / 3, 0.3) + (hist > 0 ? 0.3 : 0) + (rsiV > 60 ? 0.2 : 0.1);
@@ -230,7 +262,7 @@ function runBacktest(charts, cfg) {
     }
 
     candidates.sort((a, b) => b.score - a.score);
-    const picks = candidates.slice(0, nStocks);
+    const picks = candidates.slice(0, actualNStocks);
 
     if (picks.length > 0) {
       const perTrade = capital / picks.length;
@@ -283,9 +315,12 @@ function runBacktest(charts, cfg) {
         const netRet = grossRet - TOTAL_COST;
         capital += perTrade * netRet;
 
+        regimeTrades[currentRegime] = (regimeTrades[currentRegime] || 0) + 1;
+
         trades.push({
           symbol: p.symbol,
           entryDate: x.c[day]?.t, exitDate: x.c[exitDay]?.t,
+          regime: currentRegime,
           entryPrice, exitPrice, stopLoss, takeProfit,
           returnPct: netRet * 100,
           grossReturnPct: grossRet * 100,
@@ -336,6 +371,7 @@ function runBacktest(charts, cfg) {
       benchmarkReturn: parseFloat(benchmarkReturn.toFixed(2)),
       alpha: parseFloat((totalReturn - benchmarkReturn).toFixed(2)),
       isReliable: trades.length >= MIN_TRADES,
+      regimeTrades,
     }
   };
 }
