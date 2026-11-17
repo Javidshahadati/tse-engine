@@ -1,0 +1,45 @@
+name: Fetch All v3
+on:
+  workflow_dispatch:
+    inputs:
+      n_symbols:
+        description: '5 test, all full'
+        default: '5'
+      sleep_sec:
+        description: 'sleep between requests'
+        default: '1.5'
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    permissions:
+      contents: write
+    env:
+      PYTHONUNBUFFERED: '1'
+      N_SYMBOLS: ${{ github.event.inputs.n_symbols }}
+      SLEEP_SEC: ${{ github.event.inputs.sleep_sec }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: pip install requests
+      - name: Fetch
+        run: python data_fetch/fetch_all_v3.py
+      - name: Upload
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ohlc-full
+          path: data_fetch/
+          retention-days: 30
+      - name: Push branch
+        if: always()
+        run: |
+          git config user.name "TSE Bot"; git config user.email "bot@tse-engine.ai"
+          git checkout -B data-full
+          git add data_fetch/ || true
+          git diff --staged --quiet || git commit -m "fetch: $(date -u +%Y-%m-%dT%H:%M)"
+          git push -u origin data-full --force || true
