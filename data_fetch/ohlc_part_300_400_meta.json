@@ -1,0 +1,13 @@
+{
+  "start_idx": 300,
+  "end_idx": 400,
+  "symbols_requested": 100,
+  "symbols_ok": 100,
+  "errors": 0,
+  "errors_sample": [],
+  "size_mb": 6.13,
+  "date_min": 20010325,
+  "date_max": 20261117,
+  "total_rows": 337354,
+  "elapsed_sec": 7220.4
+}
