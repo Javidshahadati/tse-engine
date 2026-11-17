@@ -1,0 +1,53 @@
+name: Fetch Chunked
+on:
+  workflow_dispatch:
+    inputs:
+      start_idx:
+        description: 'start (0-based)'
+        required: true
+        default: '0'
+      end_idx:
+        description: 'end (exclusive)'
+        required: true
+        default: '30'
+      sleep_sec:
+        default: '1.5'
+      top_n:
+        default: '0'
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    permissions:
+      contents: write
+    env:
+      PYTHONUNBUFFERED: '1'
+      START_IDX: ${{ github.event.inputs.start_idx }}
+      END_IDX: ${{ github.event.inputs.end_idx }}
+      SLEEP_SEC: ${{ github.event.inputs.sleep_sec }}
+      TOP_N: ${{ github.event.inputs.top_n }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: pip install requests
+      - name: Fetch
+        run: python data_fetch/fetch_chunked.py
+      - name: Upload
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ohlc-chunk-${{ github.event.inputs.start_idx }}-${{ github.event.inputs.end_idx }}
+          path: data_fetch/
+          retention-days: 90
+      - name: Push
+        if: always()
+        run: |
+          git config user.name "TSE Bot"; git config user.email "bot@tse-engine.ai"
+          git checkout -B data-full || git checkout data-full
+          git add data_fetch/ || true
+          git diff --staged --quiet || git commit -m "chunk ${{ github.event.inputs.start_idx }}-${{ github.event.inputs.end_idx }}"
+          git push -u origin data-full --force || true
