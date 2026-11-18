@@ -15,7 +15,8 @@ df = pd.read_parquet(OUT / 'features_v3_20d.parquet')
 df = df.sort_values(['symbol', 'date']).reset_index(drop=True)
 
 df['future_ret_20d'] = df.groupby('symbol')['close'].shift(-20) / df['close'] - 1
-df = df.dropna(subset=['future_ret_20d']).reset_index(drop=True)
+df['label_end_date'] = df.groupby('symbol')['date'].shift(-20)
+df = df.dropna(subset=['future_ret_20d', 'label_end_date']).reset_index(drop=True)
 df['rank_pct'] = df.groupby('date')['future_ret_20d'].rank(pct=True) * 100
 df['label_3'] = np.where(df['rank_pct'] >= THRESHOLD_UP, 2,
                   np.where(df['rank_pct'] <= THRESHOLD_DOWN, 0, 1))
@@ -37,8 +38,12 @@ results = []
 clf = None
 reg = None
 for k, (s, e) in enumerate(tests, 1):
-    tr = df[df['date'] < s]; te = df[(df['date'] >= s) & (df['date'] < e)]
-    if len(te) < 100: continue
+    raw_tr = df[df['date'] < s]
+    tr = raw_tr[raw_tr['label_end_date'] < s]
+    te = df[(df['date'] >= s) & (df['date'] < e)]
+    purged_n = len(raw_tr) - len(tr)
+    print(f'  Purged: {purged_n:,} | Remaining train: {len(tr):,}')
+    if len(te) < 100 or len(tr) < 100: continue
     X_tr = tr[feat_cols].values; X_te = te[feat_cols].values
     w_tr = tr['weight'].values
 
