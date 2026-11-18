@@ -1,0 +1,154 @@
+
+name: Audit Ranking Quality
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Training workflow run ID
+        required: true
+        default: "44412100686"
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download training artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: tse-multi-horizon-results
+          path: artifacts
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: pip install pandas pyarrow numpy scipy scikit-learn
+
+      - name: Analyze ranking quality
+        run: |
+          python - <<'PY'
+          import os
+          import glob
+          import numpy as np
+          import pandas as pd
+          from scipy.stats import spearmanr
+          from sklearn.metrics import roc_auc_score
+
+          ROOT = "artifacts"
+
+          def analyze(path, horizon):
+              print("\n" + "=" * 65)
+              print("HORIZON:", horizon)
+              print("=" * 65)
+
+              df = pd.read_parquet(path)
+
+              required = [
+                  "fold", "future_return", "label",
+                  "prob_xgb", "prob_lgbm", "prob_avg"
+              ]
+
+              print("Rows:", len(df))
+              print("Columns:", list(df.columns))
+
+              missing = [c for c in required if c not in df.columns]
+              if missing:
+                  print("ERROR - Missing columns:", missing)
+                  return
+
+              for c in required:
+                  df[c] = pd.to_numeric(df[c], errors="coerce")
+
+              df = df.replace([np.inf, -np.inf], np.nan)
+              df = df.dropna(subset=required)
+
+              for fold, g in df.groupby("fold"):
+                  print("\n" + "-" * 55)
+                  print("FOLD:", fold, "| Rows:", len(g))
+
+                  y = g["label"].astype(int)
+                  ret = g["future_return"]
+                  base = ret.mean()
+
+                  print("Market mean return: %.4f%%" % (base * 100))
+                  print("Market positive rate: %.2f%%" %
+                        ((ret > 0).mean() * 100))
+
+                  for model in ["prob_xgb", "prob_lgbm", "prob_avg"]:
+                      score = g[model]
+
+                      try:
+                          auc = roc_auc_score(y, score)
+                      except Exception:
+                          auc = float("nan")
+
+                      try:
+                          rho = spearmanr(score, ret).statistic
+                      except Exception:
+                          rho = float("nan")
+
+                      print(
+                          f"{model}: AUC={auc:.4f} | "
+                          f"Spearman={rho:.4f}"
+                      )
+
+                  score = g["prob_avg"]
+
+                  for pct in [0.10, 0.20]:
+                      n = max(1, int(np.ceil(len(g) * pct)))
+                      top = g.nlargest(n, "prob_avg")
+
+                      avg_ret = top["future_return"].mean()
+                      median_ret = top["future_return"].median()
+                      win = (top["future_return"] > 0).mean()
+
+                      label_rate = top["label"].mean()
+
+                      print(
+                          f"\nTOP {int(pct*100)}% "
+                          f"(n={n}):"
+                      )
+                      print("Mean return: %.4f%%" %
+                            (avg_ret * 100))
+                      print("Median return: %.4f%%" %
+                            (median_ret * 100))
+                      print("Positive return: %.2f%%" %
+                            (win * 100))
+                      print("Positive label: %.2f%%" %
+                            (label_rate * 100))
+                      print("Excess vs market: %.4f%%" %
+                            ((avg_ret - base) * 100))
+
+          files = {
+              "1M": os.path.join(
+                  ROOT, "outputs", "multi_horizon",
+                  "1m", "predictions.parquet"
+              ),
+              "3M": os.path.join(
+                  ROOT, "outputs", "multi_horizon",
+                  "3m", "predictions.parquet"
+              )
+          }
+
+          for horizon, path in files.items():
+              if not os.path.exists(path):
+                  matches = glob.glob(
+                      f"**/{horizon.lower()}/predictions.parquet",
+                      recursive=True
+                  )
+                  if matches:
+                      path = matches[0]
+                  else:
+                      print("FILE NOT FOUND:", path)
+                      continue
+
+              analyze(path, horizon)
+
+          print("\n" + "=" * 65)
+          print("RANKING AUDIT FINISHED")
+          print("=" * 65)
+          PY
