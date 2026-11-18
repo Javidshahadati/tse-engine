@@ -127,18 +127,6 @@ combined['stock_vs_sector_60d'] = combined['ret_60d'] - combined['sector_ret_60d
 combined['sector_rank_20d'] = combined.groupby(['date', 'sector'])['ret_20d'].rank(pct=True)
 combined['sector_rank_60d'] = combined.groupby(['date', 'sector'])['ret_60d'].rank(pct=True)
 
-def sf(x):
-    try: return float(str(x).replace(',', '').strip() or 0)
-    except: return 0.0
-
-combined['_p'] = combined['symbol'].str.split('_seg').str[0]
-combined['_eps'] = combined['_p'].map(lambda s: sf(fundamentals.get(s, {}).get('estimatedEPS')))
-combined['_spe'] = combined['_p'].map(lambda s: sf(fundamentals.get(s, {}).get('sectorPE')))
-combined['eps_yield'] = np.where(combined['_eps'] > 0, combined['_eps'] / combined['close'], 0.0)
-combined['pe_relative'] = np.where((combined['_eps'] > 0) & (combined['_spe'] > 0),
-                                    (combined['close'] / combined['_eps']) / combined['_spe'], 0.0)
-combined['eps_to_sector'] = np.where(combined['_spe'] > 0, combined['_eps'] / combined['_spe'], 0.0)
-combined = combined.drop(columns=['_p', '_eps', '_spe', 'ret_20d', 'ret_60d'])
 
 feat_cols = [c for c in combined.columns if c not in ['symbol', 'sector', 'date', 'close']]
 print(f"Features: {len(feat_cols)}")
