@@ -1,5 +1,5 @@
 
-name: Audit OHLC V5 Raw TSETMC
+name: Audit OHLC V5.1 Raw TSETMC
 
 on:
   workflow_dispatch:
@@ -11,7 +11,7 @@ permissions:
 jobs:
   audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
 
     steps:
       - name: Checkout
@@ -25,13 +25,13 @@ jobs:
       - name: Install dependencies
         run: pip install requests
 
-      - name: Run V5 raw API audit
+      - name: Run V5.1 audit
         run: python scripts/audit_ohlc_v5.py
 
-      - name: Upload V5 report
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tse-ohlc-v5-raw-audit
+          name: tse-ohlc-v5-1-raw-audit
           path: v5_output/
           if-no-files-found: error
           retention-days: 14
