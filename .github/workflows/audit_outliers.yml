@@ -1,0 +1,188 @@
+
+name: Audit Outliers And Robustness
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Training artifact run ID
+        required: true
+        default: "44412100686"
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download training artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: tse-multi-horizon-results
+          path: artifacts
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: pip install pandas pyarrow numpy
+
+      - name: Audit outliers and robustness
+        run: |
+          python - <<'PY'
+          import os
+          import numpy as np
+          import pandas as pd
+
+          ROOT = "artifacts"
+
+          def pct(x):
+              return f"{x * 100:.3f}%"
+
+          def audit(path, horizon):
+              print("\n" + "=" * 72)
+              print("HORIZON:", horizon)
+              print("=" * 72)
+
+              df = pd.read_parquet(path)
+
+              required = [
+                  "symbol", "date", "close", "future_return",
+                  "label", "prob_avg", "fold"
+              ]
+
+              print("Rows loaded:", len(df))
+              print("Columns:", list(df.columns))
+
+              missing = [c for c in required if c not in df.columns]
+              if missing:
+                  print("ERROR missing columns:", missing)
+                  return
+
+              for c in [
+                  "close", "future_return", "label",
+                  "prob_avg", "fold"
+              ]:
+                  df[c] = pd.to_numeric(df[c], errors="coerce")
+
+              df = df.replace([np.inf, -np.inf], np.nan)
+              df = df.dropna(subset=required).copy()
+
+              print("Valid rows:", len(df))
+              print("Unique symbols:", df["symbol"].nunique())
+              print("Duplicate symbol/date rows:",
+                    df.duplicated(["symbol", "date"]).sum())
+              print("Non-positive close rows:",
+                    (df["close"] <= 0).sum())
+
+              r = df["future_return"]
+
+              print("\n--- FULL RETURN DISTRIBUTION ---")
+              for q in [0, .001, .01, .05, .25, .50,
+                        .75, .95, .99, .999, 1]:
+                  print(f"Q{q*100:6.1f}: {r.quantile(q):.6f}")
+
+              print("Mean:", r.mean())
+              print("Median:", r.median())
+              print("Std:", r.std())
+              print("Returns > 100%:", (r > 1).sum())
+              print("Returns > 200%:", (r > 2).sum())
+              print("Returns > 500%:", (r > 5).sum())
+              print("Returns < -90%:", (r < -.9).sum())
+              print("Returns <= -100%:", (r <= -1).sum())
+
+              print("\n--- TOP 15 EXTREME POSITIVE RETURNS ---")
+              cols = [
+                  "symbol", "date", "close", "future_return",
+                  "label", "prob_avg", "fold"
+              ]
+              print(
+                  df.nlargest(15, "future_return")[cols]
+                  .to_string(index=False)
+              )
+
+              print("\n--- TOP 15 EXTREME NEGATIVE RETURNS ---")
+              print(
+                  df.nsmallest(15, "future_return")[cols]
+                  .to_string(index=False)
+              )
+
+              print("\n--- FOLD ROBUSTNESS ---")
+
+              for fold, g in df.groupby("fold"):
+                  ret = g["future_return"]
+                  lo = ret.quantile(.01)
+                  hi = ret.quantile(.99)
+                  clipped = ret.clip(lo, hi)
+
+                  print("\nFOLD:", fold, "Rows:", len(g))
+                  print("Market mean:", pct(ret.mean()))
+                  print("Market median:", pct(ret.median()))
+                  print("Winsorized market mean (1%-99%):",
+                        pct(clipped.mean()))
+                  print("Q99 return:", pct(hi))
+                  print("Q99.9 return:", pct(ret.quantile(.999)))
+                  print("Count return >100%:", (ret > 1).sum())
+
+                  for fraction in [.10, .20]:
+                      n = max(1, int(np.ceil(len(g) * fraction)))
+                      top = g.nlargest(n, "prob_avg")
+                      top_ret = top["future_return"]
+
+                      # Clip returns using the entire fold's limits.
+                      robust = top_ret.clip(lo, hi)
+
+                      print(
+                          f"\nTOP {int(fraction*100)}% "
+                          f"(n={n})"
+                      )
+                      print("Raw mean:", pct(top_ret.mean()))
+                      print("Median:", pct(top_ret.median()))
+                      print("Winsorized mean:", pct(robust.mean()))
+                      print("Positive return rate:",
+                            pct((top_ret > 0).mean()))
+                      print("Excess raw vs market:",
+                            pct(top_ret.mean() - ret.mean()))
+                      print("Excess winsorized vs market:",
+                            pct(robust.mean() - clipped.mean()))
+
+                      print("After hypothetical round-trip costs:")
+                      for cost in [.005, .01, .02]:
+                          print(
+                              f"  Cost {pct(cost)} -> "
+                              f"{pct(top_ret.mean() - cost)}"
+                          )
+
+                  # How much the largest observations influence mean.
+                  ordered = ret.sort_values(ascending=False)
+                  k = max(1, int(np.ceil(len(ordered) * .01)))
+                  top_one_pct = ordered.iloc[:k]
+
+                  print("\nTop 1% return contribution:")
+                  print("Top 1% mean:", pct(top_one_pct.mean()))
+                  print("Top 1% median:", pct(top_one_pct.median()))
+                  print("Remaining 99% mean:",
+                        pct(ordered.iloc[k:].mean()))
+
+          paths = {
+              "1M": os.path.join(
+                  ROOT, "outputs", "multi_horizon",
+                  "1m", "predictions.parquet"
+              ),
+              "3M": os.path.join(
+                  ROOT, "outputs", "multi_horizon",
+                  "3m", "predictions.parquet"
+              )
+          }
+
+          for horizon, path in paths.items():
+              if not os.path.exists(path):
+                  print("FILE NOT FOUND:", path)
+                  continue
+              audit(path, horizon)
+
+          print("\n" + "=" * 72)
+          print("OUTLIER AND ROBUSTNESS AUDIT FINISHED")
+          print("=" * 72)
+          PY
