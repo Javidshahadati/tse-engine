@@ -1,0 +1,87 @@
+name: Export JavidLM Audit Parquet
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install libraries
+        run: pip install pandas pyarrow
+
+      - name: Export Parquet files
+        run: |
+          mkdir -p audit_export
+
+          python - <<'PY'
+          import os
+          import pandas as pd
+
+          files = [
+              "audit_upload/outputs-1/trades.parquet",
+              "audit_upload/outputs-1/equity_curve.parquet",
+              "audit_upload/outputs-2/trades.parquet",
+              "audit_upload/outputs-2/equity_curve.parquet"
+          ]
+
+          report = []
+
+          for path in files:
+              print("\\nPROCESSING:", path)
+
+              if not os.path.isfile(path):
+                  report.append("MISSING: " + path)
+                  continue
+
+              try:
+                  df = pd.read_parquet(path)
+
+                  name = path.split("/")[-2] + "_" + path.split("/")[-1]
+                  name = name.replace(".parquet", ".csv")
+
+                  output = "audit_export/" + name
+                  df.to_csv(output, index=False, encoding="utf-8-sig")
+
+                  report.append("=" * 60)
+                  report.append("FILE: " + path)
+                  report.append("ROWS: " + str(len(df)))
+                  report.append("COLUMNS: " + str(len(df.columns)))
+                  report.append("COLUMN NAMES: " + str(list(df.columns)))
+                  report.append("CSV: " + output)
+                  report.append("FIRST 5 ROWS:")
+                  report.append(df.head().to_string(index=False))
+
+                  print("ROWS:", len(df))
+                  print("COLUMNS:", list(df.columns))
+                  print("EXPORTED:", output)
+
+              except Exception as e:
+                  report.append("ERROR: " + path + " | " + repr(e))
+                  print("ERROR:", repr(e))
+
+          with open("audit_export/report.txt", "w", encoding="utf-8") as f:
+              f.write("\\n".join(report))
+
+          print("\\nEXPORT PROCESS FINISHED")
+          PY
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: javidlm-audit-results
+          path: audit_export/
+          if-no-files-found: error
+          retention-days: 14
