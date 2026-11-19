@@ -168,85 +168,185 @@ def find_price_records(obj, found):
             if isinstance(value, (dict, list)):
                 find_price_records(value, found)
 
+
 def load_clean():
+
     if not os.path.exists(CLEAN_FILE):
         raise FileNotFoundError(CLEAN_FILE)
 
-    with gzip.open(CLEAN_FILE, "rt", encoding="utf-8") as f:
+    with gzip.open(
+        CLEAN_FILE,
+        "rt",
+        encoding="utf-8-sig"
+    ) as f:
         obj = json.load(f)
 
-    found = []
-    find_price_records(obj, found)
+    if not isinstance(obj, dict):
+        raise TypeError(
+            "Clean V3 top-level object must be a dict"
+        )
 
-    # Some formats are dictionaries keyed directly by symbol.
-    if not found and isinstance(obj, dict):
-        for key, value in obj.items():
-            if isinstance(value, list) and value and isinstance(value[0], dict):
-                found.append({
-                    "symbol": str(key),
-                    "insCode": "",
-                    "rows": value
-                })
+    grouped = {}
 
-    # Extract usable date/close pairs.
-    clean = []
-    for rec in found:
-        rows = []
-        for x in rec["rows"]:
-            if not isinstance(x, dict):
+    for key, value in obj.items():
+
+        if not isinstance(value, dict):
+            continue
+
+        ins = str(value.get("i", "")).strip()
+        raw_rows = value.get("r", [])
+
+        if not ins:
+            continue
+
+        if not isinstance(raw_rows, list):
+            continue
+
+        base_symbol = str(key).split("_seg")[0]
+
+        group = grouped.setdefault(
+            ins,
+            {
+                "symbol": base_symbol,
+                "insCode": ins,
+                "segment_keys": [],
+                "date_values": {}
+            }
+        )
+
+        group["segment_keys"].append(str(key))
+
+        for row in raw_rows:
+
+            if not isinstance(row, dict):
                 continue
 
-            d = dnum(
-                x.get("d", x.get("date", x.get("dEven")))
-            )
-            c = num(
-                x.get("c", x.get("close", x.get("pClosing")))
-            )
-            if d and c is not None and c > 0:
-                rows.append({"date": d, "close": c})
+            d = dnum(row.get("d"))
+            c = num(row.get("c"))
 
-        if rows:
-            clean.append({
-                "symbol": rec["symbol"],
-                "insCode": rec["insCode"],
-                "rows": rows
+            if not d or c is None or c <= 0:
+                continue
+
+            group["date_values"].setdefault(
+                d, []
+            ).append(c)
+
+    clean = []
+
+    for ins, group in grouped.items():
+
+        rows = []
+
+        duplicate_dates = 0
+        conflicting_dates = 0
+
+        for d, values in group["date_values"].items():
+
+            if len(values) > 1:
+                duplicate_dates += 1
+
+            reference = values[0]
+
+            tolerance = max(
+                abs(reference), 1.0
+            ) * 1e-9
+
+            conflict = any(
+                abs(v - reference) > tolerance
+                for v in values[1:]
+            )
+
+            if conflict:
+                conflicting_dates += 1
+                continue
+
+            rows.append({
+                "date": d,
+                "close": reference
             })
+
+        rows.sort(
+            key=lambda x: x["date"]
+        )
+
+        clean.append({
+            "symbol": group["symbol"],
+            "insCode": ins,
+            "rows": rows,
+            "segment_keys": group["segment_keys"],
+            "segment_count": len(group["segment_keys"]),
+            "duplicate_dates": duplicate_dates,
+            "conflicting_duplicate_dates": conflicting_dates
+        })
+
+    print(
+        "Clean instrument groups:",
+        len(clean)
+    )
 
     return clean
 
+
 def normalize(s):
-    if not s:
+
+    if s is None:
         return ""
+
     return (
-        str(s).replace(" ", "")
+        str(s)
+        .replace("\ufeff", "")
         .replace("\u200c", "")
+        .replace("\u200f", "")
+        .replace("\u200e", "")
         .replace("ي", "ی")
+        .replace("ى", "ی")
         .replace("ك", "ک")
-        .replace("‌", "")
+        .replace(" ", "")
+        .strip()
     )
 
+
 def match_clean(symbol, ins, clean):
-    # Exact instrument ID match has priority.
+
+    target_id = str(ins).strip()
+
     id_matches = [
         x for x in clean
-        if x["insCode"] and x["insCode"] == str(ins)
+        if x.get("insCode") == target_id
     ]
-    if len(id_matches) == 1:
-        return id_matches[0], "insCode"
 
-    # Exact normalized ticker/name matching is weaker.
+    if len(id_matches) == 1:
+        return (
+            id_matches[0],
+            "insCode_grouped_segments"
+        )
+
+    if len(id_matches) > 1:
+        return (
+            None,
+            "duplicate_insCode_groups"
+        )
+
     target = normalize(symbol)
+
     matches = [
         x for x in clean
-        if normalize(x["symbol"]) == target
+        if normalize(x.get("symbol")) == target
     ]
 
     if len(matches) == 1:
-        return matches[0], "symbol_exact"
+        return (
+            matches[0],
+            "symbol_normalized"
+        )
 
-    return None, (
-        "ambiguous" if len(matches) > 1 else "not_found"
-    )
+    if len(matches) > 1:
+        return (
+            None,
+            "ambiguous_symbol"
+        )
+
+    return None, "not_found"
 
 def rel_error(a, b):
     if a is None or b is None or b == 0:
@@ -257,14 +357,52 @@ def median_or_none(values):
     values = [x for x in values if x is not None and math.isfinite(x)]
     return statistics.median(values) if values else None
 
+
 def save_csv(name, rows):
+
     if not rows:
         return
-    with open(os.path.join(OUT, name), "w",
-              newline="", encoding="utf-8-sig") as f:
-        w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
-        w.writeheader()
-        w.writerows(rows)
+
+    fieldnames = []
+    seen = set()
+
+    for row in rows:
+
+        for key in row.keys():
+
+            if key not in seen:
+                seen.add(key)
+                fieldnames.append(key)
+
+    path = os.path.join(
+        OUT,
+        name
+    )
+
+    with open(
+        path,
+        "w",
+        newline="",
+        encoding="utf-8-sig"
+    ) as f:
+
+        writer = csv.DictWriter(
+            f,
+            fieldnames=fieldnames,
+            extrasaction="raise"
+        )
+
+        writer.writeheader()
+        writer.writerows(rows)
+
+    print(
+        "CSV SAVED:",
+        name,
+        "| rows:",
+        len(rows),
+        "| columns:",
+        len(fieldnames)
+    )
 
 def main():
     print("Loading Clean V3...")
@@ -321,6 +459,11 @@ def main():
             event_report["clean_match_type"] = match_type
             event_report["clean_symbol"] = match["symbol"] if match else ""
             event_report["clean_rows"] = len(match["rows"]) if match else 0
+            event_report["clean_segments"] = match.get("segment_count", 0) if match else 0
+            event_report["clean_duplicate_dates"] = match.get("duplicate_dates", 0) if match else 0
+            event_report["clean_conflicting_duplicate_dates"] = match.get("conflicting_duplicate_dates", 0) if match else 0
+            event_report["clean_segment_keys"] = ";".join(match.get("segment_keys", [])) if match else ""
+
 
             if match:
                 clean_map = {
