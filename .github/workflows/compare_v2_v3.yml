@@ -1,0 +1,26 @@
+name: Compare V2 vs V3
+on:
+  workflow_dispatch:
+
+jobs:
+  cmp:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: pip install pandas numpy xgboost scikit-learn scipy pyarrow
+      - name: Build
+        run: python features/builder_v3.py
+      - name: Compare
+        run: python scripts/compare_v2_v3.py
+      - name: Upload
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compare-v2-v3
+          path: javid_v3/compare_v2_v3.json
+          retention-days: 30
