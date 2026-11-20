@@ -1,0 +1,26 @@
+name: Fetch Flow
+on:
+  workflow_dispatch:
+    inputs:
+      start_idx: { default: '0' }
+      end_idx: { default: '30' }
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    permissions: { contents: write }
+    env:
+      START_IDX: ${{ github.event.inputs.start_idx }}
+      END_IDX: ${{ github.event.inputs.end_idx }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install requests
+      - run: python data_fetch/fetch_flow_chunked.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: flow-${{ github.event.inputs.start_idx }}-${{ github.event.inputs.end_idx }}
+          path: data_fetch/flow_part_*.json.gz
+          retention-days: 90
