@@ -4,18 +4,22 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 240
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - name: Install
-        run: pip install pandas numpy pyarrow lightgbm scipy
+        run: pip install pandas numpy xgboost scikit-learn scipy pyarrow lightgbm
+      - name: Build
+        run: python features/builder_v3.py
       - name: Validate
         run: python scripts/validate_v3_20d.py --data javid_v3/features_v3_20d.parquet --out javid_v3/validation_v3_20d.json
-      - uses: actions/upload-artifact@v4
+      - name: Upload
         if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: validation_v3_20d
-          path: javid_v3/validation_v3_20d.json
+          path: javid_v3/
+          retention-days: 30
