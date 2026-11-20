@@ -1,5 +1,5 @@
 
-import json, os, time
+import gzip, json, os, time
 import numpy as np
 import pandas as pd
 import lightgbm as lgb
@@ -8,6 +8,7 @@ COST = 0.023
 COST_STRESS = 0.035
 HORIZON = 20
 OUT = "javid_v3"
+FUND = ["eps_yield", "pe_relative", "eps_to_sector"]
 
 
 def parse_dates(s):
@@ -26,42 +27,36 @@ def parse_dates(s):
     return pd.to_datetime(s)
 
 
+def load_adv():
+    with gzip.open("data/ohlc_clean_v3_20d.json.gz", "rt", encoding="utf-8") as f:
+        raw = json.load(f)
+    parts = []
+    for key, st in raw.items():
+        r = pd.DataFrame(st["r"])
+        if len(r) < 300:
+            continue
+        r = r.sort_values("d").reset_index(drop=True)
+        val = r["c"].astype(float) * r["v"].astype(float)
+        adv = val.rolling(60, min_periods=30).mean()
+        parts.append(pd.DataFrame({"symbol": key, "date": r["d"].values, "adv60": adv.values}))
+    a = pd.concat(parts, ignore_index=True)
+    a["date"] = parse_dates(a["date"])
+    return a
+
+
 def load():
     df = pd.read_parquet(OUT + "/features_v3_20d.parquet")
-    print("columns:", list(df.columns), flush=True)
     df["date"] = parse_dates(df["date"])
+    adv = load_adv()
+    df = df.merge(adv, on=["symbol", "date"], how="left")
+    match = float(df["adv60"].notna().mean())
+    print("adv60 match rate:", round(match, 4), flush=True)
     df = df.sort_values(["symbol", "date"]).reset_index(drop=True)
-    info = {
-        "columns": [str(c) for c in df.columns],
-        "sample_symbols": [str(s) for s in df["symbol"].drop_duplicates().head(15)],
-    }
-    value_col = None
-    for c in ("value", "Value", "trade_value", "tradeValue", "qTotCap"):
-        if c in df.columns:
-            value_col = c
-            break
-    vol_col = None
-    for c in ("volume", "Volume", "vol", "Vol", "qTotTran5J"):
-        if c in df.columns:
-            vol_col = c
-            break
-    if value_col is not None:
-        tv = df[value_col].astype("float64")
-        info["liquidity_source"] = value_col
-    elif vol_col is not None:
-        tv = df[vol_col].astype("float64") * df["close"].astype("float64")
-        info["liquidity_source"] = vol_col + " * close"
-    else:
-        info["error"] = "no volume or value column found"
-        with open(OUT + "/liq_info.json", "w") as f:
-            json.dump(info, f, indent=1)
-        raise SystemExit("no volume/value column; see liq_info.json")
-    df["adv60"] = tv.groupby(df["symbol"]).transform(lambda s: s.rolling(60, min_periods=30).mean())
     df["future_ret_20d"] = df.groupby("symbol")["close"].shift(-HORIZON) / df["close"] - 1
     df = df.dropna(subset=["future_ret_20d"]).reset_index(drop=True)
     with open(OUT + "/summary_v3_20d.json") as f:
         names = json.load(f)["feature_names"]
-    feats = [c for c in names if c in df.columns]
+    feats = [c for c in names if c in df.columns and c not in FUND]
     df["rank_pct"] = df.groupby("date")["future_ret_20d"].rank(pct=True) * 100
     df["weight"] = (df["rank_pct"] - 50).abs() / 50 + 0.3
     lim = np.zeros(len(df), dtype=bool)
@@ -69,10 +64,7 @@ def load():
         if c in df.columns:
             lim |= (df[c].fillna(0).values == 1)
     df["limit"] = lim
-    with open(OUT + "/liq_info.json", "w") as f:
-        json.dump(info, f, indent=1)
-    print("liquidity source:", info["liquidity_source"], flush=True)
-    return df, feats
+    return df, feats, match
 
 
 def walk_forward(df, feats, gap=25, n_folds=5, min_train_frac=0.4, train_frac=0.5, seed=42):
@@ -129,10 +121,12 @@ def backtest(oos, oos_f, uni_all, n_hold, buffer, min_univ):
         cand = [s for s in syms if s not in keep][: n_hold - len(keep)]
         new = keep + cand
         turnover = len(set(new) - held) / float(n_hold)
-        port = x[x["symbol"].isin(new)]["future_ret_20d"].mean()
+        sel = x[x["symbol"].isin(new)]
         rows.append({
-            "date": d, "port": port, "uni": x["future_ret_20d"].mean(),
-            "uni_all": uni_all.loc[d], "turnover": turnover, "n_univ": len(x)})
+            "date": d, "port": sel["future_ret_20d"].mean(),
+            "uni": x["future_ret_20d"].mean(), "uni_all": uni_all.loc[d],
+            "turnover": turnover, "n_univ": len(x),
+            "adv_med": sel["adv60"].median(), "adv_p10": sel["adv60"].quantile(0.1)})
         held = set(new)
     return pd.DataFrame(rows)
 
@@ -155,6 +149,8 @@ def bt_summary(r):
         "net_t_stat": round(float(t), 2),
         "net_hit_rate": round(float((net > 0).mean()), 3),
         "avg_port_ret_20d": round(float(r["port"].mean()), 4),
+        "holding_adv60_median_millions": round(float(r["adv_med"].median() / 1e6), 1),
+        "holding_adv60_p10_millions": round(float(r["adv_p10"].median() / 1e6), 1),
     }
 
 
@@ -166,8 +162,8 @@ def by_year(r):
 
 def main():
     t0 = time.time()
-    df, feats = load()
-    print("Rows:", len(df), "Features:", len(feats), flush=True)
+    df, feats, match = load()
+    print("Rows:", len(df), "Features (no fundamentals):", len(feats), flush=True)
     oos = walk_forward(df, feats)
     oos["liq_pct"] = oos.groupby("date")["adv60"].rank(pct=True)
     uni_all = oos.groupby("date")["future_ret_20d"].mean()
@@ -177,18 +173,18 @@ def main():
         "liq_top50_nolimit": ((oos["liq_pct"] >= 0.5) & (~oos["limit"])).values,
         "liq_top30_nolimit": ((oos["liq_pct"] >= 0.7) & (~oos["limit"])).values,
     }
-    res = {}
+    res = {"adv_match_rate": round(match, 4), "features_used": len(feats)}
     for name, mask in variants.items():
         sub = oos[mask]
         entry = {"rows": int(len(sub)), "IC_mean": ic_mean(sub)}
         for buf in (60, 100):
             r = backtest(oos, sub, uni_all, 30, buf, 60)
-            key = "buffer%d" % buf
-            entry[key] = bt_summary(r)
+            entry["buffer%d" % buf] = bt_summary(r)
             if buf == 100 and len(r) >= 5:
                 entry["net_excess_by_year_buffer100"] = by_year(r)
         res[name] = entry
         print(name, json.dumps(entry, ensure_ascii=False), flush=True)
+    os.makedirs(OUT, exist_ok=True)
     with open(OUT + "/analysis_v3_20d_liq.json", "w", encoding="utf-8") as f:
         json.dump(res, f, ensure_ascii=False, indent=2)
     print("minutes:", round((time.time() - t0) / 60, 1))
