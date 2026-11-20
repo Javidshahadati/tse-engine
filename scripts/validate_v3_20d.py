@@ -198,6 +198,12 @@ def main():
     t0 = time.time()
     df = add_labels(load_dataset(a.data))
     feats = get_features(df)
+    try:
+        with open('javid_v3/summary_v3_20d.json') as _f:
+            _names = json.load(_f)['feature_names']
+        feats = [c for c in _names if c in df.columns]
+    except Exception as _e:
+        print('summary not found, auto features:', _e)
     fund, sector, weekly = feature_groups(feats)
     print("Rows:", len(df), "| Symbols:", df["symbol"].nunique(), "| Features:", len(feats))
     print("  fund=", fund, "| sector=", len(sector), "| weekly=", len(weekly))
