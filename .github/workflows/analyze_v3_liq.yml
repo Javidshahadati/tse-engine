@@ -21,6 +21,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: analysis_v3_20d_liq
-          path: |
-            javid_v3/analysis_v3_20d_liq.json
-            javid_v3/liq_info.json
+          path: javid_v3/analysis_v3_20d_liq.json
