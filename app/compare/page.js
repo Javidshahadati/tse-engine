@@ -299,7 +299,7 @@ export default function ComparePage() {
 
             <Row label="امتیاز تحلیل" v1={Math.round(sig1.prob * 100)} v2={Math.round(sig2.prob * 100)}
               winner={better(sig1.prob, sig2.prob)} />
-            <Row label="قیمت (تومان)" v1={sig1.close} v2={sig2.close} format={(v) => fmt(v)} />
+            <Row label="قیمت (ریال)" v1={sig1.close} v2={sig2.close} format={(v) => fmt(v)} />
             <Row label="تغییر روزانه" v1={sig1.change_pct} v2={sig2.change_pct}
               format={(v) => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(2)}٪` : '—'}
               winner={better(sig1.change_pct, sig2.change_pct)} />
