@@ -11,6 +11,8 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: '3.11' }
       - run: pip install pandas numpy xgboost scikit-learn scipy pyarrow
+      - name: Fix builder
+        run: python scripts/fix_flow_dup.py
       - name: Build
         run: python features/builder_v3.py
       - name: Train 20d
