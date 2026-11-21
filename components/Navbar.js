@@ -8,6 +8,7 @@ import UserMenu from './UserMenu';
 const NAV_LINKS = [
   { href: '/', label: 'صفحه اصلی', icon: Home },
   { href: '/dashboard', label: 'داشبورد', icon: BarChart3 },
+  { href: '/predictions-v3', label: 'JavidLM v3', icon: Activity },
   { href: '/breadth', label: 'سلامت بازار', icon: Gauge },
   { href: '/screener', label: 'اسکرینر', icon: Filter },
   { href: '/compare', label: 'مقایسه', icon: Scale },
