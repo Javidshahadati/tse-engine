@@ -603,7 +603,7 @@ export default function BacktestPage() {
 
         <div className="mb-4">
           <div>
-            <div className="text-[11px] font-semibold text-slate-400 mb-2">سرمایه (تومان)</div>
+            <div className="text-[11px] font-semibold text-slate-400 mb-2">سرمایه (ریال)</div>
             <input type="number" value={capital} onChange={(e) => setCapital(parseInt(e.target.value) || 0)} step={1000000}
               className="w-full glass rounded-lg py-2 px-3 text-sm text-white num focus:outline-none border border-border/50 focus:border-primary/50" />
           </div>
