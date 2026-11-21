@@ -18,16 +18,15 @@ jobs:
         run: |
           python scripts/patch_54feat.py
           python scripts/patch_mem.py
+          python scripts/patch_predict_inline.py
       - name: Build
         run: python features/builder_v3.py
-      - name: Train 20d
+      - name: Train 20d + Predict
         env: { HORIZON: '20d' }
         run: python scripts/train_v3_unified.py
       - name: Train 60d
         env: { HORIZON: '60d' }
         run: python scripts/train_v3_unified.py
-      - name: Predict
-        run: python scripts/predict_v3.py
       - name: Commit predictions
         run: |
           git config user.name "Bot"; git config user.email "bot@tse-engine.ai"
