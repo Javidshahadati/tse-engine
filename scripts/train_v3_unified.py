@@ -1,4 +1,4 @@
-"""Train v3 - separate feature sets per horizon"""
+"""Train v3 - pattern-based exclusion for 20d"""
 import json, os
 import numpy as np
 import pandas as pd
@@ -11,16 +11,6 @@ HORIZON = os.environ.get('HORIZON', '20d')
 DAYS = int(HORIZON.replace('d', ''))
 OUT = Path("javid_v3")
 
-# Features to exclude per horizon
-EXCLUDE = {
-    '20d': ['flow_ratio_5d','flow_ratio_20d','flow_momentum','smart_money','retail_dominance',
-            'market_ret_20d','market_ret_60d','market_vol_20d','market_rsi',
-            'sector_idx_ret_20d','sector_idx_ret_60d',
-            'stock_vs_market_20d','stock_vs_sector_idx_20d'],
-    '60d': ['flow_ratio_5d','flow_ratio_20d','flow_momentum','smart_money','retail_dominance'],
-}
-exclude_list = EXCLUDE.get(HORIZON, [])
-
 df = pd.read_parquet(OUT / 'features_v3_20d.parquet')
 df = df.sort_values(['symbol', 'date']).reset_index(drop=True)
 df['future_ret'] = df.groupby('symbol')['close'].shift(-DAYS) / df['close'] - 1
@@ -29,10 +19,35 @@ df['rank_pct'] = df.groupby('date')['future_ret'].rank(pct=True) * 100
 df['weight'] = np.abs(df['rank_pct'] - 50) / 50 + 0.3
 
 with open(OUT / 'summary_v3_20d.json') as f:
-    feat_cols = [c for c in json.load(f)['feature_names']
-                 if c in df.columns and c not in exclude_list]
-print(f"Horizon: {HORIZON} | Rows: {len(df):,} | Features: {len(feat_cols)}")
-print(f"Excluded: {len(exclude_list)} features")
+    all_feats = [c for c in json.load(f)['feature_names'] if c in df.columns]
+print(f"All available: {len(all_feats)}")
+print(f"All names: {all_feats}")
+
+def should_exclude_20d(c):
+    if c.startswith('flow_'): return True
+    if c.startswith('market_'): return True
+    if c.startswith('sector_idx_'): return True
+    if c.startswith('stock_vs_market'): return True
+    if c.startswith('stock_vs_sector_idx'): return True
+    if c in ['smart_money', 'retail_dominance']: return True
+    return False
+
+def should_exclude_60d(c):
+    if c.startswith('flow_'): return True
+    if c in ['smart_money', 'retail_dominance']: return True
+    return False
+
+if HORIZON == '20d':
+    exclude_fn = should_exclude_20d
+else:
+    exclude_fn = should_exclude_60d
+
+excluded = [c for c in all_feats if exclude_fn(c)]
+feat_cols = [c for c in all_feats if not exclude_fn(c)]
+
+print(f"Excluded ({len(excluded)}): {excluded}")
+print(f"Remaining: {len(feat_cols)}")
+print(f"Horizon: {HORIZON} | Rows: {len(df):,}")
 
 df = df.sort_values('date').reset_index(drop=True)
 udates = sorted(df['date'].unique()); n = len(udates)
@@ -73,14 +88,8 @@ for up, dn in THRESHOLDS:
 best = max(thr_results, key=lambda x: x['f1'])
 print(f"\nBEST: {best['up']}/{best['down']} F1={best['f1']:.4f}")
 
-reg_final = xgb.XGBRegressor(n_estimators=300, max_depth=5, learning_rate=0.05,
-    subsample=0.8, colsample_bytree=0.8, tree_method='hist', n_jobs=-1, random_state=42)
-reg_final.fit(df[feat_cols].values, df['rank_pct'].values,
-              sample_weight=df['weight'].values, verbose=False)
-reg_final.save_model(str(OUT / f'model_v3_{HORIZON}_reg.json'))
-
 metrics = {'horizon': HORIZON, 'n_features': len(feat_cols),
-           'excluded': exclude_list,
+           'excluded_count': len(excluded), 'excluded': excluded,
            'folds': fold_results, 'overall_ic': float(overall_ic),
            'threshold_sweep': thr_results,
            'best': {'up': best['up'], 'down': best['down'], 'f1': best['f1']}}
