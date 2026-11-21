@@ -1,4 +1,4 @@
-"""Builder v3 - 59 features (54 + 5 flow)"""
+"""Builder v3 + index features"""
 import json, gzip
 import numpy as np
 import pandas as pd
@@ -7,6 +7,7 @@ from pathlib import Path
 DATA_PATH = Path("data/ohlc_clean_v3_20d.json.gz")
 FUND_PATH = Path("data/fundamentals.json")
 FLOW_PATH = Path("data/flow_full.json.gz")
+INDEX_PATH = Path("data/indexes_full.json.gz")
 OUT = Path("javid_v3"); OUT.mkdir(exist_ok=True)
 
 with gzip.open(DATA_PATH, "rt", encoding="utf-8") as f:
@@ -15,9 +16,41 @@ with open(FUND_PATH, encoding="utf-8") as f:
     fundamentals = json.load(f)
 with gzip.open(FLOW_PATH, "rt", encoding="utf-8") as f:
     flow_data = json.load(f)
-print(f"Loaded: {len(data)} segments | {len(flow_data)} flow symbols")
+with gzip.open(INDEX_PATH, "rt", encoding="utf-8") as f:
+    index_data = json.load(f)
+print(f"Loaded: {len(data)} seg | {len(flow_data)} flow | {len(index_data)} indexes")
 
 sector_map = {sym: meta.get('sector', 'unknown') for sym, meta in fundamentals.items()}
+sector_code_map = {sym: str(meta.get('sectorCode', '')) for sym, meta in fundamentals.items()}
+
+# Precompute index features per code
+MARKET_CODE = '32097828799138957'
+index_feats = {}
+for code, info in index_data.items():
+    rows = info.get('r', [])
+    if len(rows) < 100: continue
+    df_i = pd.DataFrame(rows).sort_values('d').reset_index(drop=True)
+    c = df_i['c'].astype(float)
+    ret = c.pct_change()
+    feats = pd.DataFrame({'date': df_i['d'].values})
+    feats['m_ret_20d'] = c.pct_change(20).values
+    feats['m_ret_60d'] = c.pct_change(60).values
+    feats['m_vol_20d'] = ret.rolling(20).std().values
+    delta = c.diff()
+    gain = delta.clip(lower=0).rolling(14).mean()
+    loss = (-delta.clip(upper=0)).rolling(14).mean()
+    feats['m_rsi'] = (100 - 100/(1 + gain/loss.replace(0, np.nan))).values
+    index_feats[code] = feats.set_index('date')
+print(f"Computed index feats: {len(index_feats)} indexes")
+
+# sector_code -> index code
+sector_idx_map = {}
+for code, info in index_data.items():
+    name = info.get('name', '')
+    if '-' in name:
+        prefix = name.split('-')[0].strip()
+        sector_idx_map[prefix] = code
+print(f"Sector map: {len(sector_idx_map)} sectors")
 
 def compute_base(df):
     out = pd.DataFrame(index=df.index)
@@ -33,9 +66,7 @@ def compute_base(df):
     out['Price_EMA200_ratio'] = c / ema200
     out['EMA50_slope_20d'] = ema50.pct_change(20)
     out['EMA200_slope_20d'] = ema200.pct_change(20)
-    ema12 = c.ewm(span=12, adjust=False).mean()
-    ema26 = c.ewm(span=26, adjust=False).mean()
-    macd = ema12 - ema26
+    macd = c.ewm(span=12, adjust=False).mean() - c.ewm(span=26, adjust=False).mean()
     out['MACD_Hist'] = macd - macd.ewm(span=9, adjust=False).mean()
     up_move = h.diff(); down_move = -l.diff()
     plus_dm = np.where((up_move > down_move) & (up_move > 0), up_move, 0.0)
@@ -48,8 +79,8 @@ def compute_base(df):
     out['ADX'] = dx.rolling(14).mean()
     out['ADX_60'] = out['ADX'].rolling(60).mean()
     out['ATR_pct'] = atr14 / c
-    bb_mid = c.rolling(20).mean(); bb_std = c.rolling(20).std()
-    out['BB_width'] = (2 * bb_std) / bb_mid
+    bb_std = c.rolling(20).std()
+    out['BB_width'] = (2 * bb_std) / c.rolling(20).mean()
     out['Volatility_20d'] = ret.rolling(20).std()
     out['Volatility_60d'] = ret.rolling(60).std()
     out['Volatility_120d'] = ret.rolling(120).std()
@@ -65,8 +96,7 @@ def compute_base(df):
     out['DistTo52W_Low'] = (c - l.rolling(250).min()) / c
     obv = (np.sign(ret).fillna(0) * v).cumsum()
     out['OBV_slope'] = obv.diff(10) / obv.abs().rolling(10).mean().replace(0, np.nan)
-    tp = (h + l + c) / 3
-    mf = tp * v
+    tp = (h + l + c) / 3; mf = tp * v
     pmf = mf.where(tp > tp.shift(), 0); nmf = mf.where(tp < tp.shift(), 0)
     mfr = pmf.rolling(14).sum() / nmf.rolling(14).sum().replace(0, np.nan)
     out['MFI'] = 100 - 100 / (1 + mfr)
@@ -86,9 +116,7 @@ def compute_base(df):
     gain = delta.clip(lower=0).rolling(70).mean()
     loss = (-delta.clip(upper=0)).rolling(70).mean()
     out['weekly_RSI'] = 100 - 100 / (1 + gain / loss.replace(0, np.nan))
-    wema12 = c.ewm(span=60, adjust=False).mean()
-    wema26 = c.ewm(span=130, adjust=False).mean()
-    wmacd = wema12 - wema26
+    wmacd = c.ewm(span=60, adjust=False).mean() - c.ewm(span=130, adjust=False).mean()
     out['weekly_MACD_hist'] = wmacd - wmacd.ewm(span=45, adjust=False).mean()
     return out
 
@@ -96,7 +124,7 @@ def compute_flow(df, flow_rows):
     out = pd.DataFrame(0.0, index=df.index, columns=[
         'flow_ratio_5d','flow_ratio_20d','flow_momentum','smart_money','retail_dominance'])
     if not flow_rows: return out
-    fdf = pd.DataFrame(flow_rows).sort_values('d').reset_index(drop=True)
+    fdf = pd.DataFrame(flow_rows).sort_values('d').drop_duplicates('d', keep='last').reset_index(drop=True)
     fdf['total_val'] = fdf['buy_I_Val'] + fdf['buy_N_Val'] + fdf['sell_I_Val'] + fdf['sell_N_Val']
     fdf['net_retail'] = (fdf['buy_N_Val'] - fdf['sell_N_Val']) / fdf['total_val'].replace(0, np.nan)
     fdf['net_inst'] = (fdf['buy_I_Val'] - fdf['sell_I_Val']) / fdf['total_val'].replace(0, np.nan)
@@ -120,11 +148,11 @@ for i, (key, stock) in enumerate(data.items(), 1):
     df = df.assign(date=df['d'].values)
     f = compute_base(df)
     base_sym = key.split('_seg')[0]
-    flow_rows = flow_data.get(base_sym, {}).get('r', [])
-    ff = compute_flow(df, flow_rows)
+    ff = compute_flow(df, flow_data.get(base_sym, {}).get('r', []))
     f = pd.concat([f, ff], axis=1)
     f['symbol'] = key
     f['sector'] = sector_map.get(base_sym, 'unknown')
+    f['sector_code'] = sector_code_map.get(base_sym, '')
     f['date'] = df['d'].values
     f['close'] = df['c'].values
     all_frames.append(f)
@@ -133,6 +161,8 @@ for i, (key, stock) in enumerate(data.items(), 1):
 combined = pd.concat(all_frames, ignore_index=True)
 print(f"Combined: {len(combined):,} rows")
 combined = combined.sort_values(['date', 'symbol']).reset_index(drop=True)
+
+# Sector features (existing)
 combined['ret_20d'] = combined.groupby('symbol')['close'].pct_change(20)
 combined['ret_60d'] = combined.groupby('symbol')['close'].pct_change(60)
 combined['sector_ret_20d'] = combined.groupby(['date', 'sector'])['ret_20d'].transform('mean')
@@ -145,6 +175,36 @@ combined['is_bull_market'] = (combined['sector_ret_20d'] > 0.02).astype(float)
 combined['is_bear_market'] = (combined['sector_ret_20d'] < -0.02).astype(float)
 combined['is_sideways'] = ((combined['sector_ret_20d'] >= -0.02) & (combined['sector_ret_20d'] <= 0.02)).astype(float)
 
+# ===== NEW: Index features =====
+if MARKET_CODE in index_feats:
+    mkt = index_feats[MARKET_CODE].reset_index()
+    mkt = mkt.rename(columns={'m_ret_20d':'market_ret_20d', 'm_ret_60d':'market_ret_60d',
+                              'm_vol_20d':'market_vol_20d', 'm_rsi':'market_rsi'})
+    combined = combined.merge(mkt, on='date', how='left')
+else:
+    for c in ['market_ret_20d','market_ret_60d','market_vol_20d','market_rsi']:
+        combined[c] = 0.0
+
+# Sector index features
+sector_idx_rows = []
+for sector_code, idx_code in sector_idx_map.items():
+    if idx_code not in index_feats: continue
+    f = index_feats[idx_code].reset_index().copy()
+    f['sector_code'] = sector_code
+    f = f.rename(columns={'m_ret_20d':'sector_idx_ret_20d', 'm_ret_60d':'sector_idx_ret_60d'})
+    sector_idx_rows.append(f[['date','sector_code','sector_idx_ret_20d','sector_idx_ret_60d']])
+
+if sector_idx_rows:
+    sidx = pd.concat(sector_idx_rows, ignore_index=True)
+    combined = combined.merge(sidx, on=['date','sector_code'], how='left')
+else:
+    combined['sector_idx_ret_20d'] = 0.0
+    combined['sector_idx_ret_60d'] = 0.0
+
+combined['stock_vs_market_20d'] = combined['Return_20d'] - combined['market_ret_20d']
+combined['stock_vs_sector_idx_20d'] = combined['Return_20d'] - combined['sector_idx_ret_20d']
+
+# Fundamentals
 def sf(x):
     try: return float(str(x).replace(',', '').strip() or 0)
     except: return 0.0
@@ -156,7 +216,14 @@ combined['eps_yield'] = np.where(combined['_eps'] > 0, combined['_eps'] / combin
 combined['pe_relative'] = np.where((combined['_eps'] > 0) & (combined['_spe'] > 0),
                                     (combined['close'] / combined['_eps']) / combined['_spe'], 0.0)
 combined['eps_to_sector'] = np.where(combined['_spe'] > 0, combined['_eps'] / combined['_spe'], 0.0)
-combined = combined.drop(columns=['_p', '_eps', '_spe', 'ret_20d', 'ret_60d'])
+combined = combined.drop(columns=['_p', '_eps', '_spe', 'ret_20d', 'ret_60d', 'sector_code'])
+
+# Fill new features
+for c in ['market_ret_20d','market_ret_60d','market_vol_20d','market_rsi',
+          'sector_idx_ret_20d','sector_idx_ret_60d',
+          'stock_vs_market_20d','stock_vs_sector_idx_20d']:
+    if c in combined.columns:
+        combined[c] = combined[c].fillna(0)
 
 feat_cols = [c for c in combined.columns if c not in ['symbol', 'sector', 'date', 'close']]
 print(f"Features: {len(feat_cols)}")
@@ -166,7 +233,7 @@ print(f"After clean: {len(combined):,} rows")
 
 combined[['symbol', 'date', 'close'] + feat_cols].to_parquet(OUT / 'features_v3_20d.parquet', index=False)
 summary = {
-    'version': 'v3', 'horizon': '20d',
+    'version': 'v3+index', 'horizon': '20d',
     'segments': int(combined['symbol'].nunique()),
     'rows': len(combined), 'features': len(feat_cols),
     'feature_names': feat_cols,
