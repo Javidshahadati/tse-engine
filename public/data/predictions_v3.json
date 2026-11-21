@@ -1,0 +1,1408 @@
+{
+  "generated_at": "2026-11-21T19:46:24.344418",
+  "date": 20261020,
+  "version": "v3-20d",
+  "total": 200,
+  "predictions": {
+    "شخارك": {
+      "symbol": "شخارك",
+      "rank_20d": 100.0,
+      "score_20d": 84.56,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "بپاس": {
+      "symbol": "بپاس",
+      "rank_20d": 99.5,
+      "score_20d": 66.55,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "فغدير": {
+      "symbol": "فغدير",
+      "rank_20d": 99.0,
+      "score_20d": 66.43,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "سمازن": {
+      "symbol": "سمازن",
+      "rank_20d": 98.5,
+      "score_20d": 65.48,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "درازي": {
+      "symbol": "درازي",
+      "rank_20d": 98.0,
+      "score_20d": 63.87,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "كخاك": {
+      "symbol": "كخاك",
+      "rank_20d": 97.5,
+      "score_20d": 63.33,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "ومعلم": {
+      "symbol": "ومعلم",
+      "rank_20d": 97.0,
+      "score_20d": 62.36,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "آسيا": {
+      "symbol": "آسيا",
+      "rank_20d": 96.5,
+      "score_20d": 62.24,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "غدام": {
+      "symbol": "غدام",
+      "rank_20d": 96.0,
+      "score_20d": 62.07,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "ريشمك": {
+      "symbol": "ريشمك",
+      "rank_20d": 95.5,
+      "score_20d": 61.87,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "چخزر": {
+      "symbol": "چخزر",
+      "rank_20d": 95.0,
+      "score_20d": 61.59,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "بپيوند": {
+      "symbol": "بپيوند",
+      "rank_20d": 94.5,
+      "score_20d": 61.28,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "سفار": {
+      "symbol": "سفار",
+      "rank_20d": 94.0,
+      "score_20d": 61.12,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "سغدير": {
+      "symbol": "سغدير",
+      "rank_20d": 93.5,
+      "score_20d": 60.93,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "كتوسعه": {
+      "symbol": "كتوسعه",
+      "rank_20d": 93.0,
+      "score_20d": 60.65,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "سآبيك": {
+      "symbol": "سآبيك",
+      "rank_20d": 92.5,
+      "score_20d": 60.52,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "اپال": {
+      "symbol": "اپال",
+      "rank_20d": 92.0,
+      "score_20d": 60.5,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "ولملت": {
+      "symbol": "ولملت",
+      "rank_20d": 91.5,
+      "score_20d": 60.42,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "سصوفي": {
+      "symbol": "سصوفي",
+      "rank_20d": 91.0,
+      "score_20d": 59.9,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "تجلي": {
+      "symbol": "تجلي",
+      "rank_20d": 90.5,
+      "score_20d": 59.69,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "ستران": {
+      "symbol": "ستران",
+      "rank_20d": 90.0,
+      "score_20d": 59.51,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "بمولد": {
+      "symbol": "بمولد",
+      "rank_20d": 89.5,
+      "score_20d": 59.49,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "شسينا": {
+      "symbol": "شسينا",
+      "rank_20d": 89.0,
+      "score_20d": 59.27,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "خبهمن": {
+      "symbol": "خبهمن",
+      "rank_20d": 88.5,
+      "score_20d": 59.22,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "چفيبر": {
+      "symbol": "چفيبر",
+      "rank_20d": 88.0,
+      "score_20d": 58.44,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "سبزوا": {
+      "symbol": "سبزوا",
+      "rank_20d": 87.5,
+      "score_20d": 58.39,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "بموتو": {
+      "symbol": "بموتو",
+      "rank_20d": 87.0,
+      "score_20d": 58.22,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "وپخش": {
+      "symbol": "وپخش",
+      "rank_20d": 86.5,
+      "score_20d": 57.87,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "اتكاي": {
+      "symbol": "اتكاي",
+      "rank_20d": 86.0,
+      "score_20d": 57.69,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "ركيش": {
+      "symbol": "ركيش",
+      "rank_20d": 85.5,
+      "score_20d": 57.32,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "پرداخت": {
+      "symbol": "پرداخت",
+      "rank_20d": 85.0,
+      "score_20d": 57.27,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "فسبزوار": {
+      "symbol": "فسبزوار",
+      "rank_20d": 84.5,
+      "score_20d": 57.16,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "ساحل": {
+      "symbol": "ساحل",
+      "rank_20d": 84.0,
+      "score_20d": 56.97,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "فاراك": {
+      "symbol": "فاراك",
+      "rank_20d": 83.5,
+      "score_20d": 56.44,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "حتايد": {
+      "symbol": "حتايد",
+      "rank_20d": 83.0,
+      "score_20d": 56.41,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "زفجر": {
+      "symbol": "زفجر",
+      "rank_20d": 82.5,
+      "score_20d": 56.28,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "فجام": {
+      "symbol": "فجام",
+      "rank_20d": 82.0,
+      "score_20d": 56.22,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "غشهداب": {
+      "symbol": "غشهداب",
+      "rank_20d": 81.5,
+      "score_20d": 56.2,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "شاروم": {
+      "symbol": "شاروم",
+      "rank_20d": 81.0,
+      "score_20d": 55.85,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "كتوكا": {
+      "symbol": "كتوكا",
+      "rank_20d": 80.5,
+      "score_20d": 55.78,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "پدرخش": {
+      "symbol": "پدرخش",
+      "rank_20d": 80.0,
+      "score_20d": 55.58,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "شاوان": {
+      "symbol": "شاوان",
+      "rank_20d": 79.5,
+      "score_20d": 55.5,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "تليسه": {
+      "symbol": "تليسه",
+      "rank_20d": 79.0,
+      "score_20d": 55.48,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "غدانه": {
+      "symbol": "غدانه",
+      "rank_20d": 78.5,
+      "score_20d": 55.3,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "پارتا": {
+      "symbol": "پارتا",
+      "rank_20d": 78.0,
+      "score_20d": 55.2,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "دسينا": {
+      "symbol": "دسينا",
+      "rank_20d": 77.5,
+      "score_20d": 55.1,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "دابور": {
+      "symbol": "دابور",
+      "rank_20d": 77.0,
+      "score_20d": 55.0,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "كگاز": {
+      "symbol": "كگاز",
+      "rank_20d": 76.5,
+      "score_20d": 54.84,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "غشهد": {
+      "symbol": "غشهد",
+      "rank_20d": 76.0,
+      "score_20d": 54.83,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "چكاوه": {
+      "symbol": "چكاوه",
+      "rank_20d": 75.5,
+      "score_20d": 54.81,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "سمگا": {
+      "symbol": "سمگا",
+      "rank_20d": 75.0,
+      "score_20d": 54.8,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "ولشرق": {
+      "symbol": "ولشرق",
+      "rank_20d": 74.5,
+      "score_20d": 54.72,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "تبرك": {
+      "symbol": "تبرك",
+      "rank_20d": 74.0,
+      "score_20d": 54.72,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "افرا": {
+      "symbol": "افرا",
+      "rank_20d": 73.5,
+      "score_20d": 54.69,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "ساروم": {
+      "symbol": "ساروم",
+      "rank_20d": 73.0,
+      "score_20d": 54.67,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "زقيام": {
+      "symbol": "زقيام",
+      "rank_20d": 72.5,
+      "score_20d": 54.67,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "زاگرس": {
+      "symbol": "زاگرس",
+      "rank_20d": 72.0,
+      "score_20d": 54.53,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "كبافق": {
+      "symbol": "كبافق",
+      "rank_20d": 71.5,
+      "score_20d": 54.48,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "فاذر": {
+      "symbol": "فاذر",
+      "rank_20d": 71.0,
+      "score_20d": 54.43,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "پتاير": {
+      "symbol": "پتاير",
+      "rank_20d": 70.5,
+      "score_20d": 54.36,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "وتوسم": {
+      "symbol": "وتوسم",
+      "rank_20d": 70.0,
+      "score_20d": 54.11,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "قلرست": {
+      "symbol": "قلرست",
+      "rank_20d": 69.5,
+      "score_20d": 54.1,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "تاپيكو": {
+      "symbol": "تاپيكو",
+      "rank_20d": 69.0,
+      "score_20d": 53.86,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "زپارس": {
+      "symbol": "زپارس",
+      "rank_20d": 68.5,
+      "score_20d": 53.84,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "فايرا": {
+      "symbol": "فايرا",
+      "rank_20d": 68.0,
+      "score_20d": 53.77,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "تكمبا": {
+      "symbol": "تكمبا",
+      "rank_20d": 67.5,
+      "score_20d": 53.71,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "وطوبي": {
+      "symbol": "وطوبي",
+      "rank_20d": 67.0,
+      "score_20d": 53.52,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "دكپسول": {
+      "symbol": "دكپسول",
+      "rank_20d": 66.5,
+      "score_20d": 53.4,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "حآسا": {
+      "symbol": "حآسا",
+      "rank_20d": 66.0,
+      "score_20d": 53.39,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "وبوعلي": {
+      "symbol": "وبوعلي",
+      "rank_20d": 65.5,
+      "score_20d": 53.38,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "كساپا": {
+      "symbol": "كساپا",
+      "rank_20d": 65.0,
+      "score_20d": 53.31,
+      "signal_20d": "UP",
+      "date": 20261020
+    },
+    "قشير": {
+      "symbol": "قشير",
+      "rank_20d": 64.5,
+      "score_20d": 53.25,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "شبريز": {
+      "symbol": "شبريز",
+      "rank_20d": 64.0,
+      "score_20d": 53.18,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "خچرخش": {
+      "symbol": "خچرخش",
+      "rank_20d": 63.5,
+      "score_20d": 53.16,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "دشيمي": {
+      "symbol": "دشيمي",
+      "rank_20d": 63.0,
+      "score_20d": 53.11,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "وهور": {
+      "symbol": "وهور",
+      "rank_20d": 62.5,
+      "score_20d": 53.06,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "شيران": {
+      "symbol": "شيران",
+      "rank_20d": 62.0,
+      "score_20d": 53.01,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "سدور": {
+      "symbol": "سدور",
+      "rank_20d": 61.5,
+      "score_20d": 52.97,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "كگهر": {
+      "symbol": "كگهر",
+      "rank_20d": 61.0,
+      "score_20d": 52.94,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "وملي": {
+      "symbol": "وملي",
+      "rank_20d": 60.5,
+      "score_20d": 52.83,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "ثشاهد": {
+      "symbol": "ثشاهد",
+      "rank_20d": 60.0,
+      "score_20d": 52.78,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "شنفت": {
+      "symbol": "شنفت",
+      "rank_20d": 59.5,
+      "score_20d": 52.59,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "فزرين": {
+      "symbol": "فزرين",
+      "rank_20d": 59.0,
+      "score_20d": 52.58,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "كيا": {
+      "symbol": "كيا",
+      "rank_20d": 58.5,
+      "score_20d": 52.52,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "فصبا": {
+      "symbol": "فصبا",
+      "rank_20d": 58.0,
+      "score_20d": 52.48,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "شغدير": {
+      "symbol": "شغدير",
+      "rank_20d": 57.5,
+      "score_20d": 52.44,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "بجهرم": {
+      "symbol": "بجهرم",
+      "rank_20d": 57.0,
+      "score_20d": 52.43,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "وسپهر": {
+      "symbol": "وسپهر",
+      "rank_20d": 56.5,
+      "score_20d": 52.39,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "ولبهمن": {
+      "symbol": "ولبهمن",
+      "rank_20d": 56.0,
+      "score_20d": 52.36,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "حريل": {
+      "symbol": "حريل",
+      "rank_20d": 55.5,
+      "score_20d": 52.33,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "پاكشو": {
+      "symbol": "پاكشو",
+      "rank_20d": 55.0,
+      "score_20d": 52.32,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "وپترو": {
+      "symbol": "وپترو",
+      "rank_20d": 54.5,
+      "score_20d": 52.06,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "ميدكو": {
+      "symbol": "ميدكو",
+      "rank_20d": 54.0,
+      "score_20d": 51.97,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "ثعمرا": {
+      "symbol": "ثعمرا",
+      "rank_20d": 53.5,
+      "score_20d": 51.92,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "رتاپ": {
+      "symbol": "رتاپ",
+      "rank_20d": 53.0,
+      "score_20d": 51.81,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "شراز": {
+      "symbol": "شراز",
+      "rank_20d": 52.5,
+      "score_20d": 51.78,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "كدما": {
+      "symbol": "كدما",
+      "rank_20d": 52.0,
+      "score_20d": 51.73,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "كسرام": {
+      "symbol": "كسرام",
+      "rank_20d": 51.5,
+      "score_20d": 51.71,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "سكرد": {
+      "symbol": "سكرد",
+      "rank_20d": 51.0,
+      "score_20d": 51.68,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "ساربيل": {
+      "symbol": "ساربيل",
+      "rank_20d": 50.5,
+      "score_20d": 51.64,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "سيلام": {
+      "symbol": "سيلام",
+      "rank_20d": 50.0,
+      "score_20d": 51.55,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "شوينده": {
+      "symbol": "شوينده",
+      "rank_20d": 49.5,
+      "score_20d": 51.53,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "خمحور": {
+      "symbol": "خمحور",
+      "rank_20d": 49.0,
+      "score_20d": 51.5,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "آبادا": {
+      "symbol": "آبادا",
+      "rank_20d": 48.5,
+      "score_20d": 51.49,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "زماهان": {
+      "symbol": "زماهان",
+      "rank_20d": 48.0,
+      "score_20d": 51.45,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "زبينا": {
+      "symbol": "زبينا",
+      "rank_20d": 47.5,
+      "score_20d": 51.26,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "نوين": {
+      "symbol": "نوين",
+      "rank_20d": 47.0,
+      "score_20d": 51.23,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "فرابورس": {
+      "symbol": "فرابورس",
+      "rank_20d": 46.5,
+      "score_20d": 51.23,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "سهگمت": {
+      "symbol": "سهگمت",
+      "rank_20d": 46.0,
+      "score_20d": 51.2,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "وگستر": {
+      "symbol": "وگستر",
+      "rank_20d": 45.5,
+      "score_20d": 51.16,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "جم پيلن": {
+      "symbol": "جم پيلن",
+      "rank_20d": 45.0,
+      "score_20d": 51.06,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "وساخت": {
+      "symbol": "وساخت",
+      "rank_20d": 44.5,
+      "score_20d": 51.02,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "شفارس": {
+      "symbol": "شفارس",
+      "rank_20d": 44.0,
+      "score_20d": 50.95,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "قشكر": {
+      "symbol": "قشكر",
+      "rank_20d": 43.5,
+      "score_20d": 50.92,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "زشريف": {
+      "symbol": "زشريف",
+      "rank_20d": 43.0,
+      "score_20d": 50.84,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "ساروج": {
+      "symbol": "ساروج",
+      "rank_20d": 42.5,
+      "score_20d": 50.84,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "چكارن": {
+      "symbol": "چكارن",
+      "rank_20d": 42.0,
+      "score_20d": 50.84,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "سخوز": {
+      "symbol": "سخوز",
+      "rank_20d": 41.5,
+      "score_20d": 50.79,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "غگرجي": {
+      "symbol": "غگرجي",
+      "rank_20d": 41.0,
+      "score_20d": 50.77,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "فسرب": {
+      "symbol": "فسرب",
+      "rank_20d": 40.5,
+      "score_20d": 50.74,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "فماك": {
+      "symbol": "فماك",
+      "rank_20d": 40.0,
+      "score_20d": 50.73,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "شستا": {
+      "symbol": "شستا",
+      "rank_20d": 39.5,
+      "score_20d": 50.71,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "قثابت": {
+      "symbol": "قثابت",
+      "rank_20d": 39.0,
+      "score_20d": 50.66,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "خمحركه": {
+      "symbol": "خمحركه",
+      "rank_20d": 38.5,
+      "score_20d": 50.63,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "خاور": {
+      "symbol": "خاور",
+      "rank_20d": 38.0,
+      "score_20d": 50.51,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "وبيمه": {
+      "symbol": "وبيمه",
+      "rank_20d": 37.5,
+      "score_20d": 50.24,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "بزاگرس": {
+      "symbol": "بزاگرس",
+      "rank_20d": 37.0,
+      "score_20d": 50.24,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "غگل": {
+      "symbol": "غگل",
+      "rank_20d": 36.5,
+      "score_20d": 50.21,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "كوثر": {
+      "symbol": "كوثر",
+      "rank_20d": 36.0,
+      "score_20d": 50.16,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "كرمان": {
+      "symbol": "كرمان",
+      "rank_20d": 35.5,
+      "score_20d": 50.04,
+      "signal_20d": "NEUTRAL",
+      "date": 20261020
+    },
+    "ختوقا": {
+      "symbol": "ختوقا",
+      "rank_20d": 35.0,
+      "score_20d": 49.82,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "مبين": {
+      "symbol": "مبين",
+      "rank_20d": 34.5,
+      "score_20d": 49.81,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "دكيمي": {
+      "symbol": "دكيمي",
+      "rank_20d": 34.0,
+      "score_20d": 49.79,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "خمهر": {
+      "symbol": "خمهر",
+      "rank_20d": 33.5,
+      "score_20d": 49.77,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "خاذين": {
+      "symbol": "خاذين",
+      "rank_20d": 33.0,
+      "score_20d": 49.7,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "ولپارس": {
+      "symbol": "ولپارس",
+      "rank_20d": 32.5,
+      "score_20d": 49.62,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "حآفرين": {
+      "symbol": "حآفرين",
+      "rank_20d": 32.0,
+      "score_20d": 49.41,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "خوساز": {
+      "symbol": "خوساز",
+      "rank_20d": 31.5,
+      "score_20d": 49.33,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "سپ": {
+      "symbol": "سپ",
+      "rank_20d": 31.0,
+      "score_20d": 49.27,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "مديريت": {
+      "symbol": "مديريت",
+      "rank_20d": 30.5,
+      "score_20d": 49.18,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "حتوكا": {
+      "symbol": "حتوكا",
+      "rank_20d": 30.0,
+      "score_20d": 49.02,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "سدبير": {
+      "symbol": "سدبير",
+      "rank_20d": 29.5,
+      "score_20d": 49.01,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "ثنوسا": {
+      "symbol": "ثنوسا",
+      "rank_20d": 29.0,
+      "score_20d": 48.88,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "كپرور": {
+      "symbol": "كپرور",
+      "rank_20d": 28.5,
+      "score_20d": 48.73,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "بالاس": {
+      "symbol": "بالاس",
+      "rank_20d": 28.0,
+      "score_20d": 48.72,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "حفارس": {
+      "symbol": "حفارس",
+      "rank_20d": 27.5,
+      "score_20d": 48.67,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "بركت": {
+      "symbol": "بركت",
+      "rank_20d": 27.0,
+      "score_20d": 48.64,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "غنوش": {
+      "symbol": "غنوش",
+      "rank_20d": 26.5,
+      "score_20d": 48.51,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "غالبر": {
+      "symbol": "غالبر",
+      "rank_20d": 26.0,
+      "score_20d": 48.38,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "شپاس": {
+      "symbol": "شپاس",
+      "rank_20d": 25.5,
+      "score_20d": 48.1,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "جم": {
+      "symbol": "جم",
+      "rank_20d": 25.0,
+      "score_20d": 48.04,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "وتوصا": {
+      "symbol": "وتوصا",
+      "rank_20d": 24.5,
+      "score_20d": 47.96,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "پيزد": {
+      "symbol": "پيزد",
+      "rank_20d": 24.0,
+      "score_20d": 47.95,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "فرود": {
+      "symbol": "فرود",
+      "rank_20d": 23.5,
+      "score_20d": 47.88,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "ماديرا": {
+      "symbol": "ماديرا",
+      "rank_20d": 23.0,
+      "score_20d": 47.82,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "سيستم": {
+      "symbol": "سيستم",
+      "rank_20d": 22.5,
+      "score_20d": 47.67,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "كوير": {
+      "symbol": "كوير",
+      "rank_20d": 22.0,
+      "score_20d": 47.59,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "خكمك": {
+      "symbol": "خكمك",
+      "rank_20d": 21.5,
+      "score_20d": 47.57,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "فلوله": {
+      "symbol": "فلوله",
+      "rank_20d": 21.0,
+      "score_20d": 47.52,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "شفا": {
+      "symbol": "شفا",
+      "rank_20d": 20.5,
+      "score_20d": 47.47,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "فروسيل": {
+      "symbol": "فروسيل",
+      "rank_20d": 20.0,
+      "score_20d": 47.47,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "كشرق": {
+      "symbol": "كشرق",
+      "rank_20d": 19.5,
+      "score_20d": 47.46,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "گدنا": {
+      "symbol": "گدنا",
+      "rank_20d": 19.0,
+      "score_20d": 47.3,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "زمگسا": {
+      "symbol": "زمگسا",
+      "rank_20d": 18.5,
+      "score_20d": 47.12,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "پارس": {
+      "symbol": "پارس",
+      "rank_20d": 18.0,
+      "score_20d": 46.61,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "ملت": {
+      "symbol": "ملت",
+      "rank_20d": 17.5,
+      "score_20d": 46.58,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "شملي": {
+      "symbol": "شملي",
+      "rank_20d": 17.0,
+      "score_20d": 46.48,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "خزر": {
+      "symbol": "خزر",
+      "rank_20d": 16.5,
+      "score_20d": 46.44,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "چافست": {
+      "symbol": "چافست",
+      "rank_20d": 16.0,
+      "score_20d": 46.36,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "وايران": {
+      "symbol": "وايران",
+      "rank_20d": 15.5,
+      "score_20d": 46.32,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "همراه": {
+      "symbol": "همراه",
+      "rank_20d": 15.0,
+      "score_20d": 46.27,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "خگستر": {
+      "symbol": "خگستر",
+      "rank_20d": 14.5,
+      "score_20d": 46.19,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "بالبر": {
+      "symbol": "بالبر",
+      "rank_20d": 14.0,
+      "score_20d": 46.19,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "فپنتا": {
+      "symbol": "فپنتا",
+      "rank_20d": 13.5,
+      "score_20d": 46.17,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "غنيلي": {
+      "symbol": "غنيلي",
+      "rank_20d": 13.0,
+      "score_20d": 46.16,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "پترول": {
+      "symbol": "پترول",
+      "rank_20d": 12.5,
+      "score_20d": 46.12,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "قنيشا": {
+      "symbol": "قنيشا",
+      "rank_20d": 12.0,
+      "score_20d": 45.89,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "خرينگ": {
+      "symbol": "خرينگ",
+      "rank_20d": 11.5,
+      "score_20d": 45.59,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "شسپا": {
+      "symbol": "شسپا",
+      "rank_20d": 11.0,
+      "score_20d": 45.48,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "غبهنوش": {
+      "symbol": "غبهنوش",
+      "rank_20d": 10.5,
+      "score_20d": 45.36,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "ارمغان": {
+      "symbol": "ارمغان",
+      "rank_20d": 10.0,
+      "score_20d": 45.32,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "داسوه": {
+      "symbol": "داسوه",
+      "rank_20d": 9.5,
+      "score_20d": 45.31,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "سقاين": {
+      "symbol": "سقاين",
+      "rank_20d": 9.0,
+      "score_20d": 45.28,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "فولاد": {
+      "symbol": "فولاد",
+      "rank_20d": 8.5,
+      "score_20d": 45.23,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "وتوشه": {
+      "symbol": "وتوشه",
+      "rank_20d": 8.0,
+      "score_20d": 45.2,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "چكاپا": {
+      "symbol": "چكاپا",
+      "rank_20d": 7.5,
+      "score_20d": 44.91,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "پلاسك": {
+      "symbol": "پلاسك",
+      "rank_20d": 7.0,
+      "score_20d": 44.68,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "دجابر": {
+      "symbol": "دجابر",
+      "rank_20d": 6.5,
+      "score_20d": 44.34,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "وآذر": {
+      "symbol": "وآذر",
+      "rank_20d": 6.0,
+      "score_20d": 43.46,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "لوتوس": {
+      "symbol": "لوتوس",
+      "rank_20d": 5.5,
+      "score_20d": 43.26,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "تماوند": {
+      "symbol": "تماوند",
+      "rank_20d": 5.0,
+      "score_20d": 42.98,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "دروز": {
+      "symbol": "دروز",
+      "rank_20d": 4.5,
+      "score_20d": 42.16,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "شفن": {
+      "symbol": "شفن",
+      "rank_20d": 4.0,
+      "score_20d": 41.96,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "رمپناح": {
+      "symbol": "رمپناح",
+      "rank_20d": 3.5,
+      "score_20d": 41.54,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "ثامان": {
+      "symbol": "ثامان",
+      "rank_20d": 3.0,
+      "score_20d": 41.25,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "بوعلي": {
+      "symbol": "بوعلي",
+      "rank_20d": 2.5,
+      "score_20d": 39.88,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "غبشهر": {
+      "symbol": "غبشهر",
+      "rank_20d": 2.0,
+      "score_20d": 38.23,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "آ س پ": {
+      "symbol": "آ س پ",
+      "rank_20d": 1.5,
+      "score_20d": 38.1,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "فجهان": {
+      "symbol": "فجهان",
+      "rank_20d": 1.0,
+      "score_20d": 36.44,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    },
+    "ولساپا": {
+      "symbol": "ولساپا",
+      "rank_20d": 0.5,
+      "score_20d": 27.57,
+      "signal_20d": "DOWN",
+      "date": 20261020
+    }
+  }
+}
