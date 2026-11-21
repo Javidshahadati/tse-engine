@@ -1,0 +1,32 @@
+name: Daily Predictions V3
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 13 * * *'  # 17:00 Tehran
+
+jobs:
+  predict:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions: { contents: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install pandas numpy xgboost scikit-learn scipy pyarrow
+      - name: Build
+        run: python features/builder_v3.py
+      - name: Train or Load
+        run: |
+          if [ ! -f javid_v3/model_v3_20d_reg.json ]; then
+            HORIZON=20d python scripts/train_v3_unified.py
+            HORIZON=60d python scripts/train_v3_unified.py
+          fi
+      - name: Predict
+        run: python scripts/predict_v3.py
+      - name: Commit
+        run: |
+          git config user.name "Bot"; git config user.email "bot@tse-engine.ai"
+          git add public/data/predictions_v3.json
+          git diff --staged --quiet || git commit -m "🤖 predictions_v3 $(date -u +%Y-%m-%d)"
+          git push || true
