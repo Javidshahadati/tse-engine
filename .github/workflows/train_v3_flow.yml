@@ -13,6 +13,8 @@ jobs:
       - run: pip install pandas numpy xgboost scikit-learn scipy pyarrow
       - name: Patch
         run: python scripts/patch_54feat.py
+      - name: Build
+        run: python features/builder_v3.py
       - name: Train 20d
         env: { HORIZON: '20d' }
         run: python scripts/train_v3_unified.py
