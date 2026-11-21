@@ -225,7 +225,7 @@ export default function StockPage() {
             <div className="text-left flex-shrink-0">
               <div className="num text-2xl md:text-4xl font-black text-white">
                 {fmt(lastBar.c)}
-                <span className="text-xs md:text-sm text-slate-400 mr-1 font-normal">تومان</span>
+                <span className="text-xs md:text-sm text-slate-400 mr-1 font-normal">ریال</span>
               </div>
               <div className={`num text-xs md:text-sm font-bold flex items-center gap-1 justify-end mt-1 ${change >= 0 ? 'text-success' : 'text-danger'}`}>
                 {change >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
