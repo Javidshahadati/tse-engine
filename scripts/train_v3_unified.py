@@ -1,4 +1,4 @@
-"""Train v3 - excludes flow features (54 features)"""
+"""Train v3 - separate feature sets per horizon"""
 import json, os
 import numpy as np
 import pandas as pd
@@ -11,7 +11,15 @@ HORIZON = os.environ.get('HORIZON', '20d')
 DAYS = int(HORIZON.replace('d', ''))
 OUT = Path("javid_v3")
 
-FLOW_FEATURES = ['flow_ratio_5d','flow_ratio_20d','flow_momentum','smart_money','retail_dominance']
+# Features to exclude per horizon
+EXCLUDE = {
+    '20d': ['flow_ratio_5d','flow_ratio_20d','flow_momentum','smart_money','retail_dominance',
+            'market_ret_20d','market_ret_60d','market_vol_20d','market_rsi',
+            'sector_idx_ret_20d','sector_idx_ret_60d',
+            'stock_vs_market_20d','stock_vs_sector_idx_20d'],
+    '60d': ['flow_ratio_5d','flow_ratio_20d','flow_momentum','smart_money','retail_dominance'],
+}
+exclude_list = EXCLUDE.get(HORIZON, [])
 
 df = pd.read_parquet(OUT / 'features_v3_20d.parquet')
 df = df.sort_values(['symbol', 'date']).reset_index(drop=True)
@@ -22,8 +30,9 @@ df['weight'] = np.abs(df['rank_pct'] - 50) / 50 + 0.3
 
 with open(OUT / 'summary_v3_20d.json') as f:
     feat_cols = [c for c in json.load(f)['feature_names']
-                 if c in df.columns and c not in FLOW_FEATURES]
+                 if c in df.columns and c not in exclude_list]
 print(f"Horizon: {HORIZON} | Rows: {len(df):,} | Features: {len(feat_cols)}")
+print(f"Excluded: {len(exclude_list)} features")
 
 df = df.sort_values('date').reset_index(drop=True)
 udates = sorted(df['date'].unique()); n = len(udates)
@@ -71,6 +80,7 @@ reg_final.fit(df[feat_cols].values, df['rank_pct'].values,
 reg_final.save_model(str(OUT / f'model_v3_{HORIZON}_reg.json'))
 
 metrics = {'horizon': HORIZON, 'n_features': len(feat_cols),
+           'excluded': exclude_list,
            'folds': fold_results, 'overall_ic': float(overall_ic),
            'threshold_sweep': thr_results,
            'best': {'up': best['up'], 'down': best['down'], 'f1': best['f1']}}
