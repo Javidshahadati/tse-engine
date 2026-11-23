@@ -31,23 +31,50 @@ def main():
 
     source = Path(args.input)
     df = pd.read_parquet(source)
-    required = {"symbol", "date", "close"}
+    required = {"symbol", "date", "open", "close"}
     if not required.issubset(df.columns):
         raise ValueError(f"Missing columns: {sorted(required - set(df.columns))}")
 
     df = df.sort_values(["symbol", "date"]).reset_index(drop=True)
     g = df.groupby("symbol", sort=False)
-    df["future_date"] = g["date"].shift(-args.horizon)
-    df["future_close"] = g["close"].shift(-args.horizon)
-    df["future_return_gross"] = df["future_close"] / df["close"] - 1
-    df["future_return_net"] = df["future_return_gross"] - args.round_trip_cost
-    df = df.dropna(subset=["future_date", "future_return_gross"]).copy()
-    df["label"] = (df["future_return_net"] > args.label_threshold).astype("int8")
+
+    # Signal is generated after close[t].
+    # Entry: open[t+1]. Exit: close[t+horizon].
+    df["entry_date"] = g["date"].shift(-1)
+    df["entry_open"] = g["open"].shift(-1)
+    df["exit_date"] = g["date"].shift(-args.horizon)
+    df["exit_close"] = g["close"].shift(-args.horizon)
+
+    valid_prices = (
+        (df["entry_open"] > 0) &
+        (df["exit_close"] > 0)
+    )
+    df.loc[~valid_prices, ["entry_open", "exit_close"]] = np.nan
+
+    df["future_return_gross"] = (
+        df["exit_close"] / df["entry_open"] - 1
+    )
+
+    # Proportional total round-trip cost.
+    df["future_return_net"] = (
+        (1 + df["future_return_gross"]) *
+        (1 - args.round_trip_cost) - 1
+    )
+
+    df = df.dropna(
+        subset=["entry_date", "exit_date",
+                "future_return_gross", "future_return_net"]
+    ).copy()
+
+    df["label"] = (
+        df["future_return_net"] > args.label_threshold
+    ).astype("int8")
 
     excluded = {
         "symbol", "date", "open", "high", "low", "close", "volume",
-        "future_date", "future_close", "future_return_gross",
-        "future_return_net", "label",
+        "entry_date", "entry_open", "exit_date", "exit_close",
+        "future_return_gross", "future_return_net", "label",
+        "ohl_geometry_valid", "close_in_trade_range",
     }
     features = [c for c in df.columns if c not in excluded
                 and pd.api.types.is_numeric_dtype(df[c])]
@@ -74,7 +101,7 @@ def main():
         test = df[(df.date >= start) & (df.date < end)].copy()
 
         # Purge overlapping labels: training outcome must mature before test.
-        train = df[df["future_date"] < start].copy()
+        train = df[df["exit_date"] < start].copy()
         if train.empty or test.empty or train.label.nunique() < 2:
             fold_metrics.append({"fold": k + 1, "status": "skipped",
                                  "train_rows": len(train), "test_rows": len(test),
@@ -96,8 +123,9 @@ def main():
         test["probability"] = model.predict_proba(test[features])[:, 1]
         test["fold"] = k + 1
         oof_parts.append(test[[
-            "symbol", "date", "future_date", "label",
-            "future_return_gross", "future_return_net", "probability", "fold"
+            "symbol", "date", "entry_date", "exit_date", "label",
+            "future_return_gross", "future_return_net",
+            "probability", "fold"
         ]])
 
         selected = test[test.probability >= args.signal_threshold]
@@ -107,7 +135,7 @@ def main():
             "fold": k + 1, "status": "completed",
             "test_start": start, "test_end_exclusive": end,
             "train_rows": int(len(train)), "test_rows": int(len(test)),
-            "purge_rule": "future_date < test_start",
+            "purge_rule": "exit_date < test_start",
             "auc": auc, "signals": int(len(selected)),
             "mean_gross_return": (float(selected.future_return_gross.mean())
                                   if len(selected) else None),

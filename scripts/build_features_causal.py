@@ -61,10 +61,17 @@ def normalize_rows(rows, symbol):
         raise ValueError(f"{symbol}: non-positive OHLC")
     if (frame["v"] < 0).any():
         raise ValueError(f"{symbol}: negative volume")
-    if (frame["h"] < frame[["o", "l", "c"]].max(axis=1)).any():
-        raise ValueError(f"{symbol}: invalid high")
-    if (frame["l"] > frame[["o", "h", "c"]].min(axis=1)).any():
-        raise ValueError(f"{symbol}: invalid low")
+    # pClosing (c) is not necessarily inside the intraday
+    # traded range. Validate geometry using O/H/L only.
+    frame["ohl_geometry_valid"] = (
+        (frame["h"] >= frame[["o", "l"]].max(axis=1)) &
+        (frame["l"] <= frame[["o", "h"]].min(axis=1)) &
+        (frame["h"] >= frame["l"])
+    )
+    frame["close_in_trade_range"] = (
+        (frame["c"] >= frame["l"]) &
+        (frame["c"] <= frame["h"])
+    )
     return frame
 
 
@@ -86,12 +93,26 @@ def main():
             if raw.empty:
                 errors.append({"symbol": symbol, "error": "no valid rows"})
                 continue
-            tech = build_technical_features(raw)
-            pa = build_pa_features(raw)
-            rtm = build_rtm_features_causal(raw, swing=args.swing)
+            # Preserve original prices. Mask only suspect H/L
+            # inputs for features that depend on traded geometry.
+            feature_raw = raw.copy()
+            bad_geometry = ~raw["ohl_geometry_valid"]
+            feature_raw.loc[bad_geometry, ["h", "l"]] = float("nan")
+
+            tech = build_technical_features(feature_raw)
+            pa = build_pa_features(feature_raw)
+            rtm = build_rtm_features_causal(
+                feature_raw, swing=args.swing
+            )
             feats = pd.concat([tech, pa, rtm], axis=1)
 
             out = feats.copy()
+            out["ohl_geometry_valid"] = (
+                raw["ohl_geometry_valid"].astype("int8").to_numpy()
+            )
+            out["close_in_trade_range"] = (
+                raw["close_in_trade_range"].astype("int8").to_numpy()
+            )
             out.insert(0, "symbol", symbol)
             out.insert(1, "date", raw["d"].to_numpy())
             for col in ["o", "h", "l", "c", "v"]:

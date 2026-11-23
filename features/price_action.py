@@ -17,6 +17,18 @@ def build_pa_features(df):
 
     out = pd.DataFrame(index=df.index)
 
+    # TSETMC pClosing may legitimately be outside the traded
+    # intraday range. Candle-shape features require both valid
+    # O/H/L geometry and close inside the traded range.
+    valid_geometry = (
+        (h >= pd.concat([o, l], axis=1).max(axis=1)) &
+        (l <= pd.concat([o, h], axis=1).min(axis=1)) &
+        (h >= l)
+    )
+    valid_candle = (
+        valid_geometry & (c >= l) & (c <= h)
+    )
+
     # ─── Candlestick patterns (7)
     out['Doji'] = (body / candle_range < 0.1).astype(np.int8)
     out['Hammer'] = ((lower > 2 * body) & (upper < body)).astype(np.int8)
@@ -71,6 +83,25 @@ def build_pa_features(df):
                          (c.shift(2) > c.shift(3))).astype(np.int8)
     out['ConsecDown_3'] = ((c < c.shift(1)) & (c.shift(1) < c.shift(2)) &
                            (c.shift(2) < c.shift(3))).astype(np.int8)
+
+    # Do not manufacture candle shapes from pClosing when it is
+    # outside the actual traded range.
+    shape_cols = [
+        'Doji', 'Hammer', 'ShootingStar',
+        'BullEngulf', 'BearEngulf',
+        'InsideBar', 'OutsideBar',
+        'Body_pct', 'UpperWick_pct',
+        'LowerWick_pct', 'ClosePosition',
+    ]
+    out.loc[~valid_candle, shape_cols] = np.nan
+
+    # Two-candle patterns also require a valid previous candle.
+    valid_pair = valid_candle & valid_candle.shift(1).fillna(False)
+    pair_cols = [
+        'BullEngulf', 'BearEngulf',
+        'InsideBar', 'OutsideBar',
+    ]
+    out.loc[~valid_pair, pair_cols] = np.nan
 
     return out
 
