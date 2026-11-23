@@ -1,6 +1,13 @@
 name: TSE Final SQLite Training
 
 on:
+  # Automatically run after this workflow is updated on the research branch.
+  push:
+    branches:
+      - research/leakage-safe-pipeline-20261123
+    paths:
+      - .github/workflows/train_final_sqlite.yml
+
   workflow_dispatch:
     inputs:
       db_release_tag:
@@ -41,7 +48,7 @@ jobs:
       - name: Download all 83 parts
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DB_RELEASE_TAG: ${{ inputs.db_release_tag }}
+          DB_RELEASE_TAG: ${{ inputs.db_release_tag || 'final-training-db-20261123' }}
         run: |
           mkdir -p data/parts
           gh release download "$DB_RELEASE_TAG" \
@@ -156,7 +163,7 @@ jobs:
           python scripts/train_final_sqlite.py \
             --db data/final_training.sqlite \
             --out results \
-            --threshold "${{ inputs.threshold }}" \
+            --threshold "${{ inputs.threshold || '0.017' }}" \
             --embargo 60
 
       - name: Verify outputs
