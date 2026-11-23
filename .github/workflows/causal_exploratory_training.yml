@@ -1,24 +1,24 @@
-name: TSE causal exploratory model training
+name: TSE causal multi horizon exploratory training
 
 on:
   push:
     branches:
       - research/leakage-safe-pipeline-20261123
     paths:
-      - "scripts/train_walk_forward_causal.py"
       - ".github/workflows/causal_exploratory_training.yml"
 
 permissions:
   contents: write
 
 concurrency:
-  group: tse-causal-exploratory-training
+  group: tse-causal-multi-horizon-training
   cancel-in-progress: false
 
 jobs:
   train:
     runs-on: ubuntu-latest
     timeout-minutes: 360
+
     steps:
       - name: Checkout development branch
         uses: actions/checkout@v4
@@ -36,7 +36,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Download verified full-market features
+      - name: Download existing full-market features
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -47,27 +47,85 @@ jobs:
             --dir outputs
           test -s outputs/features_causal.parquet
 
-      - name: Train exploratory 5-session model
+      - name: Train all horizons
         run: |
-          python scripts/train_walk_forward_causal.py \
-            --input outputs/features_causal.parquet \
-            --horizon 5 \
-            --label-threshold 0.017 \
-            --round-trip-cost 0.0 \
-            --signal-threshold 0.60 \
-            --folds 4 \
-            --output-dir outputs/causal_walk_forward_h5_cost0
+          set -e
 
-      - name: Publish metrics and fold models
+          for H in 5 20 40 60; do
+            OUT="outputs/causal_walk_forward_h${H}"
+
+            echo "=================================="
+            echo "TRAINING HORIZON: ${H} sessions"
+            echo "=================================="
+
+            python scripts/train_walk_forward_causal.py \
+              --input outputs/features_causal.parquet \
+              --horizon "$H" \
+              --label-threshold 0.017 \
+              --round-trip-cost 0.0 \
+              --signal-threshold 0.60 \
+              --folds 4 \
+              --output-dir "$OUT"
+
+            test -s "$OUT/metrics.json"
+            test -d "$OUT/models"
+          done
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p outputs/release_assets
+
+          for H in 5 20 40 60; do
+            OUT="outputs/causal_walk_forward_h${H}"
+
+            cp "$OUT/metrics.json" \
+              "outputs/release_assets/metrics_h${H}.json"
+
+            for MODEL in "$OUT"/models/*.json; do
+              NAME=$(basename "$MODEL")
+              cp "$MODEL" \
+                "outputs/release_assets/h${H}_${NAME}"
+            done
+          done
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          base = Path("outputs")
+          summary = {"horizons": {}}
+
+          for h in (5, 20, 40, 60):
+              path = base / f"causal_walk_forward_h{h}" / "metrics.json"
+              data = json.loads(path.read_text(encoding="utf-8"))
+
+              summary["horizons"][str(h)] = {
+                  "horizon_sessions": h,
+                  "overall_oof_auc": data.get("overall_oof_auc"),
+                  "oof_rows": data.get("oof_rows"),
+                  "oof_signal_count": data.get("oof_signal_count"),
+                  "oof_mean_net_return": data.get("oof_mean_net_return"),
+                  "oof_net_win_rate": data.get("oof_net_win_rate"),
+                  "folds": data.get("folds"),
+                  "point_in_time_adjustment_verified": False
+              }
+
+          Path("outputs/release_assets/multi_horizon_summary.json").write_text(
+              json.dumps(summary, ensure_ascii=False, indent=2),
+              encoding="utf-8"
+          )
+          PY
+
+      - name: Publish all horizon models and reports
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="causal-training-${GITHUB_RUN_ID}"
+          TAG="causal-multihorizon-${GITHUB_RUN_ID}"
+
           gh release create "$TAG" \
-            outputs/causal_walk_forward_h5_cost0/metrics.json \
-            outputs/causal_walk_forward_h5_cost0/models/*.json \
+            outputs/release_assets/* \
             --repo Javidshahadati/tse-engine \
             --target research/leakage-safe-pipeline-20261123 \
-            --title "Exploratory causal model training ${GITHUB_RUN_ID}" \
-            --notes "Five-session exploratory Walk-Forward baseline. Zero transaction cost is diagnostic only, not a trading-cost assumption. Adjusted-price point-in-time safety is unverified. Not production-ready." \
+            --title "Causal multi-horizon training ${GITHUB_RUN_ID}" \
+            --notes "Exploratory 5, 20, 40 and 60 session Walk-Forward models. Four chronological folds per horizon. Zero transaction cost is diagnostic only. Adjusted-price point-in-time safety remains unverified. Not production-ready." \
             --prerelease
