@@ -1,0 +1,72 @@
+name: TSE Final Holdout Portfolio Backtest
+
+on:
+  push:
+    branches:
+      - research/leakage-safe-pipeline-20261123
+    paths:
+      - .github/workflows/portfolio_backtest.yml
+      - scripts/backtest_holdout_portfolio.py
+
+permissions:
+  contents: write
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout research branch
+        uses: actions/checkout@v4
+        with:
+          ref: research/leakage-safe-pipeline-20261123
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy pandas
+
+      - name: Download holdout predictions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p holdout_input
+          gh release download holdout-validation-20261123-212605 \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern "holdout_predictions.csv" \
+            --dir holdout_input
+          test -s holdout_input/holdout_predictions.csv
+
+      - name: Run portfolio simulation
+        run: |
+          python scripts/backtest_holdout_portfolio.py \
+            --input holdout_input/holdout_predictions.csv \
+            --out portfolio_results \
+            --initial-capital 100000000 \
+            --max-positions 10 \
+            --threshold 0.60
+
+      - name: Verify outputs
+        run: |
+          test -s portfolio_results/portfolio_backtest_report.json
+          test -s portfolio_results/portfolio_trades.csv
+          test -s portfolio_results/portfolio_daily.csv
+          ls -lh portfolio_results/
+
+      - name: Publish results
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="portfolio-backtest-$(date -u +%Y%m%d-%H%M%S)"
+          gh release create "$TAG" portfolio_results/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --target research/leakage-safe-pipeline-20261123 \
+            --title "TSE portfolio backtest $TAG" \
+            --notes "Holdout-only capital-constrained simulation. Drawdown is cost-basis / realized-only, not mark-to-market. Research only."
+          echo "Published release: $TAG"
