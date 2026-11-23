@@ -1,0 +1,85 @@
+
+name: Audit mid-term target distributions
+
+on:
+  workflow_dispatch:
+    inputs:
+      horizons:
+        description: Trading-session horizons
+        required: true
+        default: "20,40,60"
+      thresholds:
+        description: Absolute return thresholds
+        required: true
+        default: "0.017,0.05,0.10,0.15,0.20"
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/leakage-safe-pipeline-20261123
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Download verified dataset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p data/chunks
+          gh release download dataset-ohlc-20261123 \
+            --repo Javidshahadati/tse-engine \
+            --dir data/chunks
+
+      - name: Verify dataset hashes
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+
+          root=Path("data/chunks")
+          m=json.loads(
+              (root/"dataset-manifest.json").read_text()
+          )
+          expected={x["name"]:x["sha256"] for x in m["files"]}
+          files=sorted(root.glob("ohlc_part_*.json.gz"))
+
+          if len(files)!=6:
+              raise SystemExit("Expected six chunks")
+
+          for p in files:
+              if p.name not in expected:
+                  raise SystemExit("Unlisted file "+p.name)
+
+              digest=hashlib.sha256(p.read_bytes()).hexdigest()
+
+              if digest!=expected[p.name]:
+                  raise SystemExit("Hash mismatch "+p.name)
+
+          print("Six chunk hashes verified.")
+          PY
+
+      - name: Install dependencies
+        run: pip install numpy pandas
+
+      - name: Run audit
+        run: |
+          python scripts/audit_midterm_targets.py \
+            --input-dir data/chunks \
+            --horizons "${{ inputs.horizons }}" \
+            --thresholds "${{ inputs.thresholds }}"
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: midterm-target-audit
+          path: outputs/target_audit/
+          retention-days: 3
