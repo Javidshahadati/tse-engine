@@ -1,0 +1,100 @@
+name: TSE Final SQLite Training
+
+on:
+  workflow_dispatch:
+    inputs:
+      db_release_tag:
+        description: "Existing GitHub Release tag containing final_training.sqlite"
+        required: true
+        type: string
+      threshold:
+        description: "Positive target threshold (net return)"
+        required: true
+        default: "0.017"
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Checkout research branch
+        uses: actions/checkout@v4
+        with:
+          ref: research/leakage-safe-pipeline-20261123
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy pandas scikit-learn xgboost==2.1.4
+
+      - name: Download SQLite database from Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DB_RELEASE_TAG: ${{ inputs.db_release_tag }}
+        run: |
+          mkdir -p data
+          gh release download "$DB_RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern "final_training.sqlite" \
+            --dir data
+          test -s data/final_training.sqlite
+          ls -lh data/final_training.sqlite
+
+      - name: Validate database schema
+        run: |
+          python - <<'PY'
+          import sqlite3
+          p = "data/final_training.sqlite"
+          con = sqlite3.connect(p)
+          tables = {r[0] for r in con.execute(
+              "SELECT name FROM sqlite_master WHERE type='table'"
+          )}
+          assert "dataset" in tables, f"dataset table missing: {tables}"
+          cols = {r[1] for r in con.execute("PRAGMA table_info(dataset)")}
+          required = {"date", "symbol", "features", "target_20", "target_40", "target_60"}
+          assert required.issubset(cols), f"Missing columns: {required-cols}"
+          count = con.execute("SELECT COUNT(*) FROM dataset").fetchone()[0]
+          symbols = con.execute("SELECT COUNT(DISTINCT symbol) FROM dataset").fetchone()[0]
+          print(f"Rows: {count:,}; symbols: {symbols}")
+          assert count > 100000, "Unexpectedly small database."
+          con.close()
+          PY
+
+      - name: Train and evaluate
+        run: |
+          python scripts/train_final_sqlite.py \
+            --db data/final_training.sqlite \
+            --out results \
+            --threshold "${{ inputs.threshold }}" \
+            --embargo 60
+
+      - name: Publish results as a GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="training-results-$(date -u +%Y%m%d-%H%M%S)"
+          gh release create "$TAG" results/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --target research/leakage-safe-pipeline-20261123 \
+            --title "TSE training results $TAG" \
+            --notes "Walk-forward metrics, metadata, and final exploratory models. See metadata for data caveats."
+
+      - name: Add metrics to workflow summary
+        if: always()
+        run: |
+          if [ -f results/summary_metrics.csv ]; then
+            echo "## Walk-forward summary" >> "$GITHUB_STEP_SUMMARY"
+            echo '```csv' >> "$GITHUB_STEP_SUMMARY"
+            cat results/summary_metrics.csv >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
