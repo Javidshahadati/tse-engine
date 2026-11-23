@@ -1,0 +1,172 @@
+name: TSE Leakage-Safe Holdout Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      db_release_tag:
+        description: "Release containing the 83 SQLite parts"
+        required: true
+        type: string
+        default: "final-training-db-20261123"
+      threshold:
+        description: "Positive net return threshold"
+        required: true
+        type: string
+        default: "0.017"
+      embargo:
+        description: "Purged sessions; minimum 60"
+        required: true
+        type: string
+        default: "60"
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout development branch
+        uses: actions/checkout@v4
+        with:
+          ref: research/leakage-safe-pipeline-20261123
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy pandas scikit-learn xgboost==2.1.4
+
+      - name: Download SQLite parts
+        env:
+          GH_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+          DB_TAG: \${{ inputs.db_release_tag }}
+        run: |
+          mkdir -p data/parts
+          gh release download "$DB_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern "db-part-*-of-083.gzpart" \
+            --dir data/parts
+
+      - name: Reassemble and validate database
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import gzip
+          import shutil
+          import sqlite3
+
+          folder = Path("data/parts")
+          names = [
+              f"db-part-{i:03d}-of-083.gzpart"
+              for i in range(83)
+          ]
+
+          missing = [
+              n for n in names if not (folder / n).is_file()
+          ]
+
+          if missing:
+              raise RuntimeError(f"Missing parts: {missing}")
+
+          sizes = [(folder / n).stat().st_size for n in names]
+          chunk = 5 * 1024 * 1024
+
+          if any(s != chunk for s in sizes[:-1]):
+              raise RuntimeError("Invalid part size")
+
+          if not 0 < sizes[-1] <= chunk:
+              raise RuntimeError("Invalid final part size")
+
+          compressed = Path("data/database.gz")
+          database = Path("data/final_training.sqlite")
+
+          with compressed.open("wb") as dst:
+              for name in names:
+                  with (folder / name).open("rb") as src:
+                      shutil.copyfileobj(src, dst, 1024 * 1024)
+
+          with gzip.open(compressed, "rb") as src:
+              with database.open("wb") as dst:
+                  shutil.copyfileobj(src, dst, 4 * 1024 * 1024)
+
+          con = sqlite3.connect(
+              f"file:{database}?mode=ro", uri=True
+          )
+
+          try:
+              check = con.execute(
+                  "PRAGMA integrity_check"
+              ).fetchone()[0]
+
+              if check != "ok":
+                  raise RuntimeError(check)
+
+              rows = con.execute(
+                  "SELECT COUNT(*) FROM dataset"
+              ).fetchone()[0]
+
+              symbols = con.execute(
+                  "SELECT COUNT(DISTINCT symbol) FROM dataset"
+              ).fetchone()[0]
+
+              if rows < 100000 or symbols < 500:
+                  raise RuntimeError("Unexpected database size")
+
+              print("SQLite integrity: OK")
+              print("Rows:", rows)
+              print("Symbols:", symbols)
+
+          finally:
+              con.close()
+          PY
+
+      - name: Run purged holdout validation
+        run: |
+          python scripts/validate_final_holdout.py \
+            --db data/final_training.sqlite \
+            --out holdout_results \
+            --threshold "\${{ inputs.threshold }}" \
+            --embargo "\${{ inputs.embargo }}"
+
+      - name: Verify results
+        run: |
+          test -s holdout_results/holdout_validation_report.json
+          test -s holdout_results/holdout_predictions.csv
+          test -s holdout_results/xgb_h20_purged_holdout.json
+          test -s holdout_results/xgb_h40_purged_holdout.json
+          test -s holdout_results/xgb_h60_purged_holdout.json
+          ls -lh holdout_results/
+
+      - name: Publish validation release
+        env:
+          GH_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="holdout-validation-$(date -u +%Y%m%d-%H%M%S)"
+          gh release create "$TAG" holdout_results/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --target research/leakage-safe-pipeline-20261123 \
+            --title "TSE holdout validation $TAG" \
+            --notes "Chronological 80/20 holdout with 60-session purge. Forward-return cohorts are not a compounded portfolio backtest."
+
+      - name: Summary
+        if: always()
+        run: |
+          if [ -f holdout_results/holdout_validation_report.json ]; then
+            python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          d=json.load(open("holdout_results/holdout_validation_report.json", encoding="utf-8"))
+          print("| Horizon | ROC-AUC | AP % | Precision@0.60 % | Selected net return % |")
+          print("|---|---:|---:|---:|---:|")
+          for h,v in d["horizons"].items():
+              c=v["classification"]
+              r=v["forward_return_cohort"]
+              print(f"| H{h} | {c['roc_auc']:.4f} | {c['average_precision_pct']:.2f} | {c['precision_at_060_pct']:.2f} | {r['selected_mean_net_return_pct']} |")
+          PY
+          fi
