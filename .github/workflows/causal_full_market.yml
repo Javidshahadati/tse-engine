@@ -1,0 +1,163 @@
+
+name: TSE causal full-market feature build
+
+on:
+  push:
+    branches:
+      - research/leakage-safe-pipeline-20261123
+    paths:
+      - "scripts/build_features_causal_streaming.py"
+      - ".github/workflows/causal_full_market.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tse-causal-feature-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout development branch
+        uses: actions/checkout@v4
+        with:
+          ref: research/leakage-safe-pipeline-20261123
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install project dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Download verified dataset release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p data/chunks
+          gh release download dataset-ohlc-20261123 \
+            --repo Javidshahadati/tse-engine \
+            --dir data/chunks
+
+      - name: Verify manifest, hashes and all symbols
+        run: |
+          python - <<'PY'
+          import gzip
+          import hashlib
+          import json
+          from pathlib import Path
+
+          root = Path("data/chunks")
+          manifest = json.loads(
+              (root / "dataset-manifest.json").read_text(
+                  encoding="utf-8"
+              )
+          )
+
+          expected = {
+              x["name"]: x for x in manifest["files"]
+          }
+
+          chunks = sorted(
+              root.glob("ohlc_part_*.json.gz")
+          )
+
+          if len(chunks) != 6 or len(expected) != 6:
+              raise SystemExit("Expected six verified chunks")
+
+          symbols_seen = set()
+          total_rows = 0
+
+          for path in chunks:
+              meta = expected.get(path.name)
+              if not meta:
+                  raise SystemExit("Unexpected chunk: " + path.name)
+
+              digest = hashlib.sha256(
+                  path.read_bytes()
+              ).hexdigest()
+
+              if digest != meta["sha256"]:
+                  raise SystemExit(
+                      "SHA256 mismatch: " + path.name
+                  )
+
+              with gzip.open(
+                  path, "rt", encoding="utf-8"
+              ) as f:
+                  data = json.load(f)
+
+              if len(data) != meta["symbols"]:
+                  raise SystemExit(
+                      "Symbol count mismatch: " + path.name
+                  )
+
+              rows = sum(
+                  len(x.get("r", []))
+                  for x in data.values()
+              )
+
+              if rows != meta["rows"]:
+                  raise SystemExit(
+                      "Row count mismatch: " + path.name
+                  )
+
+              overlap = symbols_seen.intersection(data)
+              if overlap:
+                  raise SystemExit(
+                      "Overlapping symbols: "
+                      + str(list(overlap)[:5])
+                  )
+
+              symbols_seen.update(data)
+              total_rows += rows
+
+              print(
+                  "VERIFIED", path.name,
+                  len(data), "symbols",
+                  rows, "rows"
+              )
+
+          if len(symbols_seen) != 604:
+              raise SystemExit("Total symbols mismatch")
+
+          if total_rows != 1842402:
+              raise SystemExit("Total row count mismatch")
+
+          print(
+              "DATASET VERIFIED:",
+              len(symbols_seen), "symbols;",
+              total_rows, "rows"
+          )
+          PY
+
+      - name: Build causal features in streaming mode
+        run: |
+          python scripts/build_features_causal_streaming.py \
+            --input-dir data/chunks \
+            --output outputs/features_causal.parquet \
+            --swing 5
+
+      - name: Publish verified feature output as a Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="causal-features-${GITHUB_RUN_ID}"
+
+          gh release create "$TAG" \
+            outputs/features_causal.parquet \
+            outputs/features_causal_summary.json \
+            --repo Javidshahadati/tse-engine \
+            --target research/leakage-safe-pipeline-20261123 \
+            --title "Causal features ${GITHUB_RUN_ID}" \
+            --notes "Full-market causal feature build from the verified six-chunk dataset." \
+            --prerelease
+
