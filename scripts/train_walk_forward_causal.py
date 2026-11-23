@@ -75,6 +75,8 @@ def main():
         "entry_date", "entry_open", "exit_date", "exit_close",
         "future_return_gross", "future_return_net", "label",
         "ohl_geometry_valid", "close_in_trade_range",
+        # Unverified fixed 4.5% heuristic: never use as a model feature.
+        "IsLimitUp", "IsLimitDown",
     }
     features = [c for c in df.columns if c not in excluded
                 and pd.api.types.is_numeric_dtype(df[c])]
@@ -173,8 +175,14 @@ def main():
                              if len(selected) else None),
         "folds": fold_metrics,
         "production_model_trained": False,
-        "warning": "Research metrics only; validate execution, liquidity, "
-                   "price limits, corporate actions and survivorship bias.",
+        "input_price_basis": "adjusted",
+        "point_in_time_adjustment_verified": False,
+        "excluded_heuristic_features": ["IsLimitUp", "IsLimitDown"],
+        "warning": "Exploratory research only. Adjusted-price point-in-time "
+                   "safety is unverified and metrics may contain adjustment "
+                   "look-ahead. Validate raw or point-in-time prices, "
+                   "execution, liquidity, price limits and survivorship "
+                   "before any trading use.",
     }
     (out_dir / "metrics.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
