@@ -4,11 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       db_release_tag:
-        description: "Existing GitHub Release tag containing final_training.sqlite"
+        description: "Release containing 83 database parts"
         required: true
         type: string
+        default: "final-training-db-20261123"
       threshold:
-        description: "Positive target threshold (net return)"
+        description: "Positive net return threshold"
         required: true
         default: "0.017"
         type: string
@@ -20,6 +21,7 @@ jobs:
   train:
     runs-on: ubuntu-latest
     timeout-minutes: 360
+
     steps:
       - name: Checkout research branch
         uses: actions/checkout@v4
@@ -30,47 +32,126 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: "pip"
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install numpy pandas scikit-learn xgboost==2.1.4
 
-      - name: Download SQLite database from Release
+      - name: Download all 83 parts
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DB_RELEASE_TAG: ${{ inputs.db_release_tag }}
         run: |
-          mkdir -p data
+          mkdir -p data/parts
           gh release download "$DB_RELEASE_TAG" \
             --repo "$GITHUB_REPOSITORY" \
-            --pattern "final_training.sqlite" \
-            --dir data
-          test -s data/final_training.sqlite
-          ls -lh data/final_training.sqlite
+            --pattern "db-part-*-of-083.gzpart" \
+            --dir data/parts
 
-      - name: Validate database schema
+      - name: Reassemble and validate SQLite
         run: |
           python - <<'PY'
+          from pathlib import Path
+          import gzip
+          import shutil
           import sqlite3
-          p = "data/final_training.sqlite"
-          con = sqlite3.connect(p)
-          tables = {r[0] for r in con.execute(
-              "SELECT name FROM sqlite_master WHERE type='table'"
-          )}
-          assert "dataset" in tables, f"dataset table missing: {tables}"
-          cols = {r[1] for r in con.execute("PRAGMA table_info(dataset)")}
-          required = {"date", "symbol", "features", "target_20", "target_40", "target_60"}
-          assert required.issubset(cols), f"Missing columns: {required-cols}"
-          count = con.execute("SELECT COUNT(*) FROM dataset").fetchone()[0]
-          symbols = con.execute("SELECT COUNT(DISTINCT symbol) FROM dataset").fetchone()[0]
-          print(f"Rows: {count:,}; symbols: {symbols}")
-          assert count > 100000, "Unexpectedly small database."
-          con.close()
+
+          folder = Path("data/parts")
+          names = [
+              f"db-part-{i:03d}-of-083.gzpart"
+              for i in range(83)
+          ]
+
+          missing = [n for n in names if not (folder / n).is_file()]
+          if missing:
+              raise RuntimeError(f"Missing parts: {missing}")
+
+          sizes = [(folder / n).stat().st_size for n in names]
+          chunk_size = 5 * 1024 * 1024
+
+          if any(s != chunk_size for s in sizes[:-1]):
+              raise RuntimeError("Invalid size among first 82 parts")
+
+          if not 0 < sizes[-1] <= chunk_size:
+              raise RuntimeError("Invalid final part size")
+
+          compressed = Path("data/final_training.sqlite.gz")
+          database = Path("data/final_training.sqlite")
+
+          with compressed.open("wb") as out:
+              for name in names:
+                  with (folder / name).open("rb") as src:
+                      shutil.copyfileobj(src, out, 1024 * 1024)
+
+          print("Compressed bytes:", compressed.stat().st_size)
+
+          # Decompressing to EOF also checks gzip CRC.
+          with gzip.open(compressed, "rb") as src:
+              with database.open("wb") as out:
+                  shutil.copyfileobj(src, out, 4 * 1024 * 1024)
+
+          print("SQLite bytes:", database.stat().st_size)
+
+          con = sqlite3.connect(
+              f"file:{database}?mode=ro", uri=True
+          )
+
+          try:
+              check = con.execute(
+                  "PRAGMA integrity_check"
+              ).fetchone()[0]
+
+              if check != "ok":
+                  raise RuntimeError(f"SQLite error: {check}")
+
+              tables = {
+                  x[0] for x in con.execute(
+                      "SELECT name FROM sqlite_master WHERE type='table'"
+                  )
+              }
+
+              if "dataset" not in tables:
+                  raise RuntimeError("dataset table missing")
+
+              columns = {
+                  x[1] for x in con.execute(
+                      "PRAGMA table_info(dataset)"
+                  )
+              }
+
+              required = {
+                  "date", "symbol", "features",
+                  "target_20", "target_40", "target_60"
+              }
+
+              if not required.issubset(columns):
+                  raise RuntimeError(
+                      f"Missing columns: {required - columns}"
+                  )
+
+              rows = con.execute(
+                  "SELECT COUNT(*) FROM dataset"
+              ).fetchone()[0]
+
+              symbols = con.execute(
+                  "SELECT COUNT(DISTINCT symbol) FROM dataset"
+              ).fetchone()[0]
+
+              if rows < 100000 or symbols < 500:
+                  raise RuntimeError(
+                      f"Unexpected size: {rows} rows, {symbols} symbols"
+                  )
+
+              print("SQLite integrity_check: OK")
+              print("Rows:", rows)
+              print("Symbols:", symbols)
+
+          finally:
+              con.close()
           PY
 
-      - name: Train and evaluate
+      - name: Train H20 H40 H60
         run: |
           python scripts/train_final_sqlite.py \
             --db data/final_training.sqlite \
@@ -78,7 +159,17 @@ jobs:
             --threshold "${{ inputs.threshold }}" \
             --embargo 60
 
-      - name: Publish results as a GitHub Release
+      - name: Verify outputs
+        run: |
+          test -s results/walk_forward_metrics.csv
+          test -s results/summary_metrics.csv
+          test -s results/training_metadata.json
+          test -s results/xgb_h20.json
+          test -s results/xgb_h40.json
+          test -s results/xgb_h60.json
+          ls -lh results/
+
+      - name: Publish training results
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -87,14 +178,12 @@ jobs:
             --repo "$GITHUB_REPOSITORY" \
             --target research/leakage-safe-pipeline-20261123 \
             --title "TSE training results $TAG" \
-            --notes "Walk-forward metrics, metadata, and final exploratory models. See metadata for data caveats."
+            --notes "Walk-forward metrics and exploratory H20/H40/H60 models. Corporate-action validation remains outstanding."
 
-      - name: Add metrics to workflow summary
+      - name: Workflow summary
         if: always()
         run: |
           if [ -f results/summary_metrics.csv ]; then
             echo "## Walk-forward summary" >> "$GITHUB_STEP_SUMMARY"
-            echo '```csv' >> "$GITHUB_STEP_SUMMARY"
             cat results/summary_metrics.csv >> "$GITHUB_STEP_SUMMARY"
-            echo '```' >> "$GITHUB_STEP_SUMMARY"
           fi
