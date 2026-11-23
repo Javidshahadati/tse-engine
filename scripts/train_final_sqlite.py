@@ -244,7 +244,8 @@ def main():
         )
         final_model.fit(X[final_idx], y_final, verbose=False)
         model_path = os.path.join(args.out, f"xgb_h{horizon}.json")
-        final_model.save_model(model_path)
+        # Save Booster directly to avoid sklearn-wrapper metadata issues.
+        final_model.get_booster().save_model(model_path)
         final_models[str(horizon)] = {
             "model_file": os.path.basename(model_path),
             "training_rows": int(len(final_idx)),
