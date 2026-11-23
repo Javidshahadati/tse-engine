@@ -1,23 +1,12 @@
 name: TSE Leakage-Safe Holdout Validation
 
 on:
-  workflow_dispatch:
-    inputs:
-      db_release_tag:
-        description: "Release containing the 83 SQLite parts"
-        required: true
-        type: string
-        default: "final-training-db-20261123"
-      threshold:
-        description: "Positive net return threshold"
-        required: true
-        type: string
-        default: "0.017"
-      embargo:
-        description: "Purged sessions; minimum 60"
-        required: true
-        type: string
-        default: "60"
+  push:
+    branches:
+      - research/leakage-safe-pipeline-20261123
+    paths:
+      - .github/workflows/validate_holdout.yml
+      - scripts/validate_final_holdout.py
 
 permissions:
   contents: write
@@ -45,8 +34,8 @@ jobs:
 
       - name: Download SQLite parts
         env:
-          GH_TOKEN: \${{ secrets.GITHUB_TOKEN }}
-          DB_TAG: \${{ inputs.db_release_tag }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DB_TAG: final-training-db-20261123
         run: |
           mkdir -p data/parts
           gh release download "$DB_TAG" \
@@ -132,8 +121,8 @@ jobs:
           python scripts/validate_final_holdout.py \
             --db data/final_training.sqlite \
             --out holdout_results \
-            --threshold "\${{ inputs.threshold }}" \
-            --embargo "\${{ inputs.embargo }}"
+            --threshold "0.017" \
+            --embargo "60"
 
       - name: Verify results
         run: |
@@ -146,7 +135,7 @@ jobs:
 
       - name: Publish validation release
         env:
-          GH_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="holdout-validation-$(date -u +%Y%m%d-%H%M%S)"
           gh release create "$TAG" holdout_results/* \
