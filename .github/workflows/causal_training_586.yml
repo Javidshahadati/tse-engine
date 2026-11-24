@@ -55,19 +55,14 @@ jobs:
         run: |
           python - <<'PY'
           import pandas as pd
-          import pickle
-          import pickletools
           from pathlib import Path
           p = Path("inputs/features_causal_586.pkl")
           print("Pandas:", pd.__version__)
-          assert pd.__version__ == "3.0.0", f"Unexpected pandas version: {pd.__version__}"
+          assert pd.__version__ == "3.0.0"
           print("Pickle protocol:", p.open("rb").read(2))
-          try:
-              df = pd.read_pickle(p)
-              print("PICKLE LOAD: PASS", df.shape)
-          except Exception as e:
-              print("PICKLE LOAD: FAIL", repr(e))
-              raise
+          df = pd.read_pickle(p)
+          print("PICKLE LOAD: PASS", df.shape)
+          assert df.shape == (1472718, 76)
           PY
 
       - name: Train H20 H40 H60
@@ -91,25 +86,24 @@ jobs:
             test -s "outputs/causal_walk_forward/H${H}/oof_ensemble_equal_weight.parquet"
           done
 
-      - name: Publish reports and models
+      - name: Package all reports and models
+        run: |
+          test -s outputs/causal_walk_forward/metrics_all_horizons.json
+          tar -czf "tse_causal_training_${GITHUB_RUN_ID}.tar.gz" \
+            -C outputs causal_walk_forward
+          test -s "tse_causal_training_${GITHUB_RUN_ID}.tar.gz"
+          sha256sum "tse_causal_training_${GITHUB_RUN_ID}.tar.gz"
+          ls -lh "tse_causal_training_${GITHUB_RUN_ID}.tar.gz"
+
+      - name: Publish single uniquely named archive
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="causal-training-586-${GITHUB_RUN_ID}"
-          find outputs/causal_walk_forward -type f -print
           gh release create "$TAG" \
-            outputs/causal_walk_forward/metrics_all_horizons.json \
-            outputs/causal_walk_forward/H20/metrics.json \
-            outputs/causal_walk_forward/H20/oof_ensemble_equal_weight.parquet \
-            outputs/causal_walk_forward/H20/models/*/* \
-            outputs/causal_walk_forward/H40/metrics.json \
-            outputs/causal_walk_forward/H40/oof_ensemble_equal_weight.parquet \
-            outputs/causal_walk_forward/H40/models/*/* \
-            outputs/causal_walk_forward/H60/metrics.json \
-            outputs/causal_walk_forward/H60/oof_ensemble_equal_weight.parquet \
-            outputs/causal_walk_forward/H60/models/*/* \
+            "tse_causal_training_${GITHUB_RUN_ID}.tar.gz" \
             --repo Javidshahadati/tse-engine \
             --target research/leakage-safe-pipeline-20261123 \
             --title "TSE multi-model research ${GITHUB_RUN_ID}" \
-            --notes "H20/H40/H60 purged walk-forward research; no production model claim." \
+            --notes "Complete H20/H40/H60 purged walk-forward outputs: metrics, OOF predictions, all per-fold models and fold imputers. Research only; not production-approved." \
             --prerelease
