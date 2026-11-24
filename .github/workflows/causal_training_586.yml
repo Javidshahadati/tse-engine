@@ -1,7 +1,12 @@
 name: TSE causal training - verified 586 symbols
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - research/leakage-safe-pipeline-20261123
+    paths:
+      - ".github/workflows/causal_training_586.yml"
+      - "scripts/train_walk_forward_causal.py"
 
 permissions:
   contents: write
