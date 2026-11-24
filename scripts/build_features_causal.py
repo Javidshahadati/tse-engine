@@ -1,8 +1,9 @@
-"""Build causal OHLCV features from the verified full file or six chunks."""
+"""Build causal features from the validated 586-symbol SQLite datasets."""
 import argparse
-import gzip
 import json
+import sqlite3
 import sys
+from contextlib import closing
 from pathlib import Path
 
 import pandas as pd
@@ -15,152 +16,197 @@ from features.price_action import build_pa_features
 from features.rtm_causal import build_rtm_features_causal
 
 
-def load_json_gz(path):
-    with gzip.open(path, "rt", encoding="utf-8") as f:
-        obj = json.load(f)
-    if not isinstance(obj, dict):
-        raise ValueError(f"Expected JSON object: {path}")
-    return obj
-
-
-def load_universe(input_path):
-    path = Path(input_path)
-    if path.is_file():
-        return load_json_gz(path), [str(path)]
-    if not path.is_dir():
+def connect_readonly(path):
+    path = Path(path).expanduser().resolve()
+    if not path.is_file():
         raise FileNotFoundError(path)
-    chunks = sorted(path.glob("*.json.gz"))
-    if not chunks:
-        raise FileNotFoundError(f"No .json.gz chunks in {path}")
-    merged = {}
-    for chunk_path in chunks:
-        chunk = load_json_gz(chunk_path)
-        overlap = set(merged).intersection(chunk)
-        if overlap:
-            raise ValueError(f"Overlapping chunk symbols: {sorted(overlap)[:5]}")
-        merged.update(chunk)
-    return merged, [str(p) for p in chunks]
+    return sqlite3.connect(f"{path.as_uri()}?mode=ro", uri=True)
 
 
-def normalize_rows(rows, symbol):
-    frame = pd.DataFrame(rows)
-    required = ["d", "o", "h", "l", "c", "v"]
-    missing = set(required) - set(frame.columns)
-    if missing:
-        raise ValueError(f"{symbol}: missing fields {sorted(missing)}")
-    frame = frame[required].copy()
-    frame["d"] = pd.to_numeric(frame["d"], errors="coerce")
-    for col in required[1:]:
+def read_targets(path):
+    with closing(connect_readonly(path)) as con:
+        tables = pd.read_sql_query(
+            "SELECT name FROM sqlite_master WHERE type='table'", con
+        )["name"].tolist()
+        if "dataset" not in tables:
+            raise RuntimeError("Missing dataset table")
+        targets = pd.read_sql_query(
+            """SELECT symbol, CAST(date AS INTEGER) AS date,
+                      target_20, target_40, target_60 FROM dataset""",
+            con,
+        )
+
+    targets["symbol"] = targets["symbol"].astype(str)
+    targets["date"] = pd.to_numeric(targets["date"], errors="coerce")
+    if targets["date"].isna().any():
+        raise RuntimeError("Invalid dates in target database")
+    targets["date"] = targets["date"].astype("int64")
+
+    symbols = sorted(targets.symbol.unique().tolist())
+    if len(symbols) != 586:
+        raise RuntimeError(
+            f"Expected exactly 586 symbols; found {len(symbols)}"
+        )
+    if targets.duplicated(["symbol", "date"]).any():
+        raise RuntimeError("Duplicate target keys")
+    return targets, symbols
+
+
+def read_bars(path, symbols):
+    with closing(connect_readonly(path)) as con:
+        tables = pd.read_sql_query(
+            "SELECT name FROM sqlite_master WHERE type='table'", con
+        )["name"].tolist()
+        if "clean" not in tables:
+            raise RuntimeError("Missing clean table in OHLC database")
+        marks = ",".join(["?"] * len(symbols))
+        bars = pd.read_sql_query(
+            f"SELECT symbol,d,o,h,l,c,v FROM clean WHERE symbol IN ({marks})",
+            con, params=symbols
+        )
+    bars["symbol"] = bars["symbol"].astype(str)
+    bars["d"] = pd.to_numeric(bars["d"], errors="coerce")
+    if bars["d"].isna().any():
+        raise RuntimeError("Invalid OHLC dates")
+    bars["d"] = bars["d"].astype("int64")
+    return bars
+
+
+def normalize(frame, symbol):
+    cols = ["d", "o", "h", "l", "c", "v"]
+    frame = frame[cols].copy()
+    for col in cols[1:]:
         frame[col] = pd.to_numeric(frame[col], errors="coerce")
     frame = frame.dropna(subset=["d", "o", "h", "l", "c"])
     frame["d"] = frame["d"].astype("int64")
     frame = frame.sort_values("d", kind="mergesort").reset_index(drop=True)
-    if frame["d"].duplicated().any():
+
+    if frame.d.duplicated().any():
         raise ValueError(f"{symbol}: duplicate dates")
     if (frame[["o", "h", "l", "c"]] <= 0).any().any():
         raise ValueError(f"{symbol}: non-positive OHLC")
-    if (frame["v"] < 0).any():
+    if (frame.v.dropna() < 0).any():
         raise ValueError(f"{symbol}: negative volume")
-    # pClosing (c) is not necessarily inside the intraday
-    # traded range. Validate geometry using O/H/L only.
+
     frame["ohl_geometry_valid"] = (
-        (frame["h"] >= frame[["o", "l"]].max(axis=1)) &
-        (frame["l"] <= frame[["o", "h"]].min(axis=1)) &
-        (frame["h"] >= frame["l"])
+        (frame.h >= frame[["o", "l"]].max(axis=1)) &
+        (frame.l <= frame[["o", "h"]].min(axis=1)) &
+        (frame.h >= frame.l)
     )
     frame["close_in_trade_range"] = (
-        (frame["c"] >= frame["l"]) &
-        (frame["c"] <= frame["h"])
+        (frame.c >= frame.l) & (frame.c <= frame.h)
     )
     return frame
 
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--input", default="data/ohlc_full.json.gz",
-                   help="Full gzip JSON or directory containing six gzip JSON chunks")
-    p.add_argument("--output", default="outputs/features_causal.parquet")
+    p.add_argument("--ohlc-sqlite", required=True)
+    p.add_argument("--targets-sqlite", required=True)
+    p.add_argument("--output", default="outputs/features_causal_586.parquet")
     p.add_argument("--swing", type=int, default=5)
-    args = p.parse_args()
+    a = p.parse_args()
 
-    universe, sources = load_universe(args.input)
+    if a.swing < 1:
+        raise ValueError("swing must be >= 1")
+
+    targets, symbols = read_targets(a.targets_sqlite)
+    bars = read_bars(a.ohlc_sqlite, symbols)
+
     frames, errors = [], []
-    print(f"Loaded {len(universe)} symbols from {len(sources)} file(s)")
-
-    for i, (symbol, stock) in enumerate(universe.items(), 1):
+    for i, symbol in enumerate(symbols, 1):
         try:
-            raw = normalize_rows(stock.get("r", []), symbol)
+            raw = normalize(
+                bars.loc[bars.symbol == symbol, ["d", "o", "h", "l", "c", "v"]],
+                symbol
+            )
             if raw.empty:
-                errors.append({"symbol": symbol, "error": "no valid rows"})
-                continue
-            # Preserve original prices. Mask only suspect H/L
-            # inputs for features that depend on traded geometry.
-            feature_raw = raw.copy()
-            bad_geometry = ~raw["ohl_geometry_valid"]
-            feature_raw.loc[bad_geometry, ["h", "l"]] = float("nan")
+                raise ValueError("No valid OHLC rows")
 
-            tech = build_technical_features(feature_raw)
-            pa = build_pa_features(feature_raw)
-            rtm = build_rtm_features_causal(
-                feature_raw, swing=args.swing
-            )
-            feats = pd.concat([tech, pa, rtm], axis=1)
+            x = raw.copy()
+            x.loc[~raw.ohl_geometry_valid, ["h", "l"]] = float("nan")
 
-            out = feats.copy()
-            out["ohl_geometry_valid"] = (
-                raw["ohl_geometry_valid"].astype("int8").to_numpy()
-            )
-            out["close_in_trade_range"] = (
-                raw["close_in_trade_range"].astype("int8").to_numpy()
-            )
-            out.insert(0, "symbol", symbol)
-            out.insert(1, "date", raw["d"].to_numpy())
-            for col in ["o", "h", "l", "c", "v"]:
-                out[{"o":"open", "h":"high", "l":"low",
-                     "c":"close", "v":"volume"}[col]] = raw[col].to_numpy()
-            frames.append(out)
-            if i % 50 == 0:
-                print(f"Processed {i}/{len(universe)}")
-        except Exception as exc:
-            errors.append({"symbol": symbol, "error": str(exc)[:300]})
+            feats = pd.concat([
+                build_technical_features(x),
+                build_pa_features(x),
+                build_rtm_features_causal(x, swing=a.swing)
+            ], axis=1)
 
-    if not frames:
-        raise RuntimeError("No symbols processed successfully")
-    combined = pd.concat(frames, ignore_index=True)
-    combined = combined.sort_values(["symbol", "date"]).reset_index(drop=True)
-    excluded = {"symbol", "date", "open", "high", "low", "close", "volume"}
-    feature_names = [c for c in combined.columns if c not in excluded]
+            feats["ohl_geometry_valid"] = raw.ohl_geometry_valid.astype("int8").to_numpy()
+            feats["close_in_trade_range"] = raw.close_in_trade_range.astype("int8").to_numpy()
+            feats.insert(0, "symbol", symbol)
+            feats.insert(1, "date", raw.d.to_numpy())
 
-    output = Path(args.output)
-    if not output.is_absolute():
-        output = ROOT / output
-    output.parent.mkdir(parents=True, exist_ok=True)
-    combined.to_parquet(output, index=False)
+            for src, dst in (
+                ("o", "open"), ("h", "high"), ("l", "low"),
+                ("c", "close"), ("v", "volume")
+            ):
+                feats[dst] = raw[src].to_numpy()
+
+            frames.append(feats)
+            if i % 50 == 0 or i == 586:
+                print(f"Processed {i}/586", flush=True)
+
+        except Exception as e:
+            errors.append({"symbol": symbol, "error": str(e)[:300]})
+
+    if errors or len(frames) != 586:
+        raise RuntimeError(
+            "Build aborted; partial 586-symbol output is forbidden: "
+            + json.dumps(errors[:20], ensure_ascii=False)
+        )
+
+    features = pd.concat(frames, ignore_index=True)
+    if features.duplicated(["symbol", "date"]).any():
+        raise RuntimeError("Duplicate feature keys")
+
+    result = features.merge(
+        targets, on=["symbol", "date"], how="inner",
+        validate="one_to_one"
+    )
+    if len(result) != len(targets):
+        raise RuntimeError(
+            f"Missing OHLC matches: {len(targets) - len(result)}"
+        )
+    if result.symbol.nunique() != 586:
+        raise RuntimeError("Final universe is not exactly 586 symbols")
+
+    result = result.sort_values(["symbol", "date"]).reset_index(drop=True)
+    excluded = {
+        "symbol", "date", "open", "high", "low", "close", "volume",
+        "target_20", "target_40", "target_60"
+    }
+    feature_names = [
+        c for c in result.columns
+        if c not in excluded and pd.api.types.is_numeric_dtype(result[c])
+    ]
+
+    out = Path(a.output)
+    if not out.is_absolute():
+        out = ROOT / out
+    out.parent.mkdir(parents=True, exist_ok=True)
+    result.to_parquet(out, index=False)
 
     summary = {
-        "pipeline": "causal_ohlcv_v1",
-        "input_sources": sources,
-        "input_symbols": len(universe),
-        "processed_symbols": int(combined["symbol"].nunique()),
-        "failed_symbols": errors,
-        "rows": int(len(combined)),
-        "date_min": int(combined["date"].min()),
-        "date_max": int(combined["date"].max()),
+        "pipeline": "causal_ohlcv_authoritative_targets_v2",
+        "universe_symbols": int(result.symbol.nunique()),
+        "rows": int(len(result)),
         "feature_count": len(feature_names),
         "feature_names": feature_names,
-        "fundamentals_included": False,
-        "rtm_swing_confirmation_bars": args.swing,
-        "warmup_rows_removed": 0,
-        "missing_feature_values_filled": False,
+        "target_source": "final_training.sqlite dataset table",
+        "target_recomputed": False,
+        "target_null_counts": {
+            c: int(result[c].isna().sum())
+            for c in ("target_20", "target_40", "target_60")
+        },
+        "sqlite_sources_read_only": True,
+        "partial_build_allowed": False
     }
-    summary_path = output.with_name("features_causal_summary.json")
-    summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2),
-                            encoding="utf-8")
-    print(f"BUILD COMPLETE: {combined['symbol'].nunique()} symbols, "
-          f"{len(combined):,} rows, {len(feature_names)} features")
-    print(f"Parquet: {output}")
-    print(f"Summary: {summary_path}")
-    print(f"Failed symbols: {len(errors)}")
+    out.with_name("features_causal_summary.json").write_text(
+        json.dumps(summary, ensure_ascii=False, indent=2),
+        encoding="utf-8"
+    )
+    print(f"BUILD COMPLETE: 586 symbols, {len(result):,} rows")
 
 
 if __name__ == "__main__":
