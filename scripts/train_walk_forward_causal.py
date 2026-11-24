@@ -39,10 +39,28 @@ def train_one(source, horizon, args, root):
     excluded = RAW | {
         "entry_date", "exit_date", "future_return_net", "label"
     }
+
+    FEATURE_ALLOWLIST = ['RSI', 'RSI_slope', 'MACD', 'MACD_Sig', 'MACD_Hist', 'MACD_slope', 'EMA20', 'EMA50', 'EMA200', 'SMA20', 'BB_pct', 'BB_width', 'ATR_pct', 'Stoch', 'Stoch_D', 'WillR', 'CCI', 'MFI', 'OBV_slope', 'ADX', 'Return_1d', 'Return_5d', 'Return_20d', 'Volatility_20d', 'Price_EMA50_ratio', 'Price_EMA200_ratio', 'Volume_ratio', 'High_Low_range', 'Close_Open', 'Gap', 'Doji', 'Hammer', 'ShootingStar', 'BullEngulf', 'BearEngulf', 'InsideBar', 'OutsideBar', 'Body_pct', 'UpperWick_pct', 'LowerWick_pct', 'ClosePosition', 'IsLimitUp', 'IsLimitDown', 'DistToHigh20', 'DistToLow20', 'DistToHigh50', 'DistToLow50', 'RangePos20', 'BodyRange_ratio', 'Uptrend', 'Downtrend', 'BreakHigh20', 'BreakLow20', 'BreakHigh50', 'BreakLow50', 'Consolidation', 'ConsecUp_3', 'ConsecDown_3', 'BOS_Bull', 'BOS_Bear', 'CHoCH_Bull', 'CHoCH_Bear', 'FVG_Bull', 'FVG_Bear', 'ohl_geometry_valid', 'close_in_trade_range']
+
+    missing_features = sorted(
+        set(FEATURE_ALLOWLIST) - set(df.columns)
+    )
+    if missing_features:
+        raise RuntimeError(
+            f"Missing approved features: {missing_features}"
+        )
+
     features = [
-        c for c in df.columns
-        if c not in excluded and pd.api.types.is_numeric_dtype(df[c])
+        c for c in FEATURE_ALLOWLIST
+        if c not in excluded
+        and pd.api.types.is_numeric_dtype(df[c])
     ]
+
+    if len(features) != 62:
+        raise RuntimeError(
+            f"Expected 62 model features, got {len(features)}"
+        )
+
     if not features:
         raise RuntimeError("No numeric features")
 
@@ -127,7 +145,7 @@ def train_one(source, horizon, args, root):
         float(roc_auc_score(oof.label, oof.probability))
         if oof.label.nunique() == 2 else None
     )
-    oof.to_parquet(out / "oof_predictions.parquet", index=False)
+    oof.to_pickle(out / "oof_predictions.pkl")
 
     report = {
         "pipeline": "causal_walk_forward_authoritative_targets_v2",
@@ -141,6 +159,8 @@ def train_one(source, horizon, args, root):
         "feature_count": len(features),
         "feature_names": features,
         "oof_rows": len(oof),
+        "oof_file": "oof_predictions.pkl",
+        "oof_format": "pickle",
         "overall_oof_auc": auc,
         "oof_signal_count": len(selected),
         "oof_mean_net_return": (
@@ -167,7 +187,7 @@ def train_one(source, horizon, args, root):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--input", default="outputs/features_causal_586.parquet")
+    p.add_argument("--input", default="outputs/features_causal_586.pkl")
     p.add_argument("--horizons", nargs="+", type=int,
                    choices=[20, 40, 60], default=[20, 40, 60])
     p.add_argument("--label-threshold", type=float, default=0.017)
@@ -179,7 +199,7 @@ def main():
     if a.folds < 2 or not 0 < a.signal_threshold < 1:
         raise ValueError("Invalid folds or signal threshold")
 
-    source = pd.read_parquet(a.input)
+    source = pd.read_pickle(a.input)
     required = {
         "symbol", "date", "target_20", "target_40", "target_60"
     }
