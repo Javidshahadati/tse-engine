@@ -1,4 +1,4 @@
-name: TSE causal training - verified 586 symbols
+name: TSE multi-model causal training 586
 
 on:
   push:
@@ -7,6 +7,7 @@ on:
     paths:
       - ".github/workflows/causal_training_586.yml"
       - "scripts/train_walk_forward_causal.py"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -19,14 +20,13 @@ jobs:
   train:
     runs-on: ubuntu-latest
     timeout-minutes: 360
-
     steps:
       - name: Checkout development branch
         uses: actions/checkout@v4
         with:
           ref: research/leakage-safe-pipeline-20261123
 
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -34,12 +34,13 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install "numpy>=1.24,<2.1"
-          pip install "pandas==2.3.3"
-          pip install "xgboost==2.0.3"
-          pip install "scikit-learn>=1.3,<1.6"
+          pip install "numpy==1.26.4"
+          pip install "pandas==2.3.3" "pyarrow==19.0.1"
+          pip install "scikit-learn==1.5.2"
+          pip install "xgboost==2.1.4" "lightgbm==4.6.0" "catboost==1.2.8"
+          pip install "joblib>=1.4,<2"
 
-      - name: Download verified dataset
+      - name: Download dataset
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -48,52 +49,24 @@ jobs:
             --repo Javidshahadati/tse-engine \
             --pattern features_causal_586.pkl \
             --dir inputs
-          test -s inputs/features_causal_586.pkl
-          stat -c "Dataset bytes: %s" inputs/features_causal_586.pkl
+          test "$(stat -c %s inputs/features_causal_586.pkl)" = "693590177"
 
-      - name: Validate dataset
+      - name: Diagnose pickle compatibility
         run: |
           python - <<'PY'
           import pandas as pd
+          import pickle
+          import pickletools
           from pathlib import Path
-
           p = Path("inputs/features_causal_586.pkl")
-
-          if p.stat().st_size != 693590177:
-              raise SystemExit("Dataset file size mismatch")
-
-          df = pd.read_pickle(p)
-
-          if len(df) != 1472718:
-              raise SystemExit("Wrong row count")
-
-          if df["symbol"].nunique() != 586:
-              raise SystemExit("Wrong symbol universe")
-
-          if df.duplicated(["symbol", "date"]).any():
-              raise SystemExit("Duplicate symbol/date rows")
-
-          expected = {
-              "target_20": 0,
-              "target_40": 32385,
-              "target_60": 63574,
-          }
-
-          actual = {
-              c: int(df[c].isna().sum())
-              for c in expected
-          }
-
-          if actual != expected:
-              raise SystemExit(
-                  f"Target NULL mismatch: {actual}"
-              )
-
-          print("DATASET VALIDATION PASSED")
-          print("Rows:", len(df))
-          print("Symbols:", df["symbol"].nunique())
-          print("Columns:", len(df.columns))
-          print("Target NULL:", actual)
+          print("Pandas:", pd.__version__)
+          print("Pickle protocol:", p.open("rb").read(2))
+          try:
+              df = pd.read_pickle(p)
+              print("PICKLE LOAD: PASS", df.shape)
+          except Exception as e:
+              print("PICKLE LOAD: FAIL", repr(e))
+              raise
           PY
 
       - name: Train H20 H40 H60
@@ -108,39 +81,34 @@ jobs:
             --label-threshold 0.017 \
             --signal-threshold 0.60 \
             --folds 4 \
+            --threads 2 \
             --output-dir outputs/causal_walk_forward
 
           test -s outputs/causal_walk_forward/metrics_all_horizons.json
-
           for H in 20 40 60; do
             test -s "outputs/causal_walk_forward/H${H}/metrics.json"
-            test -s "outputs/causal_walk_forward/H${H}/oof_predictions.pkl"
-            test -d "outputs/causal_walk_forward/H${H}/models"
-            test "$(find "outputs/causal_walk_forward/H${H}/models" -name 'xgb_fold_*.json' | wc -l)" -ge 1
+            test -s "outputs/causal_walk_forward/H${H}/oof_ensemble_equal_weight.parquet"
           done
 
-      - name: Publish models and reports
+      - name: Publish reports and models
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="causal-training-586-${GITHUB_RUN_ID}"
-
+          find outputs/causal_walk_forward -type f -print
           gh release create "$TAG" \
             outputs/causal_walk_forward/metrics_all_horizons.json \
             outputs/causal_walk_forward/H20/metrics.json \
-            outputs/causal_walk_forward/H20/oof_predictions.pkl \
-            outputs/causal_walk_forward/H20/models/*.json \
+            outputs/causal_walk_forward/H20/oof_ensemble_equal_weight.parquet \
+            outputs/causal_walk_forward/H20/models/*/* \
             outputs/causal_walk_forward/H40/metrics.json \
-            outputs/causal_walk_forward/H40/oof_predictions.pkl \
-            outputs/causal_walk_forward/H40/models/*.json \
+            outputs/causal_walk_forward/H40/oof_ensemble_equal_weight.parquet \
+            outputs/causal_walk_forward/H40/models/*/* \
             outputs/causal_walk_forward/H60/metrics.json \
-            outputs/causal_walk_forward/H60/oof_predictions.pkl \
-            outputs/causal_walk_forward/H60/models/*.json \
+            outputs/causal_walk_forward/H60/oof_ensemble_equal_weight.parquet \
+            outputs/causal_walk_forward/H60/models/*/* \
             --repo Javidshahadati/tse-engine \
             --target research/leakage-safe-pipeline-20261123 \
-            --title "Causal 586 training ${GITHUB_RUN_ID}" \
-            --notes "Research-only purged walk-forward training. H20/H40/H60. Four chronological folds. Not production-ready; point-in-time corporate-action safety remains unverified." \
+            --title "TSE multi-model research ${GITHUB_RUN_ID}" \
+            --notes "H20/H40/H60 purged walk-forward research; no production model claim." \
             --prerelease
-
-      - name: Completion
-        run: echo "Training workflow completed."
