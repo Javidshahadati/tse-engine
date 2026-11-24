@@ -71,7 +71,6 @@ def make_models(pos_weight, seed, threads):
             n_jobs=threads, random_state=seed
         ),
         "logistic_regression": make_pipeline(
-            SimpleImputer(strategy="median"),
             StandardScaler(),
             LogisticRegression(
                 C=0.1, max_iter=400, class_weight="balanced",
@@ -79,7 +78,6 @@ def make_models(pos_weight, seed, threads):
             )
         ),
         "mlp": make_pipeline(
-            SimpleImputer(strategy="median"),
             StandardScaler(),
             MLPClassifier(
                 hidden_layer_sizes=(128, 64), alpha=0.001,
@@ -193,12 +191,29 @@ def train_horizon(source, horizon, args, output):
         fold_dir = models_dir / f"fold_{fold+1}"
         fold_dir.mkdir(exist_ok=True)
 
+        # Fit imputation ONLY on this fold's training rows.
+        # Apply the same fitted transform to held-out test rows.
+        # Preserve all 62 columns, including entirely-missing columns.
+        imputer = SimpleImputer(
+            strategy="median",
+            keep_empty_features=True
+        )
+        x_train = imputer.fit_transform(train[features])
+        x_test = imputer.transform(test[features])
+
+        # Save preprocessing with the fold models.
+        joblib.dump(
+            imputer,
+            fold_dir / "feature_imputer.joblib",
+            compress=3
+        )
+
         for name, estimator in make_models(
             weight, args.seed, args.threads
         ).items():
             model = clone(estimator)
-            model.fit(train[features], y)
-            probability = model.predict_proba(test[features])[:, 1]
+            model.fit(x_train, y)
+            probability = model.predict_proba(x_test)[:, 1]
             fold_predictions[name] = probability
 
             part = test[[
