@@ -118,8 +118,15 @@ def train_horizon(source, horizon, args, output):
     df["entry_date"] = grouped.date.shift(-1)
     df["exit_date"] = df[f"exit_date_{horizon}"]
     df["future_return_net"] = pd.to_numeric(df[target], errors="coerce")
-    df = df[~df[f"event_cross_{horizon}"]].dropna(subset=["entry_date", "exit_date", "future_return_net"]).copy()
-
+    event_cross_col = f"event_cross_{horizon}"
+    for flag in ("event_window", event_cross_col):
+        if df[flag].isna().any(): raise RuntimeError(f"H{horizon}: null values in {flag}")
+        if not df[flag].isin([True, False, 0, 1]).all(): raise RuntimeError(f"H{horizon}: invalid values in {flag}")
+        df[flag] = df[flag].astype(bool)
+    target_valid = df.future_return_net.notna(); event_window_mask = df.event_window; event_cross_mask = df[event_cross_col]
+    filter_audit = {"source_rows":int(len(df)),"target_valid_rows":int(target_valid.sum()),"event_window_rows_with_valid_target":int((target_valid & event_window_mask).sum()),"event_cross_rows_with_valid_target":int((target_valid & event_cross_mask).sum()),"overlap_rows_with_valid_target":int((target_valid & event_window_mask & event_cross_mask).sum()),"excluded_event_union_rows_with_valid_target":int((target_valid & (event_window_mask | event_cross_mask)).sum())}
+    df = df.loc[~(event_window_mask | event_cross_mask)].dropna(subset=["entry_date","exit_date","future_return_net"]).copy()
+    filter_audit["eligible_rows_after_event_and_null_filters"] = int(len(df))
     if df.empty:
         raise RuntimeError(f"H{horizon}: no valid rows")
 
@@ -170,7 +177,8 @@ def train_horizon(source, horizon, args, output):
         # Purge: هیچ نمونه آموزشی که افق خروجش به شروع آزمون برسد مجاز نیست.
         train = df[df.exit_date < start].copy()
         test = df[(df.date >= start) & (df.date < end)].copy()
-
+        for split_name, split_df in (("train",train),("test",test)):
+            if split_df.event_window.any() or split_df[event_cross_col].any(): raise RuntimeError(f"H{horizon} fold {fold+1}: event rows leaked into {split_name}")
         if train.empty or test.empty or train.label.nunique() < 2:
             folds_report.append({
                 "fold": fold + 1, "status": "skipped",
@@ -295,6 +303,7 @@ def train_horizon(source, horizon, args, output):
         "second_cost_deduction": False,
         "feature_count": len(features),
         "feature_names": features,
+        "event_filter_audit": filter_audit,
         "label_threshold_net": args.label_threshold,
         "signal_threshold": args.signal_threshold,
         "models": reports,
@@ -330,6 +339,7 @@ def main():
     required = {"symbol", "date", "target_raw_20", "target_raw_40", "target_raw_60"}
     required |= {f"exit_date_{h}" for h in args.horizons}
     required |= {f"event_cross_{h}" for h in args.horizons}
+    required.add("event_window")
     missing = required - set(df.columns)
     if missing: raise RuntimeError(f"Missing columns: {sorted(missing)}")
     if df.duplicated(["symbol", "date"]).any(): raise RuntimeError("Duplicate symbol/date keys.")
