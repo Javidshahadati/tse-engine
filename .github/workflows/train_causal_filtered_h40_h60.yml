@@ -53,7 +53,7 @@ jobs:
           mkdir -p run_outputs
           python scripts/train_walk_forward_causal_filtered.py \
             --input /tmp/features_causal_585_walkforward_compact.pkl \
-            --horizons 40 60 \
+            --horizons 20 40 60 \
             --folds 2 \
             --threads 1 \
             --seed 42 \
@@ -74,7 +74,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: tse-causal-h40-h60-research-${{ github.run_number }}
+          name: tse-causal-h20-h40-h60-research-${{ github.run_number }}
           path: run_outputs/
           if-no-files-found: ignore
           compression-level: 1
